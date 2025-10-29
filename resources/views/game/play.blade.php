@@ -149,6 +149,10 @@
                             this.startTimer();
                             this.showInactivityWarning = false;
                         }
+
+                        if(data.error){
+                            alert(data.error)
+                        }
                     } finally {
                         this.loading = false;
                     }
@@ -437,75 +441,101 @@
     </script>
 
     <div class="py-6" x-data="gameBoard(@js($game), @js($player), @js($categories), {{ $isPlayerTurn ? 'true' : 'false' }}, @js($usedCombinations), @js($activeRound))">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Forfeit Button -->
-            <div class="mb-4 flex justify-end">
-                <button @click="forfeitGame"
-                        class="inline-flex items-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-                    <span>Forfeit Game</span>
-                </button>
-            </div>
-
-            <!-- Inactivity Timer - Always Visible (except during question phase or when opponent is answering) -->
-            <div x-show="phase !== 'question' && opponentMove?.phase !== 'difficulty'" class="mb-4 rounded-xl p-5 shadow-lg transition-all duration-300"
-                 :class="[
-                     isMyTurn ? (showInactivityWarning ? 'bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-400' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300') : (showInactivityWarning ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-yellow-400' : 'bg-gradient-to-r from-slate-50 to-gray-50 border-2 border-gray-300'),
-                     !inactivityTimerReady ? 'blur-sm' : ''
-                 ]">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full animate-pulse"
-                             :class="showInactivityWarning ? 'bg-red-500' : 'bg-blue-500'"></div>
-                        <span class="font-semibold text-gray-800 text-lg" x-text="isMyTurn ? 'Your Turn' : 'Opponent\'s Turn'"></span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                <!-- Left Sidebar - Score and Turn Info -->
+                <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
+                    <!-- Mobile: Horizontal Score Display -->
+                    <div class="lg:hidden bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 rounded-lg transition-all duration-300"
+                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-400' : 'bg-gray-50'">
+                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">You</div>
+                                <div class="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" x-text="players[{{ $player->id }}]?.score || 0"></div>
+                            </div>
+                            <div class="p-3 rounded-lg transition-all duration-300"
+                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-400' : 'bg-gray-50'" x-show="opponent">
+                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Opponent</div>
+                                <div class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" x-text="opponent?.score || 0"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-3xl font-bold tracking-tight"
-                         :class="showInactivityWarning ? 'text-red-600' : 'text-blue-600'"
-                         x-text="Math.floor(inactivityTimeRemaining / 60) + ':' + String(inactivityTimeRemaining % 60).padStart(2, '0')">
+
+                    <!-- Inactivity Timer -->
+                    <div x-show="phase !== 'question' && opponentMove?.phase !== 'difficulty'"
+                         class="rounded-xl p-3 lg:p-4 shadow-lg transition-all duration-300"
+                         :class="[
+                             isMyTurn ? (showInactivityWarning ? 'bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-400' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300') : (showInactivityWarning ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-yellow-400' : 'bg-gradient-to-r from-slate-50 to-gray-50 border-2 border-gray-300'),
+                             !inactivityTimerReady ? 'blur-sm' : ''
+                         ]">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full animate-pulse"
+                                     :class="showInactivityWarning ? 'bg-red-500' : 'bg-blue-500'"></div>
+                                <span class="font-semibold text-gray-800 text-xs lg:text-sm">Time Left</span>
+                            </div>
+                            <div class="text-xl lg:text-2xl font-bold tracking-tight"
+                                 :class="showInactivityWarning ? 'text-red-600' : 'text-blue-600'"
+                                 x-text="Math.floor(inactivityTimeRemaining / 60) + ':' + String(inactivityTimeRemaining % 60).padStart(2, '0')">
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div class="h-2 rounded-full transition-all duration-1000 shadow-sm"
+                                 :class="inactivityTimeRemaining > 60 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : (inactivityTimeRemaining > 30 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
+                                 :style="`width: ${(inactivityTimeRemaining / 120) * 100}%`"></div>
+                        </div>
+                        <div x-show="showInactivityWarning" class="mt-2 text-xs font-medium px-2 py-1 rounded"
+                             :class="isMyTurn ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
+                            <span x-show="isMyTurn">Time is running out!</span>
+                            <span x-show="!isMyTurn">Opponent's time running out</span>
+                        </div>
                     </div>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div class="h-3 rounded-full transition-all duration-1000 shadow-sm"
-                         :class="inactivityTimeRemaining > 60 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : (inactivityTimeRemaining > 30 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
-                         :style="`width: ${(inactivityTimeRemaining / 120) * 100}%`"></div>
-                </div>
-                <div x-show="showInactivityWarning" class="mt-3 text-sm font-medium px-3 py-2 rounded-lg"
-                     :class="isMyTurn ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
-                    <span x-show="isMyTurn">Time is running out! Make your move</span>
-                    <span x-show="!isMyTurn">Opponent's time is running out</span>
-                </div>
-            </div>
 
-
-            <!-- Score Display -->
-            <div class="bg-white rounded-xl shadow-lg p-5 mb-4 border border-gray-100">
-                <div class="grid grid-cols-2 gap-5">
-                    <div class="text-center p-5 rounded-xl transition-all duration-300"
-                         :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-400 scale-105' : 'bg-gray-50'">
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">You</div>
-                        <div class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" x-text="players[{{ $player->id }}]?.score || 0"></div>
-                        <div class="text-xs text-gray-600 mt-2 font-medium" x-text="players[{{ $player->id }}]?.display_name"></div>
+                    <!-- Turn Indicator -->
+                    <div class="bg-white rounded-xl shadow-lg p-3 lg:p-4 border border-gray-100">
+                        <div x-show="isMyTurn" class="flex items-center justify-center gap-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-green-600 font-bold text-sm lg:text-base">Your Turn</span>
+                        </div>
+                        <div x-show="!isMyTurn" class="flex items-center justify-center gap-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span class="text-blue-600 font-bold text-sm lg:text-base">Opponent's Turn</span>
+                        </div>
+                        <div class="text-center mt-2 text-xs lg:text-sm text-gray-600">
+                            Round <span class="font-bold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span>
+                        </div>
                     </div>
-                    <div class="text-center p-5 rounded-xl transition-all duration-300"
-                         :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'bg-gray-50'" x-show="opponent">
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Opponent</div>
-                        <div class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" x-text="opponent?.score || 0"></div>
-                        <div class="text-xs text-gray-600 mt-2 font-medium" x-text="opponent?.display_name"></div>
+
+                    <!-- Desktop: Vertical Score Display -->
+                    <div class="hidden lg:block bg-white rounded-xl shadow-lg p-5 border border-gray-100">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Scores</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-xl transition-all duration-300"
+                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-400' : 'bg-gray-50'">
+                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">You</div>
+                                <div class="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" x-text="players[{{ $player->id }}]?.score || 0"></div>
+                                <div class="text-xs text-gray-600 mt-1 truncate" x-text="players[{{ $player->id }}]?.display_name"></div>
+                            </div>
+                            <div class="p-4 rounded-xl transition-all duration-300"
+                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-400' : 'bg-gray-50'" x-show="opponent">
+                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Opponent</div>
+                                <div class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" x-text="opponent?.score || 0"></div>
+                                <div class="text-xs text-gray-600 mt-1 truncate" x-text="opponent?.display_name"></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Turn Indicator -->
-            <div class="bg-white rounded-xl shadow-lg p-4 mb-4 text-center border border-gray-100">
-                <div x-show="isMyTurn" class="flex items-center justify-center gap-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-green-600 font-bold text-lg">Your Turn - Round <span x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span></span>
-                </div>
-                <div x-show="!isMyTurn" class="flex items-center justify-center gap-2">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span class="text-blue-600 font-bold text-lg">Waiting for opponent - Round <span x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span></span>
-                </div>
-            </div>
+                    <!-- Forfeit Button -->
+                    <button @click="forfeitGame"
+                            class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                        <span>Forfeit Game</span>
+                    </button>
 
+
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="flex-1 min-w-0">
             <!-- Opponent Move Display -->
             <div x-show="opponentMove && !isMyTurn" x-cloak class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-lg p-6 mb-4 border-2 border-indigo-200">
                 <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
@@ -609,13 +639,52 @@
             </div>
 
             <!-- Game Phase Display -->
-            <div class="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-lg p-3 lg:p-4 border border-gray-100">
                 <!-- Phase 1 & 2: Combined Category & Difficulty Selection Table -->
                 <!-- Show to current player OR waiting player (to see the board) -->
                 <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Select Category & Difficulty</h3>
+                    <h3 class="text-lg lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Select Category & Difficulty</h3>
 
-                    <div class="overflow-x-auto">
+                    <!-- Mobile: Stacked Cards View -->
+                    <div class="lg:hidden space-y-3">
+                        <template x-for="category in categories" :key="category.id">
+                            <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
+                                    <div class="text-2xl" x-text="category.icon"></div>
+                                    <span class="font-semibold text-gray-900" x-text="category.name"></span>
+                                </div>
+                                <div class="space-y-2">
+                                    <!-- Easy -->
+                                    <button @click="selectCategoryAndDifficulty(category.id, 'easy')"
+                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
+                                            :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
+                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Easy (1pt)</span>
+                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'easy')">Easy - Used</span>
+                                    </button>
+                                    <!-- Medium -->
+                                    <button @click="selectCategoryAndDifficulty(category.id, 'medium')"
+                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
+                                            :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
+                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Medium (2pts)</span>
+                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'medium')">Medium - Used</span>
+                                    </button>
+                                    <!-- Hard -->
+                                    <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
+                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
+                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-gradient-to-r from-red-400 to-rose-500 hover:from-red-500 hover:to-rose-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
+                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Hard (3pts)</span>
+                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'hard')">Hard - Used</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Desktop: Table View -->
+                    <div class="hidden lg:block overflow-x-auto">
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="bg-gradient-to-r from-gray-50 to-slate-50">
@@ -776,6 +845,8 @@
                         <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                     </div>
                     <p class="mt-4 text-gray-600 font-medium">Processing...</p>
+                </div>
+            </div>
                 </div>
             </div>
         </div>

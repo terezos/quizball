@@ -38,6 +38,9 @@
             </main>
         </div>
 
+        <!-- Game Notification -->
+        <x-game-notification />
+
         @stack('scripts')
     </body>
 </html>

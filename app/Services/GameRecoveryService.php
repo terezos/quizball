@@ -60,7 +60,7 @@ class GameRecoveryService
         return $this->findPlayer($game, $user);
     }
 
-    protected function findPlayer(Game $game, ?User $user = null): ?GamePlayer
+    protected function findPlayer(Game $game, ?User $user = null): object
     {
         if ($user) {
             return $game->players()->where('user_id', $user->id)->first();

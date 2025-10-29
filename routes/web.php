@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\GameNotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ Route::get('/', function () {
 Route::get('/game', [GameController::class, 'lobby'])->name('game.lobby');
 Route::post('/game/create', [GameController::class, 'create'])->name('game.create');
 Route::post('/game/join', [GameController::class, 'join'])->name('game.join');
+Route::get('/game/check-active', [GameNotificationController::class, 'checkActiveGame'])->middleware('auth')->name('game.checkActive');
 Route::get('/game/{game}/wait', [GameController::class, 'wait'])->name('game.wait');
 Route::get('/game/{game}/matchmaking', [GameController::class, 'matchmaking'])->name('game.matchmaking');
 Route::post('/game/{game}/cancel-matchmaking', [GameController::class, 'cancelMatchmaking'])->name('game.cancelMatchmaking');
