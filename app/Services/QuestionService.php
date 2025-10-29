@@ -9,12 +9,20 @@ use App\QuestionType;
 
 class QuestionService
 {
-    public function getRandomQuestion(Category $category, DifficultyLevel $difficulty): ?Question
+    public function __construct(
+        protected AIAnswerValidationService $aiValidation
+    ) {}
+
+    public function getRandomQuestion(Category $category, DifficultyLevel $difficulty, ?int $excludeCreatorId = null): ?Question
     {
         return Question::query()
             ->where('category_id', $category->id)
             ->where('difficulty', $difficulty)
             ->where('is_active', true)
+            ->where('status', 'approved')  // Only approved questions
+            ->when($excludeCreatorId, function ($query, $creatorId) {
+                $query->where('created_by', '!=', $creatorId);
+            })
             ->with('answers')
             ->inRandomOrder()
             ->first();
@@ -31,15 +39,41 @@ class QuestionService
 
     protected function validateTextInput(Question $question, string $playerAnswer): bool
     {
-        $correctAnswer = $question->answers()
+        $correctAnswers = $question->answers()
             ->where('is_correct', true)
-            ->first();
+            ->pluck('answer_text')
+            ->toArray();
 
-        if (!$correctAnswer) {
+        if (empty($correctAnswers)) {
             return false;
         }
 
-        return $this->normalizeText($playerAnswer) === $this->normalizeText($correctAnswer->answer_text);
+        // First try exact match (normalized)
+        $normalizedPlayerAnswer = $this->normalizeText($playerAnswer);
+        foreach ($correctAnswers as $correct) {
+            if ($normalizedPlayerAnswer === $this->normalizeText($correct)) {
+                return true;
+            }
+        }
+        // If no exact match, try AI validation
+        if (config('quiz.ai_validation_enabled', true) && config('openai.api_key')) {
+            try {
+                $result = $this->aiValidation->validateAnswer(
+                    $question->question_text,
+                    $correctAnswers,
+                    $playerAnswer
+                );
+
+                return $result['is_correct'];
+            } catch (\Exception $e) {
+                \Log::warning('AI validation failed, falling back to exact match', [
+                    'question_id' => $question->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return false;
     }
 
     protected function validateMultipleChoice(Question $question, string $playerAnswer): bool
@@ -48,7 +82,7 @@ class QuestionService
             ->where('is_correct', true)
             ->first();
 
-        if (!$correctAnswer) {
+        if (! $correctAnswer) {
             return false;
         }
 
@@ -65,21 +99,45 @@ class QuestionService
         $correctAnswers = $question->answers()
             ->where('is_correct', true)
             ->pluck('answer_text')
-            ->map(fn($text) => $this->normalizeText($text))
             ->toArray();
 
         if (count($correctAnswers) < 5) {
             return false;
         }
 
-        $normalizedPlayerAnswers = array_map(
-            fn($answer) => $this->normalizeText($answer),
-            array_slice($playerAnswers, 0, 5)
-        );
-
         $matchCount = 0;
-        foreach ($normalizedPlayerAnswers as $playerAnswer) {
-            if (in_array($playerAnswer, $correctAnswers)) {
+
+        // Check each player answer
+        foreach (array_slice($playerAnswers, 0, 5) as $playerAnswer) {
+            $isMatch = false;
+
+            // First try exact match
+            $normalizedPlayerAnswer = $this->normalizeText($playerAnswer);
+            foreach ($correctAnswers as $correct) {
+                if ($normalizedPlayerAnswer === $this->normalizeText($correct)) {
+                    $isMatch = true;
+                    break;
+                }
+            }
+
+            // If no exact match, try AI validation
+            if (! $isMatch && config('quiz.ai_validation_enabled', true) && config('openai.api_key')) {
+                try {
+                    $result = $this->aiValidation->validateAnswer(
+                        $question->question_text,
+                        $correctAnswers,
+                        $playerAnswer
+                    );
+
+                    if ($result['is_correct']) {
+                        $isMatch = true;
+                    }
+                } catch (\Exception $e) {
+                    // Continue with next answer
+                }
+            }
+
+            if ($isMatch) {
                 $matchCount++;
             }
         }

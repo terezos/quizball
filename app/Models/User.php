@@ -19,6 +19,8 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'is_pre_validated',
+        'approved_questions_count',
     ];
 
     protected $hidden = [
@@ -33,6 +35,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'is_pre_validated' => 'boolean',
+            'approved_questions_count' => 'integer',
         ];
     }
 

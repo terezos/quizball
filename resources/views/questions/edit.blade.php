@@ -7,6 +7,17 @@
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            @if($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <strong class="font-bold">Validation Errors:</strong>
+                    <ul class="mt-2 list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <form method="POST" action="{{ route('questions.update', $question) }}" x-data="questionForm('{{ $question->question_type->value }}', {{ $question->answers->count() }})">
@@ -53,6 +64,18 @@
                             </select>
                         </div>
 
+                        <!-- Source URL -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Source URL *</label>
+                            <input type="url" name="source_url" value="{{ old('source_url', $question->source_url) }}" required
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="https://example.com/source-article">
+                            <p class="text-sm text-gray-500 mt-1">Add a link to verify the correct answer (will be shown after game ends)</p>
+                            @error('source_url')
+                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Answers -->
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Answers *</label>
@@ -60,6 +83,7 @@
                             <!-- Text Input -->
                             <div x-show="questionType === 'text_input'" x-cloak>
                                 <input type="text" name="answers[0][text]" value="{{ $question->answers->first()?->answer_text }}"
+                                       :required="questionType === 'text_input'"
                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <input type="hidden" name="answers[0][is_correct]" value="1">
                             </div>
@@ -69,9 +93,12 @@
                                 @foreach($question->answers as $index => $answer)
                                     <div class="flex gap-3">
                                         <input type="radio" name="correct_answer_id" value="{{ $index }}"
-                                               {{ $answer->is_correct ? 'checked' : '' }} required class="mt-3">
+                                               {{ $answer->is_correct ? 'checked' : '' }}
+                                               :required="questionType === 'multiple_choice'"
+                                               class="mt-3">
                                         <input type="text" name="answers[{{ $index }}][text]" value="{{ $answer->answer_text }}"
-                                               class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                               class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                               :required="questionType === 'multiple_choice'">
                                     </div>
                                 @endforeach
                             </div>
@@ -80,6 +107,7 @@
                             <div x-show="questionType === 'top_5'" x-cloak class="space-y-2">
                                 @foreach($question->answers as $index => $answer)
                                     <input type="text" name="answers[{{ $index }}][text]" value="{{ $answer->answer_text }}"
+                                           :required="questionType === 'top_5'"
                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     <input type="hidden" name="answers[{{ $index }}][is_correct]" value="1">
                                 @endforeach

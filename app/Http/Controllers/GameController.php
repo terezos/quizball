@@ -17,8 +17,9 @@ class GameController extends Controller
         protected GameService $gameService,
         protected GameRecoveryService $recoveryService,
         protected AIOpponentService $aiService,
-    ) {
-    }
+        protected \App\Services\MatchmakingService $matchmakingService,
+        protected \App\Services\AIAnswerValidationService $aiAnswerValidation,
+    ) {}
 
     public function lobby()
     {
@@ -34,9 +35,28 @@ class GameController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'game_type' => 'required|in:ai,human',
+            'game_type' => 'required|in:ai,human,matchmaking',
             'guest_name' => 'nullable|string|max:255',
         ]);
+
+        // Handle matchmaking
+        if ($request->game_type === 'matchmaking') {
+            $game = $this->matchmakingService->joinQueue(
+                auth()->user(),
+                $request->guest_name,
+                Session::getId()
+            );
+
+            $this->recoveryService->storeActiveGame($game, auth()->user(), Session::getId());
+
+            // If opponent found immediately, go to game
+            if ($this->matchmakingService->hasFoundOpponent($game)) {
+                return redirect()->route('game.play', $game);
+            }
+
+            // Otherwise, wait for opponent
+            return redirect()->route('game.matchmaking', $game);
+        }
 
         $game = $this->gameService->createGame(
             $request->game_type,
@@ -68,7 +88,7 @@ class GameController extends Controller
             Session::getId()
         );
 
-        if (!$game) {
+        if (! $game) {
             return back()->withErrors(['game_code' => 'Game not found or already full']);
         }
 
@@ -81,7 +101,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return redirect()->route('game.lobby');
         }
 
@@ -91,22 +111,86 @@ class GameController extends Controller
         ]);
     }
 
+    public function matchmaking(Game $game)
+    {
+        $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
+
+        if (! $player) {
+            return redirect()->route('game.lobby');
+        }
+
+        // If opponent found, redirect to game
+        if ($this->matchmakingService->hasFoundOpponent($game->fresh())) {
+            return redirect()->route('game.play', $game);
+        }
+
+        $queuePosition = $this->matchmakingService->getQueuePosition($game);
+
+        return view('game.matchmaking', [
+            'game' => $game->load('players'),
+            'player' => $player,
+            'queuePosition' => $queuePosition,
+        ]);
+    }
+
+    public function cancelMatchmaking(Game $game)
+    {
+        $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
+
+        if (! $player) {
+            return redirect()->route('game.lobby');
+        }
+
+        $this->matchmakingService->cancelMatchmaking($game);
+        $this->recoveryService->clearActiveGame(auth()->user(), Session::getId());
+
+        return redirect()->route('game.lobby')->with('success', 'Matchmaking cancelled');
+    }
+
+    public function checkMatchmaking(Game $game)
+    {
+        $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
+
+        if (! $player) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $game = $game->fresh();
+        $hasOpponent = $this->matchmakingService->hasFoundOpponent($game);
+
+        return response()->json([
+            'found' => $hasOpponent,
+            'queue_position' => $this->matchmakingService->getQueuePosition($game),
+            'redirect_url' => $hasOpponent ? route('game.play', $game) : null,
+        ]);
+    }
+
     public function play(Game $game)
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return redirect()->route('game.lobby');
         }
 
         $categories = Category::where('is_active', true)->orderBy('order')->get();
         $isPlayerTurn = $this->recoveryService->isPlayersTurn($game, $player);
+        $usedCombinations = $this->gameService->getUsedCategoryDifficulties($game);
+
+        // Check if player has an unanswered question
+        $activeRound = \App\Models\GameRound::where('game_id', $game->id)
+            ->where('game_player_id', $player->id)
+            ->whereNull('answered_at')
+            ->with(['question.answers', 'category'])
+            ->first();
 
         return view('game.play', [
             'game' => $game->load('players'),
             'player' => $player,
             'categories' => $categories,
             'isPlayerTurn' => $isPlayerTurn,
+            'usedCombinations' => $usedCombinations,
+            'activeRound' => $activeRound,
         ]);
     }
 
@@ -118,14 +202,22 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player || !$this->recoveryService->isPlayersTurn($game, $player)) {
+        if (! $player || ! $this->recoveryService->isPlayersTurn($game, $player)) {
             return response()->json(['error' => 'Not your turn'], 403);
         }
 
         $category = Category::findOrFail($request->category_id);
         $this->gameService->selectCategory($game, $player, $category);
 
-        return response()->json(['success' => true]);
+        $availableDifficulties = [];
+        foreach (['easy', 'medium', 'hard'] as $diff) {
+            $availableDifficulties[$diff] = $this->gameService->isCategoryDifficultyAvailable($game, $category->id, $diff);
+        }
+
+        return response()->json([
+            'success' => true,
+            'available_difficulties' => $availableDifficulties,
+        ]);
     }
 
     public function selectDifficulty(Request $request, Game $game)
@@ -136,14 +228,14 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player || !$this->recoveryService->isPlayersTurn($game, $player)) {
+        if (! $player || ! $this->recoveryService->isPlayersTurn($game, $player)) {
             return response()->json(['error' => 'Not your turn'], 403);
         }
 
         $difficulty = DifficultyLevel::from($request->difficulty);
         $question = $this->gameService->selectDifficulty($game, $player, $difficulty);
 
-        if (!$question) {
+        if (! $question) {
             return response()->json(['error' => 'No questions available'], 400);
         }
 
@@ -155,7 +247,7 @@ class GameController extends Controller
                 'type' => $question->question_type->value,
                 'difficulty' => $question->difficulty->value,
                 'answers' => $question->question_type->value === 'multiple_choice'
-                    ? $question->answers->map(fn($a) => [
+                    ? $question->answers->map(fn ($a) => [
                         'id' => $a->id,
                         'text' => $a->answer_text,
                     ])
@@ -172,7 +264,7 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
@@ -195,18 +287,33 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
-        return response()->json($this->gameService->getGameState($game->fresh(['players'])));
+        $gameState = $this->gameService->getGameState($game->fresh(['players']));
+
+        // Check for inactivity timeout (2 minutes = 120 seconds)
+        if ($gameState['turn_started_at'] && $gameState['status'] === 'active') {
+            $elapsed = now()->timestamp - $gameState['turn_started_at'];
+            if ($elapsed >= 120) {
+                $currentPlayer = $game->players->firstWhere('id', $game->current_turn_player_id);
+                if ($currentPlayer) {
+                    $this->gameService->forfeitGame($game, $currentPlayer);
+                    $gameState = $this->gameService->getGameState($game->fresh(['players']));
+                    $gameState['auto_forfeit'] = true;
+                }
+            }
+        }
+
+        return response()->json($gameState);
     }
 
     public function forfeit(Game $game)
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
@@ -223,7 +330,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (!$player) {
+        if (! $player) {
             return redirect()->route('game.lobby');
         }
 

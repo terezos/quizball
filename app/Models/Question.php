@@ -17,6 +17,11 @@ class Question extends Model
         'question_type',
         'difficulty',
         'is_active',
+        'status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
+        'source_url',
     ];
 
     protected function casts(): array
@@ -25,6 +30,7 @@ class Question extends Model
             'question_type' => QuestionType::class,
             'difficulty' => DifficultyLevel::class,
             'is_active' => 'boolean',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -36,6 +42,11 @@ class Question extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function answers(): HasMany

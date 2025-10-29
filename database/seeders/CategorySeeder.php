@@ -10,14 +10,14 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Premier League', 'icon' => '⚽', 'order' => 1],
-            ['name' => 'Champions League', 'icon' => '🏆', 'order' => 2],
-            ['name' => 'World Cup', 'icon' => '🌍', 'order' => 3],
-            ['name' => 'Players & Legends', 'icon' => '👤', 'order' => 4],
-            ['name' => 'Clubs & Stadiums', 'icon' => '🏟️', 'order' => 5],
-            ['name' => 'Tactics & Rules', 'icon' => '📋', 'order' => 6],
-            ['name' => 'Football History', 'icon' => '📚', 'order' => 7],
-            ['name' => 'Transfers & Records', 'icon' => '💰', 'order' => 8],
+            ['name' => 'Πρέμιερ Λιγκ', 'icon' => '⚽', 'order' => 1],
+            ['name' => 'Τσάμπιονς Λιγκ', 'icon' => '🏆', 'order' => 2],
+            ['name' => 'Παγκόσμιο Κύπελλο', 'icon' => '🌍', 'order' => 3],
+            ['name' => 'Παίκτες & Θρύλοι', 'icon' => '👤', 'order' => 4],
+            ['name' => 'Ομάδες & Γήπεδα', 'icon' => '🏟️', 'order' => 5],
+            ['name' => 'Τακτικές & Κανόνες', 'icon' => '📋', 'order' => 6],
+            ['name' => 'Ιστορία Ποδοσφαίρου', 'icon' => '📚', 'order' => 7],
+            ['name' => 'Μεταγραφές & Ρεκόρ', 'icon' => '💰', 'order' => 8],
         ];
 
         foreach ($categories as $category) {

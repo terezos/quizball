@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
@@ -14,6 +15,9 @@ Route::get('/game', [GameController::class, 'lobby'])->name('game.lobby');
 Route::post('/game/create', [GameController::class, 'create'])->name('game.create');
 Route::post('/game/join', [GameController::class, 'join'])->name('game.join');
 Route::get('/game/{game}/wait', [GameController::class, 'wait'])->name('game.wait');
+Route::get('/game/{game}/matchmaking', [GameController::class, 'matchmaking'])->name('game.matchmaking');
+Route::post('/game/{game}/cancel-matchmaking', [GameController::class, 'cancelMatchmaking'])->name('game.cancelMatchmaking');
+Route::get('/game/{game}/check-matchmaking', [GameController::class, 'checkMatchmaking'])->name('game.checkMatchmaking');
 Route::get('/game/{game}/play', [GameController::class, 'play'])->name('game.play');
 Route::get('/game/{game}/results', [GameController::class, 'results'])->name('game.results');
 
@@ -42,6 +46,21 @@ Route::middleware(['auth', 'editor'])->prefix('questions')->name('questions.')->
     Route::get('/{question}/edit', [QuestionController::class, 'edit'])->name('edit');
     Route::put('/{question}', [QuestionController::class, 'update'])->name('update');
     Route::delete('/{question}', [QuestionController::class, 'destroy'])->name('destroy');
+
+    // Admin only routes
+    Route::get('/pending', [QuestionController::class, 'pending'])->name('pending');
+    Route::post('/{question}/approve', [QuestionController::class, 'approve'])->name('approve');
+    Route::post('/{question}/reject', [QuestionController::class, 'reject'])->name('reject');
+});
+
+// Admin Routes - Category Management
+Route::middleware(['auth', 'admin'])->prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
 });
 
 require __DIR__.'/auth.php';

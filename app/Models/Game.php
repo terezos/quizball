@@ -13,6 +13,8 @@ class Game extends Model
         'game_code',
         'status',
         'game_type',
+        'is_matchmaking',
+        'matchmaking_started_at',
         'current_round',
         'max_rounds',
         'current_turn_player_id',
@@ -24,6 +26,8 @@ class Game extends Model
     {
         return [
             'status' => GameStatus::class,
+            'is_matchmaking' => 'boolean',
+            'matchmaking_started_at' => 'datetime',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

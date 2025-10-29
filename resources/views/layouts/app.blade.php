@@ -19,7 +19,9 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+            @unless(request()->routeIs('game.play'))
+                @include('layouts.navigation')
+            @endunless
 
             <!-- Page Heading -->
             @isset($header)

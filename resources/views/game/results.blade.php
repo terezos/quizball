@@ -65,6 +65,24 @@
                                         <div class="text-sm text-gray-500 mt-1">
                                             Difficulty: {{ ucfirst($round->difficulty->value) }}
                                         </div>
+                                        @if(!$round->is_correct && $round->question->answers->where('is_correct', true)->first())
+                                            <div class="text-sm mt-2">
+                                                <span class="text-gray-600">Correct answer:</span>
+                                                <span class="font-medium text-green-700">
+                                                    {{ $round->question->answers->where('is_correct', true)->first()->answer_text }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                        @if($round->question->source_url)
+                                            <div class="mt-2">
+                                                <a href="{{ $round->question->source_url }}" target="_blank" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                                    </svg>
+                                                    Verify source
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="text-right ml-4">
                                         @if($round->is_correct)

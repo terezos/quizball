@@ -18,17 +18,20 @@ class GameService
     public function __construct(
         protected QuestionService $questionService,
         protected StatisticsService $statisticsService,
-    ) {
-    }
+    ) {}
 
     public function createGame(string $gameType, ?User $user = null, ?string $guestName = null, ?string $sessionId = null): Game
     {
+        $totalCategories = Category::where('is_active', true)->count();
+        $totalDifficulties = 3;
+        $maxRounds = $totalCategories * $totalDifficulties;
+
         $game = Game::create([
             'game_code' => $this->generateGameCode(),
             'status' => GameStatus::Waiting,
             'game_type' => $gameType,
             'current_round' => 0,
-            'max_rounds' => 10,
+            'max_rounds' => $maxRounds,
         ]);
 
         $player = GamePlayer::create([
@@ -54,6 +57,8 @@ class GameService
                 'current_turn_player_id' => $player->id,
                 'started_at' => now(),
             ]);
+
+            Cache::put("game:{$game->id}:turn_started_at", now()->timestamp, now()->addMinutes(5));
         }
 
         $this->cacheGameState($game);
@@ -67,7 +72,7 @@ class GameService
             ->where('status', GameStatus::Waiting)
             ->first();
 
-        if (!$game || $game->players()->count() >= 2) {
+        if (! $game || $game->players()->count() >= 2) {
             return null;
         }
 
@@ -89,6 +94,7 @@ class GameService
             'started_at' => now(),
         ]);
 
+        Cache::put("game:{$game->id}:turn_started_at", now()->timestamp, now()->addMinutes(5));
         $this->cacheGameState($game);
 
         return $game->fresh(['players']);
@@ -96,27 +102,87 @@ class GameService
 
     public function selectCategory(Game $game, GamePlayer $player, Category $category): void
     {
+        // Check if player has an unanswered question
+        $activeRound = GameRound::where('game_id', $game->id)
+            ->where('game_player_id', $player->id)
+            ->whereNull('answered_at')
+            ->first();
+
+        if ($activeRound) {
+            // Player must answer current question before selecting new category
+            return;
+        }
+
         Cache::put("game:{$game->id}:selected_category", $category->id, now()->addMinutes(5));
+        Cache::put("game:{$game->id}:current_move", [
+            'player_id' => $player->id,
+            'phase' => 'category',
+            'category' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'icon' => $category->icon,
+            ],
+        ], now()->addMinutes(5));
         $this->cacheGameState($game);
+    }
+
+    public function getUsedCategoryDifficulties(Game $game): array
+    {
+        return GameRound::where('game_id', $game->id)
+            ->get()
+            ->map(fn ($round) => [
+                'category_id' => $round->category_id,
+                'difficulty' => $round->difficulty->value,
+            ])
+            ->toArray();
+    }
+
+    public function isCategoryDifficultyAvailable(Game $game, int $categoryId, string $difficulty): bool
+    {
+        return ! GameRound::where('game_id', $game->id)
+            ->where('category_id', $categoryId)
+            ->where('difficulty', $difficulty)
+            ->exists();
     }
 
     public function selectDifficulty(Game $game, GamePlayer $player, DifficultyLevel $difficulty): ?Question
     {
+        // Check if player has an unanswered question
+        $activeRound = GameRound::where('game_id', $game->id)
+            ->where('game_player_id', $player->id)
+            ->whereNull('answered_at')
+            ->first();
+
+        if ($activeRound) {
+            // Player must answer current question, return existing question
+            $question = Question::find($activeRound->question_id);
+            Cache::put("game:{$game->id}:current_round", $activeRound->id, now()->addMinutes(5));
+
+            return $question;
+        }
+
         $categoryId = Cache::get("game:{$game->id}:selected_category");
 
-        if (!$categoryId) {
+        if (! $categoryId) {
             return null;
         }
 
         $category = Category::find($categoryId);
 
-        if (!$category) {
+        if (! $category) {
             return null;
         }
 
-        $question = $this->questionService->getRandomQuestion($category, $difficulty);
+        if (! $this->isCategoryDifficultyAvailable($game, $categoryId, $difficulty->value)) {
+            return null;
+        }
 
-        if (!$question) {
+        // Get user_id from player to exclude their questions
+        $excludeCreatorId = $player->user_id;
+
+        $question = $this->questionService->getRandomQuestion($category, $difficulty, $excludeCreatorId);
+
+        if (! $question) {
             return null;
         }
 
@@ -134,6 +200,20 @@ class GameService
 
         Cache::put("game:{$game->id}:current_round", $round->id, now()->addMinutes(5));
         Cache::forget("game:{$game->id}:selected_category");
+
+        Cache::put("game:{$game->id}:current_move", [
+            'player_id' => $player->id,
+            'phase' => 'difficulty',
+            'category' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'icon' => $category->icon,
+            ],
+            'difficulty' => $difficulty->value,
+            'question' => $question->question_text,
+            'started_at' => now()->timestamp,
+        ], now()->addMinutes(5));
+
         $this->cacheGameState($game);
 
         return $question;
@@ -143,19 +223,25 @@ class GameService
     {
         $roundId = Cache::get("game:{$game->id}:current_round");
 
-        if (!$roundId) {
+        if (! $roundId) {
             return ['success' => false, 'message' => 'No active round found'];
         }
 
         $round = GameRound::find($roundId);
 
-        if (!$round || $round->game_player_id !== $player->id) {
+        if (! $round || $round->game_player_id !== $player->id) {
             return ['success' => false, 'message' => 'Invalid round or player'];
         }
 
         $question = $round->question()->with('answers')->first();
         $isCorrect = $this->questionService->validateAnswer($question, $answer);
         $pointsEarned = $isCorrect ? $round->difficulty->points() : 0;
+
+        // Get correct answer(s)
+        $correctAnswer = $this->getCorrectAnswer($question);
+
+        // Format player's answer for display
+        $playerAnswerDisplay = $this->formatAnswerForDisplay($question, $answer);
 
         $round->update([
             'player_answer' => is_array($answer) ? json_encode($answer) : $answer,
@@ -171,6 +257,16 @@ class GameService
 
         Cache::forget("game:{$game->id}:current_round");
 
+        $currentMove = Cache::get("game:{$game->id}:current_move", []);
+        $currentMove['phase'] = 'result';
+        $currentMove['answer'] = $playerAnswerDisplay;
+        $currentMove['correct_answer'] = $correctAnswer;
+        $currentMove['is_correct'] = $isCorrect;
+        $currentMove['points_earned'] = $pointsEarned;
+        $currentMove['question'] = $question->question_text;
+        // Keep result visible for 10 seconds so opponent can see it through polling
+        Cache::put("game:{$game->id}:current_move", $currentMove, now()->addSeconds(10));
+
         $this->switchTurn($game);
         $this->checkGameCompletion($game);
         $this->cacheGameState($game);
@@ -179,8 +275,44 @@ class GameService
             'success' => true,
             'is_correct' => $isCorrect,
             'points_earned' => $pointsEarned,
+            'player_answer' => $playerAnswerDisplay,
+            'correct_answer' => $correctAnswer,
+            'question_text' => $question->question_text,
             'game_status' => $game->fresh()->status,
         ];
+    }
+
+    protected function getCorrectAnswer(Question $question): string
+    {
+        $correctAnswers = $question->answers()->where('is_correct', true)->get();
+
+        if ($question->question_type->value === 'multiple_choice') {
+            return $correctAnswers->first()->answer_text;
+        }
+
+        if ($question->question_type->value === 'top_5') {
+            return $correctAnswers->pluck('answer_text')->take(5)->implode(', ');
+        }
+
+        // text_input
+        return $correctAnswers->first()->answer_text;
+    }
+
+    protected function formatAnswerForDisplay(Question $question, string|array $answer): string
+    {
+        if ($question->question_type->value === 'multiple_choice') {
+            $answerId = $answer;
+            $answerModel = $question->answers()->find($answerId);
+
+            return $answerModel ? $answerModel->answer_text : 'No answer';
+        }
+
+        if ($question->question_type->value === 'top_5') {
+            return is_array($answer) ? implode(', ', $answer) : $answer;
+        }
+
+        // text_input
+        return $answer;
     }
 
     protected function switchTurn(Game $game): void
@@ -191,17 +323,23 @@ class GameService
             return;
         }
 
-        $currentPlayerIndex = $players->search(fn($p) => $p->id === $game->current_turn_player_id);
+        $currentPlayerIndex = $players->search(fn ($p) => $p->id === $game->current_turn_player_id);
         $nextPlayerIndex = ($currentPlayerIndex + 1) % $players->count();
 
         $game->update([
             'current_turn_player_id' => $players[$nextPlayerIndex]->id,
         ]);
+
+        // Don't clear current_move here - let it expire naturally so opponent can see the result
+        // The result phase cache will expire after 10 seconds
+        Cache::put("game:{$game->id}:turn_started_at", now()->timestamp, now()->addMinutes(5));
     }
 
     protected function checkGameCompletion(Game $game): void
     {
-        if ($game->current_round >= $game->max_rounds) {
+        $totalRounds = GameRound::where('game_id', $game->id)->count();
+
+        if ($totalRounds >= $game->max_rounds) {
             $players = $game->players;
             $winner = $players->sortByDesc('score')->first();
 
@@ -252,6 +390,10 @@ class GameService
 
     public function getGameState(Game $game): array
     {
+        $usedCombinations = $this->getUsedCategoryDifficulties($game);
+        $currentMove = Cache::get("game:{$game->id}:current_move");
+        $turnStartedAt = Cache::get("game:{$game->id}:turn_started_at");
+
         return [
             'id' => $game->id,
             'game_code' => $game->game_code,
@@ -259,7 +401,10 @@ class GameService
             'current_round' => $game->current_round,
             'max_rounds' => $game->max_rounds,
             'current_turn_player_id' => $game->current_turn_player_id,
-            'players' => $game->players->map(fn($p) => [
+            'used_combinations' => $usedCombinations,
+            'current_move' => $currentMove,
+            'turn_started_at' => $turnStartedAt,
+            'players' => $game->players->map(fn ($p) => [
                 'id' => $p->id,
                 'display_name' => $p->display_name,
                 'score' => $p->score,

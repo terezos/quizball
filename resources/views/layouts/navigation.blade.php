@@ -24,6 +24,11 @@
                                 📝 Questions
                             </x-nav-link>
                         @endif
+                        @if(auth()->user()->isAdmin())
+                            <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                                📂 Categories
+                            </x-nav-link>
+                        @endif
                     @endauth
                 </div>
             </div>
@@ -89,6 +94,11 @@
                 @if(auth()->user()->isEditor())
                     <x-responsive-nav-link :href="route('questions.index')" :active="request()->routeIs('questions.*')">
                         📝 Questions
+                    </x-responsive-nav-link>
+                @endif
+                @if(auth()->user()->isAdmin())
+                    <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                        📂 Categories
                     </x-responsive-nav-link>
                 @endif
             @endauth
