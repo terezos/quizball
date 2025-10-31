@@ -7,6 +7,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuestionReportController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -109,6 +110,18 @@ Route::middleware(['auth', 'editor'])
     ->group(function () {
         Route::get('', [QuestionReportController::class, 'index'])->name('index');
         Route::post('{report}/resolve', [QuestionReportController::class, 'resolve'])->name('resolve');
+    });
+
+// Admin User Management
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin/users')
+    ->name('admin.users.')
+    ->group(function () {
+        Route::get('', [UserController::class, 'index'])->name('index');
+        Route::get('{user}', [UserController::class, 'show'])->name('show');
+        Route::patch('{user}/role', [UserController::class, 'updateRole'])->name('updateRole');
+        Route::patch('{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggleStatus');
+        Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 
 require __DIR__.'/auth.php';

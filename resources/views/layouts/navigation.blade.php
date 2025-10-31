@@ -28,6 +28,9 @@
                             <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')" icon="📂">
                                 Κατηγορίες
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')" icon="👥">
+                                Χρήστες
+                            </x-nav-link>
                         @endif
                     </div>
                 @endauth
@@ -373,6 +376,11 @@
                        class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('categories.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                         <span class="text-2xl">📂</span>
                         <span class="font-semibold">Κατηγορίες</span>
+                    </a>
+                    <a href="{{ route('admin.users.index') }}" 
+                       class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                        <span class="text-2xl">👥</span>
+                        <span class="font-semibold">Χρήστες</span>
                     </a>
                 @endif
             </div>
