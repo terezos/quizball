@@ -601,16 +601,25 @@
         }
     </script>
 
-    <div class="py-6 no-select" x-data="gameBoard(@js($game), @js($player), @js($categories), {{ $isPlayerTurn ? 'true' : 'false' }}, @js($usedCombinations), @js($activeRound))" x-init="setTimeout(() => { $refs.loadingOverlay.style.display = 'none'; }, 2000)">
+    <div class="py-4 no-select" x-data="gameBoard(@js($game), @js($player), @js($categories), {{ $isPlayerTurn ? 'true' : 'false' }}, @js($usedCombinations), @js($activeRound))" x-init="setTimeout(() => { $refs.loadingOverlay.style.display = 'none'; }, 2000)">
         <!-- Loading Overlay -->
-        <div x-ref="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-lg">
+        <div x-ref="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50/95 backdrop-blur-sm">
             <div class="text-center">
-                <div class="inline-flex items-center gap-3 mb-4">
-                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                    <div class="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                    <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                <div class="inline-flex items-center gap-2 mb-3">
+                    <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                 </div>
-                <p class="text-xl font-bold text-gray-800">Το παιχνίδι φορτώνει...</p>
+                <p class="text-lg font-semibold text-slate-700">Το παιχνίδι φορτώνει...</p>
+            </div>
+        </div>
+
+        <!-- Logo Header -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+            <div class="flex items-center justify-center py-3">
+                <a href="{{ route('dashboard') }}" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
+                    QuizBall
+                </a>
             </div>
         </div>
 
@@ -619,17 +628,17 @@
                 <!-- Left Sidebar - Score and Turn Info -->
                 <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
                     <!-- Mobile: Horizontal Score Display -->
-                    <div class="lg:hidden bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+                    <div class="lg:hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 border border-slate-200">
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="p-3 rounded-lg transition-all duration-300"
-                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-400' : 'bg-gray-50'">
-                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">You</div>
-                                <div class="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" x-text="players[{{ $player->id }}]?.score || 0"></div>
+                            <div class="p-3 rounded-xl transition-all duration-300"
+                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-emerald-50 ring-1 ring-emerald-300' : 'bg-slate-50'">
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">You</div>
+                                <div class="text-2xl font-bold text-emerald-600" x-text="players[{{ $player->id }}]?.score || 0"></div>
                             </div>
-                            <div class="p-3 rounded-lg transition-all duration-300"
-                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-400' : 'bg-gray-50'" x-show="opponent">
-                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Opponent</div>
-                                <div class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" x-text="opponent?.score || 0"></div>
+                            <div class="p-3 rounded-xl transition-all duration-300"
+                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-indigo-50 ring-1 ring-indigo-300' : 'bg-slate-50'" x-show="opponent">
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Opponent</div>
+                                <div class="text-2xl font-bold text-indigo-600" x-text="opponent?.score || 0"></div>
                             </div>
                         </div>
                     </div>
@@ -665,35 +674,35 @@
                     </div>
 
                     <!-- Turn Indicator -->
-                    <div class="bg-white rounded-xl shadow-lg p-3 lg:p-4 border border-gray-100">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-3 lg:p-4 border border-slate-200">
                         <div x-show="isMyTurn" class="flex items-center justify-center gap-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span class="text-green-600 font-bold text-sm lg:text-base">Your Turn</span>
+                            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span class="text-emerald-600 font-semibold text-sm lg:text-base">Your Turn</span>
                         </div>
                         <div x-show="!isMyTurn" class="flex items-center justify-center gap-2">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                            <span class="text-blue-600 font-bold text-sm lg:text-base">Opponent's Turn</span>
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                            <span class="text-indigo-600 font-semibold text-sm lg:text-base">Opponent's Turn</span>
                         </div>
-                        <div class="text-center mt-2 text-xs lg:text-sm text-gray-600">
-                            Round <span class="font-bold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span>
+                        <div class="text-center mt-2 text-xs lg:text-sm text-slate-600">
+                            Round <span class="font-semibold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span>
                         </div>
                     </div>
 
                     <!-- Desktop: Vertical Score Display -->
-                    <div class="hidden lg:block bg-white rounded-xl shadow-lg p-5 border border-gray-100">
-                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Scores</h3>
-                        <div class="space-y-4">
+                    <div class="hidden lg:block bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-200">
+                        <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wide mb-4">Scores</h3>
+                        <div class="space-y-3">
                             <div class="p-4 rounded-xl transition-all duration-300"
-                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-400' : 'bg-gray-50'">
-                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">You</div>
-                                <div class="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" x-text="players[{{ $player->id }}]?.score || 0"></div>
-                                <div class="text-xs text-gray-600 mt-1 truncate" x-text="players[{{ $player->id }}]?.display_name"></div>
+                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-emerald-50 ring-1 ring-emerald-300' : 'bg-slate-50'">
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">You</div>
+                                <div class="text-3xl font-bold text-emerald-600" x-text="players[{{ $player->id }}]?.score || 0"></div>
+                                <div class="text-xs text-slate-600 mt-1 truncate" x-text="players[{{ $player->id }}]?.display_name"></div>
                             </div>
                             <div class="p-4 rounded-xl transition-all duration-300"
-                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-400' : 'bg-gray-50'" x-show="opponent">
-                                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Opponent</div>
-                                <div class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" x-text="opponent?.score || 0"></div>
-                                <div class="text-xs text-gray-600 mt-1 truncate" x-text="opponent?.display_name"></div>
+                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-indigo-50 ring-1 ring-indigo-300' : 'bg-slate-50'" x-show="opponent">
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Opponent</div>
+                                <div class="text-3xl font-bold text-indigo-600" x-text="opponent?.score || 0"></div>
+                                <div class="text-xs text-slate-600 mt-1 truncate" x-text="opponent?.display_name"></div>
                             </div>
                         </div>
                     </div>
@@ -701,7 +710,7 @@
                     <!-- Forfeit Button -->
                     <button @click="showForfeitConfirmation = true"
                             class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-                        <span>Παραίτηση</span>
+                        <span>Ματαίωση</span>
                     </button>
 
 
@@ -710,146 +719,146 @@
                 <!-- Main Content Area -->
                 <div class="flex-1 min-w-0">
             <!-- Opponent Move Display -->
-            <div x-show="opponentMove && !isMyTurn" x-cloak class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-lg p-6 mb-4 border-2 border-indigo-200">
-                <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                    <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            <div x-show="opponentMove && !isMyTurn" x-cloak class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm p-3 mb-3 border border-indigo-200">
+                <h3 class="text-sm font-semibold text-indigo-900 mb-2.5 flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
                     <span x-text="opponent?.display_name"></span>'s Move
                 </h3>
 
                 <!-- Category Selected -->
                 <div x-show="opponentMove?.phase === 'category'" class="text-center">
-                    <div class="inline-flex items-center gap-3 bg-white rounded-xl p-5 shadow-md border border-gray-100">
+                    <div class="inline-flex items-center gap-2 bg-white rounded-lg p-2.5 shadow-sm border border-slate-200">
                         <div class="text-left">
-                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Επιλογη Κατηγοριας</div>
-                            <div class="text-xl font-bold text-gray-900 mt-1" x-text="opponentMove?.category?.name"></div>
+                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Επιλογη Κατηγοριας</div>
+                            <div class="text-sm font-semibold text-slate-800 mt-0.5" x-text="opponentMove?.category?.name"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Difficulty Selected -->
-                <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-4">
+                <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-2">
                     <!-- Timer -->
-                    <div class="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="font-semibold text-gray-700">Time Remaining</span>
-                            <span class="font-bold text-indigo-600" x-text="opponentTimeRemaining + 's'"></span>
+                    <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-medium text-slate-600">Time</span>
+                            <span class="font-semibold text-indigo-600" x-text="opponentTimeRemaining + 's'"></span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-1000"
-                                 :class="opponentTimeRemaining > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' : (opponentTimeRemaining > 10 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
+                        <div class="w-full bg-slate-200 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full transition-all duration-1000"
+                                 :class="opponentTimeRemaining > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' : (opponentTimeRemaining > 10 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-600')"
                                  :style="`width: ${(opponentTimeRemaining / 60) * 100}%`"></div>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-center gap-4 flex-wrap">
-                        <div class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                            <div class="text-left">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Κατηγορία</div>
-                                <div class="font-bold text-gray-900 mt-1" x-text="opponentMove?.category?.name"></div>
-                            </div>
+                    <div class="flex items-center justify-center gap-2 flex-wrap text-xs">
+                        <div class="inline-flex items-center gap-1.5 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                            <span class="text-slate-500 font-medium">Κατηγορία:</span>
+                            <span class="font-semibold text-slate-800" x-text="opponentMove?.category?.name"></span>
                         </div>
-                        <div class="text-2xl text-gray-300">→</div>
-                        <div class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                            <div class="text-left">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Επίπεδο</div>
-                                <div class="font-bold text-gray-900 mt-1" x-text="getDifficultyLabel(opponentMove?.difficulty)"></div>
-                            </div>
+                        <div class="text-slate-300">→</div>
+                        <div class="inline-flex items-center gap-1.5 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                            <span class="text-slate-500 font-medium">Επίπεδο:</span>
+                            <span class="font-semibold text-slate-800" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl p-4 shadow-md mt-3 border border-gray-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Ερώτηση</div>
-                        <div class="text-gray-900 font-medium" x-text="opponentMove?.question"></div>
+                    <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                        <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Ερώτηση</div>
+                        <div class="text-slate-800 text-xs font-medium" x-text="opponentMove?.question"></div>
                     </div>
-                    <div class="text-center text-sm text-indigo-700 font-medium">
-                        <div class="inline-flex items-center gap-2">
-                            <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                    <div class="text-center text-xs text-indigo-700 font-medium">
+                        <div class="inline-flex items-center gap-1.5">
+                            <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
                             Απαντάει ο αντίπαλος...
                         </div>
                     </div>
                 </div>
 
                 <!-- Answer Result -->
-                <div x-show="opponentMove?.phase === 'result'" class="text-center space-y-4">
-                    <div class="flex items-center justify-center gap-4 flex-wrap">
-                        <div class="inline-flex items-center gap-2 bg-white rounded-xl p-3 shadow-md text-sm border border-gray-100">
-                            <span x-text="opponentMove?.category?.name" class="font-semibold"></span>
+                <div x-show="opponentMove?.phase === 'result'" class="text-center space-y-2.5">
+                    <div class="flex items-center justify-center gap-2 flex-wrap text-xs">
+                        <div class="inline-flex items-center bg-white rounded-lg px-2 py-1 shadow-sm border border-slate-200">
+                            <span class="font-semibold text-slate-700" x-text="opponentMove?.category?.name"></span>
                         </div>
-                        <div class="inline-flex items-center gap-2 bg-white rounded-xl p-3 shadow-md text-sm border border-gray-100">
-                            <span x-text="getDifficultyLabel(opponentMove?.difficulty)" class="font-semibold"></span>
+                        <div class="inline-flex items-center bg-white rounded-lg px-2 py-1 shadow-sm border border-slate-200">
+                            <span class="font-semibold text-slate-700" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
                         </div>
                     </div>
 
-                    <div x-show="opponentMove?.is_correct" class="inline-flex flex-col items-center gap-3 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-8">
-                        <div class="text-6xl font-black text-green-600">✓</div>
-                        <div class="text-green-800 font-bold text-xl">Correct Answer</div>
-                        <div class="text-green-700 font-semibold">+<span x-text="opponentMove?.points_earned"></span> points</div>
+                    <div x-show="opponentMove?.is_correct" class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                        <div class="text-2xl text-emerald-600">✓</div>
+                        <div>
+                            <div class="text-emerald-800 font-medium text-xs">Correct</div>
+                            <div class="text-emerald-700 font-semibold text-xs">+<span x-text="opponentMove?.points_earned"></span> pts</div>
+                        </div>
                     </div>
 
-                    <div x-show="!opponentMove?.is_correct" class="inline-flex flex-col items-center gap-3 bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-400 rounded-xl p-8">
-                        <div class="text-6xl font-black text-red-600">×</div>
-                        <div class="text-red-800 font-bold text-xl">Incorrect Answer</div>
-                        <div class="text-red-700 font-semibold">0 points</div>
+                    <div x-show="!opponentMove?.is_correct" class="inline-flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                        <div class="text-2xl text-rose-600">×</div>
+                        <div>
+                            <div class="text-rose-800 font-medium text-xs">Incorrect</div>
+                            <div class="text-rose-700 font-semibold text-xs">0 pts</div>
+                        </div>
                     </div>
 
                     <!-- Question Text -->
-                    <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Question</div>
-                        <div class="text-gray-900 font-medium" x-text="opponentMove?.question"></div>
+                    <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-lg p-2 border border-slate-200">
+                        <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Question</div>
+                        <div class="text-slate-800 text-xs font-medium" x-text="opponentMove?.question"></div>
                     </div>
 
                     <!-- Answer Details -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Opponent's Answer</div>
-                            <div class="text-gray-900 font-bold" x-text="opponentMove?.answer"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Opponent's Answer</div>
+                            <div class="text-slate-800 font-semibold" x-text="opponentMove?.answer"></div>
                         </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Correct Answer</div>
-                            <div class="text-green-700 font-bold" x-text="opponentMove?.correct_answer"></div>
+                        <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
+                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Correct Answer</div>
+                            <div class="text-emerald-700 font-semibold" x-text="opponentMove?.correct_answer"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Game Phase Display -->
-            <div class="bg-white rounded-xl shadow-lg p-3 lg:p-4 border border-gray-100">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-3 lg:p-4 border border-slate-200">
                 <!-- Phase 1 & 2: Combined Category & Difficulty Selection Table -->
                 <!-- Show to current player OR waiting player (to see the board) -->
                 <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak style="display:none;">
-                    <h3 class="text-lg lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Επίλεξε Κατηγορία & Επίπεδο</h3>
+                    <h3 class="text-base lg:text-lg font-semibold text-slate-800 mb-3 lg:mb-4">Επίλεξε Κατηγορία & Επίπεδο</h3>
 
                     <!-- Mobile: Stacked Cards View -->
-                    <div class="lg:hidden space-y-3">
+                    <div class="lg:hidden space-y-2.5">
                         <template x-for="category in categories" :key="category.id">
-                            <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-                                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
-                                    <div class="text-2xl" x-text="category.icon"></div>
-                                    <span class="font-semibold text-gray-900" x-text="category.name"></span>
+                            <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 border border-slate-200">
+                                <div class="flex items-center gap-2 mb-2.5 pb-2.5 border-b border-slate-200">
+                                    <div class="text-xl" x-text="category.icon"></div>
+                                    <span class="font-medium text-sm text-slate-800" x-text="category.name"></span>
                                 </div>
-                                <div class="space-y-2">
+                                <div class="grid grid-cols-3 gap-1.5">
                                     <!-- Easy -->
                                     <button @click="selectCategoryAndDifficulty(category.id, 'easy')"
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
-                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Easy (1pt)</span>
-                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'easy')">Easy - Used</span>
+                                            :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Easy<br/><span class="text-[10px] opacity-90">1pt</span></div>
+                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'easy')" class="text-[10px]">Used</div>
                                     </button>
                                     <!-- Medium -->
                                     <button @click="selectCategoryAndDifficulty(category.id, 'medium')"
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
-                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Medium (2pts)</span>
-                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'medium')">Medium - Used</span>
+                                            :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Medium<br/><span class="text-[10px] opacity-90">2pts</span></div>
+                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'medium')" class="text-[10px]">Used</div>
                                     </button>
                                     <!-- Hard -->
                                     <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-gradient-to-r from-red-400 to-rose-500 hover:from-red-500 hover:to-rose-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                            class="w-full py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed text-sm">
-                                        <span x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Hard (3pts)</span>
-                                        <span x-show="!isCategoryDifficultyAvailable(category.id, 'hard')">Hard - Used</span>
+                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Hard<br/><span class="text-[10px] opacity-90">3pts</span></div>
+                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'hard')" class="text-[10px]">Used</div>
                                     </button>
                                 </div>
                             </div>
@@ -860,51 +869,51 @@
                     <div class="hidden lg:block overflow-x-auto">
                         <table class="w-full border-collapse">
                             <thead>
-                                <tr class="bg-gradient-to-r from-gray-50 to-slate-50">
-                                    <th class="border border-gray-200 px-6 py-4 text-left font-bold text-gray-700">Category</th>
-                                    <th class="border border-gray-200 px-6 py-4 text-center font-bold text-green-700">Easy<br/><span class="text-xs font-normal text-gray-500">1 point</span></th>
-                                    <th class="border border-gray-200 px-6 py-4 text-center font-bold text-yellow-700">Medium<br/><span class="text-xs font-normal text-gray-500">2 points</span></th>
-                                    <th class="border border-gray-200 px-6 py-4 text-center font-bold text-red-700">Hard<br/><span class="text-xs font-normal text-gray-500">3 points</span></th>
+                                <tr class="bg-gradient-to-r from-slate-50 to-gray-50">
+                                    <th class="border border-slate-200 px-4 py-2.5 text-left text-sm font-semibold text-slate-700">Category</th>
+                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-emerald-700">Easy<br/><span class="text-xs font-normal text-slate-500">1pt</span></th>
+                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-amber-700">Medium<br/><span class="text-xs font-normal text-slate-500">2pts</span></th>
+                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-rose-700">Hard<br/><span class="text-xs font-normal text-slate-500">3pts</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="category in categories" :key="category.id">
-                                    <tr class="hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-all duration-200">
-                                        <td class="border border-gray-200 px-3 py-4">
-                                            <div class="flex items-center gap-3">
-                                                <div class="text-2xl" x-text="category.icon"></div>
-                                                <span class="font-semibold text-gray-900" x-text="category.name"></span>
+                                    <tr class="hover:bg-gradient-to-r hover:from-indigo-50/40 hover:to-purple-50/40 transition-all duration-200">
+                                        <td class="border border-slate-200 px-4 py-2.5">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="text-xl" x-text="category.icon"></div>
+                                                <span class="font-medium text-sm text-slate-800" x-text="category.name"></span>
                                             </div>
                                         </td>
 
                                         <!-- Easy Button -->
-                                        <td class="border border-gray-200 px-4 py-3">
+                                        <td class="border border-slate-200 px-2.5 py-2">
                                             <button @click="selectCategoryAndDifficulty(category.id, 'easy')"
                                                     :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white shadow-md hover:shadow-lg scale-100 hover:scale-105' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                                    class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed">
+                                                    :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
                                                 <span x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Select</span>
                                                 <span x-show="!isCategoryDifficultyAvailable(category.id, 'easy')">Used</span>
                                             </button>
                                         </td>
 
                                         <!-- Medium Button -->
-                                        <td class="border border-gray-200 px-4 py-3">
+                                        <td class="border border-slate-200 px-2.5 py-2">
                                             <button @click="selectCategoryAndDifficulty(category.id, 'medium')"
                                                     :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white shadow-md hover:shadow-lg scale-100 hover:scale-105' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                                    class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed">
+                                                    :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
                                                 <span x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Select</span>
                                                 <span x-show="!isCategoryDifficultyAvailable(category.id, 'medium')">Used</span>
                                             </button>
                                         </td>
 
                                         <!-- Hard Button -->
-                                        <td class="border border-gray-200 px-4 py-3">
+                                        <td class="border border-slate-200 px-2.5 py-2">
                                             <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
                                                     :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-gradient-to-r from-red-400 to-rose-500 hover:from-red-500 hover:to-rose-600 text-white shadow-md hover:shadow-lg scale-100 hover:scale-105' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                                                    class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:cursor-not-allowed">
+                                                    :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
                                                 <span x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Select</span>
                                                 <span x-show="!isCategoryDifficultyAvailable(category.id, 'hard')">Used</span>
                                             </button>

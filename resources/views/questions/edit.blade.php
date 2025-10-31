@@ -1,8 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Question
-        </h2>
+        <x-page-header title="Edit Question" icon="✏️" />
     </x-slot>
 
     <div class="py-12">
@@ -68,30 +66,30 @@
                         <!-- Image Upload (only for text_input_with_image) -->
                         <div class="mb-6" x-show="questionType === 'text_input_with_image'" x-cloak>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Image</label>
-                            
+
                             <!-- Current/Preview Image -->
                             @if($question->image_url)
                             <div x-show="!imagePreview" class="mb-3">
-                                <img src="{{ asset($question->image_url) }}" 
-                                     alt="Question image" 
+                                <img src="{{ asset($question->image_url) }}"
+                                     alt="Question image"
                                      class="max-w-md rounded border shadow-sm">
                                 <p class="text-sm text-gray-500 mt-1">Current image</p>
                             </div>
                             @endif
-                            
+
                             <!-- New Image Preview -->
                             <div x-show="imagePreview" class="mb-3">
-                                <img :src="imagePreview" 
-                                     alt="Preview" 
+                                <img :src="imagePreview"
+                                     alt="Preview"
                                      class="max-w-md rounded border shadow-sm">
                                 <p class="text-sm text-gray-500 mt-1">Preview of new image</p>
-                                <button type="button" 
-                                        @click="clearImagePreview()" 
+                                <button type="button"
+                                        @click="clearImagePreview()"
                                         class="mt-2 text-sm text-red-600 hover:text-red-800">
                                     ✕ Remove new image
                                 </button>
                             </div>
-                            
+
                             <input type="file" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                                    @change="previewImage($event)"
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -169,7 +167,7 @@
                                                :required="questionType === 'top_5' && index < 5"
                                                :disabled="questionType !== 'top_5'">
                                         <input type="hidden" :name="'answers[' + index + '][is_correct]'" value="1" :disabled="questionType !== 'top_5'">
-                                        <button type="button" 
+                                        <button type="button"
                                                 @click="removeAnswer(answer.id)"
                                                 x-show="top5Answers.length > 5"
                                                 class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition">
@@ -183,11 +181,11 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-4">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <button type="submit" class="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
                                 Update Question
                             </button>
-                            <a href="{{ route('questions.index') }}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
+                            <a href="{{ route('questions.index') }}" class="w-full sm:flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
                                 Cancel
                             </a>
                         </div>
@@ -201,7 +199,7 @@
     <script>
         function questionForm(initialType, initialCount) {
             const existingAnswers = @json($question->answers->sortBy('order')->values()->pluck('answer_text'));
-            
+
             return {
                 questionType: initialType,
                 top5Answers: [],

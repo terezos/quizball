@@ -19,10 +19,11 @@
 
         <style>
             body { font-family: 'Inter', sans-serif; }
+            [x-cloak] { display: none !important; }
         </style>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div class="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
             @unless(request()->routeIs('game.play'))
                 @include('layouts.navigation')
             @endunless
@@ -37,12 +38,14 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-1">
                 {{ $slot }}
             </main>
 
             <!-- Footer -->
-            <x-footer />
+            @unless(request()->routeIs('game.play'))
+                <x-footer />
+            @endunless
         </div>
 
         <!-- Game Notification -->

@@ -3,8 +3,10 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameNotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\QuestionReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -85,6 +87,28 @@ Route::middleware(['auth', 'admin'])
         Route::get('{category}/edit', [CategoryController::class, 'edit'])->name('edit');
         Route::put('{category}', [CategoryController::class, 'update'])->name('update');
         Route::delete('{category}', [CategoryController::class, 'destroy'])->name('destroy');
-});
+    });
+
+// Notifications
+Route::middleware('auth')
+    ->prefix('notifications')
+    ->name('notifications.')
+    ->group(function () {
+        Route::get('', [NotificationController::class, 'index'])->name('index');
+        Route::get('unread', [NotificationController::class, 'getUnread'])->name('unread');
+        Route::post('{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
+        Route::post('mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+    });
+
+// Question Reports (accessible by guests too)
+Route::post('questions/{question}/report', [QuestionReportController::class, 'store'])->name('questions.report');
+
+Route::middleware(['auth', 'editor'])
+    ->prefix('reports')
+    ->name('reports.')
+    ->group(function () {
+        Route::get('', [QuestionReportController::class, 'index'])->name('index');
+        Route::post('{report}/resolve', [QuestionReportController::class, 'resolve'])->name('resolve');
+    });
 
 require __DIR__.'/auth.php';

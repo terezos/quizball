@@ -1,8 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Category
-        </h2>
+        <x-page-header title="Edit Category" icon="✏️" />
     </x-slot>
 
     <div class="py-12">

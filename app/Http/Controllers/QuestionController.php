@@ -11,17 +11,26 @@ use Illuminate\Http\Request;
 
 class QuestionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
         $questions = Question::query()
             ->when(! auth()->user()->isAdmin(), function ($query) {
                 $query->where('created_by', auth()->id());
             })
+            ->when($request->has('categories') && is_array($request->categories), function ($query) use ($request) {
+                $query->whereIn('category_id', $request->categories);
+            })
             ->with(['category', 'creator', 'answers'])
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->only('categories'));
 
-        return view('questions.index', ['questions' => $questions]);
+        return view('questions.index', [
+            'questions' => $questions,
+            'categories' => $categories,
+        ]);
     }
 
     public function create()

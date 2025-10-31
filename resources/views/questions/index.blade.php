@@ -1,20 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Question Management
-            </h2>
-            <div class="flex gap-3">
+        <x-page-header title="Question Management" icon="📝">
+            <x-slot:actions>
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('questions.pending') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                        📋 Pending Approval
-                    </a>
+                    <x-header-button href="{{ route('questions.pending') }}" variant="warning" icon="📋">
+                        Pending Approval
+                    </x-header-button>
                 @endif
-                <a href="{{ route('questions.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                    + Create Question
-                </a>
-            </div>
-        </div>
+                <x-header-button href="{{ route('questions.create') }}" icon="+">
+                    Create Question
+                </x-header-button>
+            </x-slot:actions>
+        </x-page-header>
     </x-slot>
 
     <div class="py-12">
@@ -24,6 +21,50 @@
                     {{ session('success') }}
                 </div>
             @endif
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Filter Questions</h3>
+                    <form method="GET" action="{{ route('questions.index') }}" id="filterForm">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3">
+                                    Select Categories
+                                </label>
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    @foreach($categories as $category)
+                                        <label class="relative flex items-center p-3 cursor-pointer rounded-lg border-2 transition-all
+                                            {{ in_array($category->id, request('categories', [])) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white' }}">
+                                            <input type="checkbox" name="categories[]" value="{{ $category->id }}"
+                                                {{ in_array($category->id, request('categories', [])) ? 'checked' : '' }}
+                                                class="sr-only peer"
+                                                onchange="document.getElementById('filterForm').submit()">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-2xl">{{ $category->icon }}</span>
+                                                <span class="text-sm font-medium text-gray-900">{{ $category->name }}</span>
+                                            </div>
+                                            <svg class="absolute top-2 right-2 w-5 h-5 text-blue-600 {{ in_array($category->id, request('categories', [])) ? '' : 'hidden' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @if(request('categories'))
+                                <div class="flex justify-between items-center pt-2">
+                                    <span class="text-sm text-gray-600">
+                                        {{ count(request('categories')) }} {{ Str::plural('category', count(request('categories'))) }} selected
+                                    </span>
+                                    <a href="{{ route('questions.index') }}"
+                                        class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition">
+                                        ✕ Clear Filters
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">

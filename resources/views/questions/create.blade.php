@@ -1,8 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Create New Question
-        </h2>
+        <x-page-header title="Create New Question" icon="➕" />
     </x-slot>
 
     <div class="py-12">

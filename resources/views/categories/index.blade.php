@@ -1,13 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Category Management
-            </h2>
-            <a href="{{ route('categories.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                + Create Category
-            </a>
-        </div>
+        <x-page-header title="Category Management" icon="📂">
+            <x-slot:actions>
+                <x-header-button href="{{ route('categories.create') }}" icon="+">
+                    Create Category
+                </x-header-button>
+            </x-slot:actions>
+        </x-page-header>
     </x-slot>
 
     <div class="py-12">
