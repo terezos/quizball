@@ -52,9 +52,38 @@ class UserController extends Controller
             'statistics',
             'gamePlayers' => fn($q) => $q->with('game')->latest()->take(10)
         ]);
+        
+        // Get total counts
+        $totalQuestionsCount = $user->questions()->count();
+        $totalGamesCount = $user->gamePlayers()->count();
+        
+        // Calculate game statistics
+        $completedGames = $user->gamePlayers()
+            ->whereHas('game', function($q) {
+                $q->where('status', 'completed');
+            })
+            ->with('game.gamePlayers')
+            ->get();
+        
+        $gamesPlayed = $completedGames->count();
+        $gamesWon = $completedGames->filter(function($gp) {
+            return $gp->is_winner;
+        })->count();
+        $gamesLost = $gamesPlayed - $gamesWon;
+        $winRate = $gamesPlayed > 0 ? round(($gamesWon / $gamesPlayed) * 100) : 0;
+        
+        // Calculate total score
+        $totalScore = $user->gamePlayers()->sum('score');
 
         return view('admin.users.show', [
             'user' => $user,
+            'totalQuestionsCount' => $totalQuestionsCount,
+            'totalGamesCount' => $totalGamesCount,
+            'gamesPlayed' => $gamesPlayed,
+            'gamesWon' => $gamesWon,
+            'gamesLost' => $gamesLost,
+            'winRate' => $winRate,
+            'totalScore' => $totalScore,
         ]);
     }
 

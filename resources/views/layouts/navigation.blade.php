@@ -5,7 +5,7 @@
             <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                    <a href="{{ route('welcome') }}" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
                         QuizBall
                     </a>
                 </div>
@@ -13,11 +13,11 @@
                 <!-- Navigation Links -->
                 @auth
                     <div class="hidden space-x-2 sm:ms-10 sm:flex items-center">
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="🏠">
-                            Αρχική
-                        </x-nav-link>
                         <x-nav-link :href="route('game.lobby')" :active="request()->routeIs('game.*')" icon="⚽">
                             Παιχνίδι
+                        </x-nav-link>
+                        <x-nav-link :href="route('statistics.index')" :active="request()->routeIs('statistics.*')" icon="📊">
+                            Στατιστικά
                         </x-nav-link>
                         @if(auth()->user()->isEditor())
                             <x-nav-link :href="route('questions.index')" :active="request()->routeIs('questions.*')" icon="📝">
@@ -335,7 +335,7 @@
     @endguest
 
     <!-- Responsive Navigation Menu -->
-    <div x-show="open" 
+    <div x-show="open"
          @click.away="open = false"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
@@ -349,35 +349,41 @@
             <!-- Navigation Links -->
             @auth
             <div class="py-3 space-y-1">
-                <a href="{{ route('dashboard') }}" 
+                <a href="{{ route('dashboard') }}"
                    class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('dashboard') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                     <svg class="w-6 h-6 {{ request()->routeIs('dashboard') ? 'text-blue-600' : 'text-gray-500' }}" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                     </svg>
                     <span class="font-semibold">Αρχική</span>
                 </a>
-                
-                <a href="{{ route('game.lobby') }}" 
+
+                <a href="{{ route('game.lobby') }}"
                    class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('game.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                     <span class="text-2xl">⚽</span>
                     <span class="font-semibold">Παιχνίδι</span>
                 </a>
-                
+
+                <a href="{{ route('statistics.index') }}"
+                   class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('statistics.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                    <span class="text-2xl">📊</span>
+                    <span class="font-semibold">Στατιστικά</span>
+                </a>
+
                 @if(auth()->user()->isEditor())
-                    <a href="{{ route('questions.index') }}" 
+                    <a href="{{ route('questions.index') }}"
                        class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('questions.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                         <span class="text-2xl">📝</span>
                         <span class="font-semibold">Ερωτήσεις</span>
                     </a>
                 @endif
-                
+
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('categories.index') }}" 
+                    <a href="{{ route('categories.index') }}"
                        class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('categories.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                         <span class="text-2xl">📂</span>
                         <span class="font-semibold">Κατηγορίες</span>
                     </a>
-                    <a href="{{ route('admin.users.index') }}" 
+                    <a href="{{ route('admin.users.index') }}"
                        class="flex items-center gap-3 px-6 py-3 transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 text-blue-600' : 'text-gray-700 hover:bg-gray-50' }}">
                         <span class="text-2xl">👥</span>
                         <span class="font-semibold">Χρήστες</span>
@@ -406,7 +412,7 @@
 
                 <!-- Menu Items -->
                 <div class="pb-4 space-y-1">
-                    <a href="{{ route('profile.edit') }}" 
+                    <a href="{{ route('profile.edit') }}"
                        class="flex items-center gap-3 mx-4 px-4 py-3 rounded-xl transition-all hover:bg-white hover:shadow-md {{ request()->routeIs('profile.*') ? 'bg-white shadow-md' : '' }}">
                         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">

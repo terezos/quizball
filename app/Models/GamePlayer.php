@@ -48,4 +48,24 @@ class GamePlayer extends Model
 
         return $this->user?->name ?? $this->guest_name ?? 'Guest';
     }
+
+    public function getIsWinnerAttribute(): bool
+    {
+        if ($this->game->status->value !== 'completed') {
+            return false;
+        }
+
+        // Get all players in this game
+        $players = $this->game->gamePlayers;
+        
+        // Find the opponent
+        $opponent = $players->where('id', '!=', $this->id)->first();
+        
+        if (!$opponent) {
+            return false;
+        }
+        
+        // User wins if their score is higher than opponent's score
+        return $this->score > $opponent->score;
+    }
 }

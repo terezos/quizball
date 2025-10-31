@@ -67,7 +67,7 @@
                             <span class="text-2xl">📝</span>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ $user->questions->count() }}</div>
+                            <div class="text-2xl font-bold text-gray-900">{{ $totalQuestionsCount }}</div>
                             <div class="text-sm text-gray-600">Questions Created</div>
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                             <span class="text-2xl">🎮</span>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ $user->gamePlayers->count() }}</div>
+                            <div class="text-2xl font-bold text-gray-900">{{ $totalGamesCount }}</div>
                             <div class="text-sm text-gray-600">Games Played</div>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                             <span class="text-2xl">🏆</span>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ $user->statistics?->total_score ?? 0 }}</div>
+                            <div class="text-2xl font-bold text-gray-900">{{ $totalScore }}</div>
                             <div class="text-sm text-gray-600">Total Score</div>
                         </div>
                     </div>
@@ -192,31 +192,27 @@
             @endif
 
             <!-- Game Statistics -->
-            @if($user->statistics)
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Game Statistics</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <div class="text-2xl font-bold text-gray-900">{{ $user->statistics->games_played }}</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ $gamesPlayed }}</div>
                         <div class="text-sm text-gray-600">Games Played</div>
                     </div>
                     <div>
-                        <div class="text-2xl font-bold text-green-600">{{ $user->statistics->games_won }}</div>
+                        <div class="text-2xl font-bold text-green-600">{{ $gamesWon }}</div>
                         <div class="text-sm text-gray-600">Games Won</div>
                     </div>
                     <div>
-                        <div class="text-2xl font-bold text-red-600">{{ $user->statistics->games_lost }}</div>
+                        <div class="text-2xl font-bold text-red-600">{{ $gamesLost }}</div>
                         <div class="text-sm text-gray-600">Games Lost</div>
                     </div>
                     <div>
-                        <div class="text-2xl font-bold text-blue-600">
-                            {{ $user->statistics->games_played > 0 ? round(($user->statistics->games_won / $user->statistics->games_played) * 100) : 0 }}%
-                        </div>
+                        <div class="text-2xl font-bold text-blue-600">{{ $winRate }}%</div>
                         <div class="text-sm text-gray-600">Win Rate</div>
                     </div>
                 </div>
             </div>
-            @endif
 
             <!-- Recent Games -->
             @if($user->gamePlayers->count() > 0)
@@ -228,7 +224,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">
-                                        Game #{{ $gamePlayer->game->id }} - {{ ucfirst($gamePlayer->game->game_mode) }}
+                                        Game #{{ $gamePlayer->game->id }} - {{ ucfirst($gamePlayer->game->game_type) }}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ $gamePlayer->game->created_at->diffForHumans() }}

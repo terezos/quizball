@@ -38,6 +38,11 @@ class Game extends Model
         return $this->hasMany(GamePlayer::class);
     }
 
+    public function gamePlayers(): HasMany
+    {
+        return $this->hasMany(GamePlayer::class);
+    }
+
     public function rounds(): HasMany
     {
         return $this->hasMany(GameRound::class);
