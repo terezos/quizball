@@ -68,11 +68,11 @@
         <!-- Bottom Bar -->
         <div class="border-t border-gray-700 pt-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-sm text-gray-400">
-                    &copy; {{ date('Y') }} QuizBall. All rights reserved.
+                <p class="text-xs text-gray-400">
+                    &copy; {{ date('Y') }} QuizBall.
                 </p>
                 <p class="text-xs text-gray-500">
-                    Made with ❤️ for trivia enthusiasts
+                    Φτιαγμένο για φίλους του ποδοσφαίρου που νομίζουν ότι τα ξέρουν όλα.
                 </p>
             </div>
         </div>

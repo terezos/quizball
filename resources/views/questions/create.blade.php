@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Create New Question" icon="➕" />
+        <x-page-header title="Δημιουργία Ερώτησης" icon="➕" />
     </x-slot>
 
     <div class="py-12">
@@ -23,9 +23,9 @@
 
                         <!-- Category -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Κατηγορία *</label>
                             <select name="category_id" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Select a category</option>
+                                <option value="">Επίλεξε Κατηγορία</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->icon }} {{ $category->name }}</option>
                                 @endforeach
@@ -37,10 +37,10 @@
 
                         <!-- Question Text -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Text *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ερώτηση *</label>
                             <textarea name="question_text" rows="3" required
                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                      placeholder="Enter your football question...">{{ old('question_text') }}</textarea>
+                                      placeholder="Προσθέστε την ερώτηση...">{{ old('question_text') }}</textarea>
                             @error('question_text')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
@@ -48,13 +48,13 @@
 
                         <!-- Question Type -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Type *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Τύπος *</label>
                             <select name="question_type" x-model="questionType" required
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Select type</option>
-                                <option value="text_input" {{ old('question_type') == 'text_input' ? 'selected' : '' }}>Text Input</option>
-                                <option value="text_input_with_image" {{ old('question_type') == 'text_input_with_image' ? 'selected' : '' }}>Text Input with Image</option>
-                                <option value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
+                                <option value="">Επιλέξτε Τύπο Ερώτησης</option>
+                                <option value="text_input" {{ old('question_type') == 'text_input' ? 'selected' : '' }}>Απάντηση κενού</option>
+                                <option value="text_input_with_image" {{ old('question_type') == 'text_input_with_image' ? 'selected' : '' }}>Απάντηση κενού Βάση Εικόνας</option>
+                                <option value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'selected' : '' }}>Πολλαπλής</option>
                                 <option value="top_5" {{ old('question_type') == 'top_5' ? 'selected' : '' }}>Top 5</option>
                             </select>
                             @error('question_type')
@@ -64,12 +64,12 @@
 
                         <!-- Difficulty -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Difficulty *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Επίπεδο *</label>
                             <select name="difficulty" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Select difficulty</option>
-                                <option value="easy" {{ old('difficulty') == 'easy' ? 'selected' : '' }}>Easy (1 point)</option>
-                                <option value="medium" {{ old('difficulty') == 'medium' ? 'selected' : '' }}>Medium (2 points)</option>
-                                <option value="hard" {{ old('difficulty') == 'hard' ? 'selected' : '' }}>Hard (3 points)</option>
+                                <option value="">Επίλεξε Επίπεδο</option>
+                                <option value="easy" {{ old('difficulty') == 'easy' ? 'selected' : '' }}>Εύκολο (1π)</option>
+                                <option value="medium" {{ old('difficulty') == 'medium' ? 'selected' : '' }}>Μέτριο (2π)</option>
+                                <option value="hard" {{ old('difficulty') == 'hard' ? 'selected' : '' }}>Δύσκολο (3π)</option>
                             </select>
                             @error('difficulty')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
@@ -78,21 +78,21 @@
 
                         <!-- Image Upload (only for text_input_with_image) -->
                         <div class="mb-6" x-show="questionType === 'text_input_with_image'" x-cloak>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Image *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Εικόνα *</label>
                             <input type="file" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                                    :required="questionType === 'text_input_with_image'"
                                    @change="previewImage($event)"
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <p class="text-sm text-gray-500 mt-1">Upload an image (JPG, PNG, GIF, WebP - max 5MB). Example: player bio, team squad photo</p>
-                            
+                            <p class="text-sm text-gray-500 mt-1">Ανέβασε μια εικόνα (JPG, PNG, GIF, WebP - max 5MB). πχ: βιογραφικό παίκτη, παίκτης που λείπε</p>
+
                             <!-- Image Preview -->
                             <div x-show="imagePreview" class="mt-3">
                                 <img :src="imagePreview" alt="Preview" class="max-w-md rounded border shadow-sm">
                                 <button type="button" @click="clearImagePreview()" class="mt-2 text-sm text-red-600 hover:text-red-800">
-                                    ✕ Remove image
+                                    ✕ Διαγραφή Εικόνας
                                 </button>
                             </div>
-                            
+
                             @error('image')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
@@ -100,11 +100,11 @@
 
                         <!-- Source URL -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Source URL *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Πηγή *</label>
                             <input type="url" name="source_url" value="{{ old('source_url') }}" required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                    placeholder="https://example.com/source-article">
-                            <p class="text-sm text-gray-500 mt-1">Add a link to verify the correct answer (will be shown after game ends)</p>
+                            <p class="text-sm text-gray-500 mt-1">Πρόσθεσε ένα link για επαλήθευση της απάντησης</p>
                             @error('source_url')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
@@ -112,7 +112,7 @@
 
                         <!-- Answers -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Answers *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Απαντήσεις *</label>
 
                             <!-- Text Input -->
                             <div x-show="questionType === 'text_input'" x-cloak>
@@ -120,7 +120,7 @@
                                        :required="questionType === 'text_input'"
                                        :disabled="questionType !== 'text_input'"
                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="Enter the correct answer">
+                                       placeholder="Δώσε τη σωστή απάντηση">
                                 <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input'">
                                 @error('answers.0.text')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
@@ -128,7 +128,6 @@
                                 @error('answers')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
                             </div>
 
                             <!-- Text Input with Image -->
@@ -137,7 +136,7 @@
                                        :required="questionType === 'text_input_with_image'"
                                        :disabled="questionType !== 'text_input_with_image'"
                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="Enter the correct answer">
+                                       placeholder="Δώσε τη σωστή απάντηση">
                                 <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input_with_image'">
                                 @error('answers.0.text')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
@@ -145,7 +144,6 @@
                                 @error('answers')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
                             </div>
 
                             <!-- Multiple Choice -->
@@ -159,7 +157,7 @@
                                                class="mt-3">
                                         <input type="text" name="answers[{{ $i }}][text]" value="{{ old('answers.'.$i.'.text') }}"
                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                               placeholder="Answer {{ $i + 1 }}"
+                                               placeholder="Απάντηση {{ $i + 1 }}"
                                                :required="questionType === 'multiple_choice'"
                                                :disabled="questionType !== 'multiple_choice'">
                                     </div>
@@ -170,7 +168,7 @@
                                 @error('answers')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Select the radio button next to the correct answer</p>
+                                <p class="text-xs text-gray-500 mt-1">Επίλεξε το κουμπί επιλογής δίπλα στη σωστή απάντηση.</p>
                             </div>
 
                             <!-- Top 5 -->
@@ -180,11 +178,11 @@
                                         <input type="text" :name="'answers[' + index + '][text]'"
                                                x-model="answer.text"
                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                               :placeholder="'Correct answer ' + (index + 1)"
+                                               :placeholder="'Σωστή απάντηση ' + (index + 1)"
                                                :required="questionType === 'top_5' && index < 5"
                                                :disabled="questionType !== 'top_5'">
                                         <input type="hidden" :name="'answers[' + index + '][is_correct]'" value="1" :disabled="questionType !== 'top_5'">
-                                        <button type="button" 
+                                        <button type="button"
                                                 @click="removeAnswer(answer.id)"
                                                 x-show="top5Answers.length > 5"
                                                 class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition">
@@ -193,21 +191,21 @@
                                     </div>
                                 </template>
                                 <button type="button" @click="addAnswer()" x-show="questionType === 'top_5'" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                                    + Add More Answers
+                                    + Προσθέστε Απάντηση
                                 </button>
                                 @error('answers')
                                     <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Players must provide 5 correct answers in any order</p>
+                                <p class="text-xs text-gray-500 mt-1">Οι παίκτες πρέπει να δώσουν 5 σωστές απαντήσεις με οποιαδήποτε σειρά.</p>
                             </div>
                         </div>
 
                         <div class="flex gap-4">
                             <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
-                                Create Question
+                                Δημιουργία Ερώτησης
                             </button>
                             <a href="{{ route('questions.index') }}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
-                                Cancel
+                                Ακύρωση
                             </a>
                         </div>
                     </form>

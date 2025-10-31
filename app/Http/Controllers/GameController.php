@@ -45,6 +45,25 @@ class GameController extends Controller
             'guest_name' => 'nullable|string|max:255',
         ]);
 
+        // Check if private game requires authentication
+        if ($request->game_type === 'human' && auth()->guest()) {
+            return back()->with('error', 'Πρέπει να συνδεθείτε για να δημιουργήσετε ιδιωτικό παιχνίδι.');
+        }
+
+        // Check daily limit for non-premium users creating private games
+        if ($request->game_type === 'human' && auth()->check() && !auth()->user()->isPremium()) {
+            $todayGamesCount = \App\Models\Game::where('game_type', 'human')
+                ->whereHas('gamePlayers', function($q) {
+                    $q->where('user_id', auth()->id());
+                })
+                ->whereDate('created_at', today())
+                ->count();
+
+            if ($todayGamesCount >= 2) {
+                return back()->with('error', 'Έχετε φτάσει το όριο των 2 ιδιωτικών παιχνιδιών για σήμερα. Κάντε αναβάθμιση σε Premium για απεριόριστα παιχνίδια!');
+            }
+        }
+
         // Handle matchmaking
         if ($request->game_type === 'matchmaking') {
             $game = $this->matchmakingService->joinQueue(
@@ -87,6 +106,32 @@ class GameController extends Controller
             'guest_name' => 'nullable|string|max:255',
         ]);
 
+        // Find the game first to check if it's a private game
+        $game = \App\Models\Game::where('game_code', strtoupper($request->game_code))->first();
+
+        if (!$game) {
+            return back()->withErrors(['game_code' => 'Ο κωδικός παιχνιδιού δεν βρέθηκε']);
+        }
+
+        // Check if it's a private (human) game and user is guest
+        if ($game->game_type === 'human' && auth()->guest()) {
+            return back()->withErrors(['game_code' => 'Πρέπει να συνδεθείτε για να συμμετάσχετε σε ιδιωτικό παιχνίδι']);
+        }
+
+        // Check daily limit for non-premium users joining private games
+        if ($game->game_type === 'human' && auth()->check() && !auth()->user()->isPremium()) {
+            $todayGamesCount = \App\Models\Game::where('game_type', 'human')
+                ->whereHas('gamePlayers', function($q) {
+                    $q->where('user_id', auth()->id());
+                })
+                ->whereDate('created_at', today())
+                ->count();
+
+            if ($todayGamesCount >= 2) {
+                return back()->withErrors(['game_code' => 'Έχετε φτάσει το όριο των 2 ιδιωτικών παιχνιδιών για σήμερα. Κάντε αναβάθμιση σε Premium για απεριόριστα παιχνίδια!']);
+            }
+        }
+
         $game = $this->gameService->joinGame(
             strtoupper($request->game_code),
             auth()->user(),
@@ -95,7 +140,7 @@ class GameController extends Controller
         );
 
         if (! $game) {
-            return back()->withErrors(['game_code' => 'Game not found or already full']);
+            return back()->withErrors(['game_code' => 'Το παιχνίδι δεν βρέθηκε ή είναι γεμάτο']);
         }
 
         $this->recoveryService->storeActiveGame($game, auth()->user(), Session::getId());

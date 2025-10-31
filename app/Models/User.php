@@ -17,6 +17,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',
+        'avatar',
         'role',
         'is_active',
         'is_pre_validated',
@@ -68,6 +70,12 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === UserRole::User;
+    }
+
+    public function isPremium(): bool
+    {
+        // For now, return false - will be implemented with subscription system
+        return false;
     }
 
     public function notifications(): HasMany

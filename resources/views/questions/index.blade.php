@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Question Management" icon="📝">
+        <x-page-header title="Ερωτήσεις" icon="📝">
             <x-slot:actions>
                 @if(auth()->user()->isAdmin())
                     <x-header-button href="{{ route('questions.pending') }}" variant="warning" icon="📋">
-                        Pending Approval
+                        Προς Έγκριση
                     </x-header-button>
                 @endif
                 <x-header-button href="{{ route('questions.create') }}" icon="+">
-                    Create Question
+                    Δημιουργία Ερώτησης
                 </x-header-button>
             </x-slot:actions>
         </x-page-header>
@@ -24,12 +24,12 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Filter Questions</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Φίλτρα</h3>
                     <form method="GET" action="{{ route('questions.index') }}" id="filterForm">
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
-                                    Select Categories
+                                    Επίλεξε Κατηγορίες
                                 </label>
                                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                     @foreach($categories as $category)
@@ -53,11 +53,11 @@
                             @if(request('categories'))
                                 <div class="flex justify-between items-center pt-2">
                                     <span class="text-sm text-gray-600">
-                                        {{ count(request('categories')) }} {{ Str::plural('category', count(request('categories'))) }} selected
+                                        {{ count(request('categories')) }} κατηγορί{{ count(request('categories')) > 1 ? 'ες' : 'α' }} επιλεγμέν{{ count(request('categories')) > 1 ? 'ες' : 'η' }}.
                                     </span>
                                     <a href="{{ route('questions.index') }}"
                                         class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition">
-                                        ✕ Clear Filters
+                                        ✕ Καθαρισμός Φίλτρων
                                     </a>
                                 </div>
                             @endif
@@ -72,12 +72,12 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΡΩΤΗΣΗ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΚΑΤΗΓΟΡΙΑ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΤΥΠΟΣ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΔΥΣΚΟΛΙΑ</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creator</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΔΗΜΙΟΥΡΓΟΣ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -132,7 +132,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                            No questions found. <a href="{{ route('questions.create') }}" class="text-blue-600">Create your first question</a>
+                                            Δεν έχεις δημιουργήσει ερωτήσεις. <a href="{{ route('questions.create') }}" class="text-blue-600">Δημιούργησε την πρώτη σου</a>
                                         </td>
                                     </tr>
                                 @endforelse

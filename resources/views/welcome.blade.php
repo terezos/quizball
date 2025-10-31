@@ -54,7 +54,7 @@
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ποδόσφαιρο</span>;
                 </h1>
                 <p class="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
-                    Προκαλέστε φίλους ή AI. Επιλέξτε κατηγορίες. Απαντήστε ερωτήσεις. Κερδίστε δικαιώματα καυχησιολογίας.
+                    Προκαλέστε φίλους ή AI.
                 </p>
             </div>
 
@@ -125,11 +125,7 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 mt-16 border-t border-gray-200">
-        <div class="text-center text-gray-600 text-sm">
-            <p>© 2025 QuizBall. Φτιαγμένο για φίλους του ποδοσφαίρου που νομίζουν ότι τα ξέρουν όλα.</p>
-        </div>
-    </footer>
+    <x-footer />
+
 </body>
 </html>

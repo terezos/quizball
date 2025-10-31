@@ -833,7 +833,7 @@
                             <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 border border-slate-200">
                                 <div class="flex items-center gap-2 mb-2.5 pb-2.5 border-b border-slate-200">
                                     <div class="text-xl" x-text="category.icon"></div>
-                                    <span class="font-medium text-sm text-slate-800" x-text="category.name"></span>
+                                    <span class="font-bold text-lg text-slate-800" x-text="category.name"></span>
                                 </div>
                                 <div class="grid grid-cols-3 gap-1.5">
                                     <!-- Easy -->
@@ -841,7 +841,7 @@
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
                                             :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
                                             class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Easy<br/><span class="text-[10px] opacity-90">1pt</span></div>
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Εύκολο<br/><span class="text-[10px] opacity-90">1pt</span></div>
                                         <div x-show="!isCategoryDifficultyAvailable(category.id, 'easy')" class="text-[10px]">Used</div>
                                     </button>
                                     <!-- Medium -->
@@ -849,15 +849,15 @@
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
                                             :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
                                             class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Medium<br/><span class="text-[10px] opacity-90">2pts</span></div>
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Μέτριο<br/><span class="text-[10px] opacity-90">2pts</span></div>
                                         <div x-show="!isCategoryDifficultyAvailable(category.id, 'medium')" class="text-[10px]">Used</div>
                                     </button>
                                     <!-- Hard -->
                                     <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
                                             :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-white text-red-500 border-red-300 hover:bg-rose-600 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
                                             class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Hard<br/><span class="text-[10px] opacity-90">3pts</span></div>
+                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Δύσκολο<br/><span class="text-[10px] opacity-90">3pts</span></div>
                                         <div x-show="!isCategoryDifficultyAvailable(category.id, 'hard')" class="text-[10px]">Used</div>
                                     </button>
                                 </div>
@@ -882,7 +882,7 @@
                                         <td class="border border-slate-200 px-4 py-2.5">
                                             <div class="flex items-center gap-2.5">
                                                 <div class="text-xl" x-text="category.icon"></div>
-                                                <span class="font-medium text-sm text-slate-800" x-text="category.name"></span>
+                                                <span class="font-bold text-lg text-slate-800" x-text="category.name"></span>
                                             </div>
                                         </td>
 
