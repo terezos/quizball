@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GamePlayer extends Model
 {
     protected $fillable = [
-        'game_id',
-        'user_id',
-        'guest_name',
-        'session_id',
-        'is_ai',
-        'score',
-        'player_order',
+	    'game_id',
+	    'user_id',
+	    'guest_name',
+	    'session_id',
+	    'is_ai',
+	    'score',
+	    'player_order',
     ];
 
     protected function casts(): array

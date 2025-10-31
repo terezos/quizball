@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\DifficultyLevel;
+use App\Enums\DifficultyLevel;
 use App\Models\Category;
 use App\Models\Game;
 use App\Services\AIOpponentService;
@@ -29,7 +29,13 @@ class GameController extends Controller
             return redirect()->route('game.play', $activeGame);
         }
 
-        return view('game.lobby');
+        $categoriesCount = Category::where('is_active', true)->count();
+        $questionsCount = \App\Models\Question::count();
+
+        return view('game.lobby', [
+            'categoriesCount' => $categoriesCount,
+            'questionsCount' => $questionsCount,
+        ]);
     }
 
     public function create(Request $request)
@@ -246,6 +252,7 @@ class GameController extends Controller
                 'text' => $question->question_text,
                 'type' => $question->question_type->value,
                 'difficulty' => $question->difficulty->value,
+                'image_url' => $question->image_url,
                 'answers' => $question->question_type->value === 'multiple_choice'
                     ? $question->answers->map(fn ($a) => [
                         'id' => $a->id,
@@ -259,7 +266,7 @@ class GameController extends Controller
     public function submitAnswer(Request $request, Game $game)
     {
         $request->validate([
-            'answer' => 'required',
+            'answer' => 'nullable', // Allow empty answer for timeout scenarios
         ]);
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
@@ -268,7 +275,10 @@ class GameController extends Controller
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
-        $result = $this->gameService->submitAnswer($game, $player, $request->answer);
+        // Use empty string if no answer provided (timeout scenario)
+        $answer = $request->answer ?? '';
+
+        $result = $this->gameService->submitAnswer($game, $player, $answer);
 
         // If next player is AI, trigger AI turn
         $game = $game->fresh(['players']);

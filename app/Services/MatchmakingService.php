@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\GameStatus;
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\User;

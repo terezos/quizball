@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\DifficultyLevel;
+use App\Enums\DifficultyLevel;
+use App\Enums\QuestionType;
 use App\Models\Answer;
 use App\Models\Category;
 use App\Models\Question;
-use App\QuestionType;
 use Illuminate\Http\Request;
 
 class QuestionController extends Controller
@@ -19,7 +19,7 @@ class QuestionController extends Controller
             })
             ->with(['category', 'creator', 'answers'])
             ->latest()
-            ->paginate(20);
+            ->paginate(10);
 
         return view('questions.index', ['questions' => $questions]);
     }
@@ -47,14 +47,22 @@ class QuestionController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'question_text' => 'required|string|max:1000',
-            'question_type' => 'required|in:text_input,multiple_choice,top_5',
+            'question_type' => 'required|in:text_input,multiple_choice,top_5,text_input_with_image',
             'difficulty' => 'required|in:easy,medium,hard',
             'source_url' => 'required|url|max:500',
+            'image' => 'required_if:question_type,text_input_with_image|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
             'answers' => 'required|array|min:1',
             'answers.*.text' => 'required|string|max:500',
             'answers.*.is_correct' => 'sometimes|boolean',
             'correct_answer_id' => 'sometimes|required_if:question_type,multiple_choice',
         ]);
+
+        // Handle image upload
+        $imageUrl = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('questions', 'public');
+            $imageUrl = 'storage/' . $imagePath;
+        }
 
         // Determine if question should be auto-approved
         $user = auth()->user();
@@ -72,6 +80,7 @@ class QuestionController extends Controller
             'category_id' => $request->category_id,
             'created_by' => auth()->id(),
             'question_text' => $request->question_text,
+            'image_url' => $imageUrl,
             'question_type' => $request->question_type,
             'difficulty' => $request->difficulty,
             'source_url' => $request->source_url,
@@ -83,7 +92,7 @@ class QuestionController extends Controller
 
         foreach ($request->answers as $index => $answerData) {
             $isCorrect = match ($request->question_type) {
-                'text_input', 'top_5' => (bool) ($answerData['is_correct'] ?? true),
+                'text_input', 'text_input_with_image', 'top_5' => (bool) ($answerData['is_correct'] ?? true),
                 'multiple_choice' => $request->correct_answer_id == $index,
                 default => false,
             };
@@ -122,7 +131,7 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question)
     {
-        if (! auth()->user()->isAdmin() && $question->created_by !== auth()->id()) {
+        if (!auth()->user()->isAdmin() && $question->created_by !== auth()->id()) {
             abort(403);
         }
 
@@ -137,18 +146,37 @@ class QuestionController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'question_text' => 'required|string|max:1000',
-            'question_type' => 'required|in:text_input,multiple_choice,top_5',
+            'question_type' => 'required|in:text_input,multiple_choice,top_5,text_input_with_image',
             'difficulty' => 'required|in:easy,medium,hard',
             'source_url' => 'required|url|max:500',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
             'answers' => 'required|array|min:1',
             'answers.*.text' => 'required|string|max:500',
             'answers.*.is_correct' => 'sometimes|boolean',
             'correct_answer_id' => 'sometimes|required_if:question_type,multiple_choice',
         ]);
 
+        // Handle image upload
+        $imageUrl = $question->image_url;
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($question->image_url && \Storage::disk('public')->exists(str_replace('storage/', '', $question->image_url))) {
+                \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
+            }
+            $imagePath = $request->file('image')->store('questions', 'public');
+            $imageUrl = 'storage/' . $imagePath;
+        } elseif ($request->question_type !== 'text_input_with_image') {
+            // Clear image if question type changed from text_input_with_image
+            if ($question->image_url && \Storage::disk('public')->exists(str_replace('storage/', '', $question->image_url))) {
+                \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
+            }
+            $imageUrl = null;
+        }
+
         $question->update([
             'category_id' => $request->category_id,
             'question_text' => $request->question_text,
+            'image_url' => $imageUrl,
             'question_type' => $request->question_type,
             'difficulty' => $request->difficulty,
             'source_url' => $request->source_url,
@@ -158,7 +186,7 @@ class QuestionController extends Controller
 
         foreach ($request->answers as $index => $answerData) {
             $isCorrect = match ($request->question_type) {
-                'text_input', 'top_5' => (bool) ($answerData['is_correct'] ?? true),
+                'text_input', 'text_input_with_image', 'top_5' => (bool) ($answerData['is_correct'] ?? true),
                 'multiple_choice' => $request->correct_answer_id == $index,
                 default => false,
             };

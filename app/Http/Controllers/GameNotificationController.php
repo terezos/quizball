@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\GameStatus;
 use App\Services\GameRecoveryService;
 use Illuminate\Http\Request;
 

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\DifficultyLevel;
+use App\Enums\DifficultyLevel;
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\GamePlayer;

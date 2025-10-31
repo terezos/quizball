@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\DifficultyLevel;
-use App\QuestionType;
+use App\Enums\DifficultyLevel;
+use App\Enums\QuestionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +14,7 @@ class Question extends Model
         'category_id',
         'created_by',
         'question_text',
+        'image_url',
         'question_type',
         'difficulty',
         'is_active',

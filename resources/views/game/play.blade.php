@@ -1,4 +1,68 @@
 <x-app-layout>
+    <style>
+        /* Disable text selection */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+    </style>
+
+{{--    <script>--}}
+{{--        // Disable copy, paste, cut, and right-click--}}
+{{--        document.addEventListener('DOMContentLoaded', function() {--}}
+{{--            const gameArea = document.body;--}}
+
+{{--            // Prevent copying--}}
+{{--            gameArea.addEventListener('copy', function(e) {--}}
+{{--                e.preventDefault();--}}
+{{--                return false;--}}
+{{--            });--}}
+
+{{--            // Prevent cutting--}}
+{{--            gameArea.addEventListener('cut', function(e) {--}}
+{{--                e.preventDefault();--}}
+{{--                return false;--}}
+{{--            });--}}
+
+{{--            // Prevent pasting--}}
+{{--            gameArea.addEventListener('paste', function(e) {--}}
+{{--                e.preventDefault();--}}
+{{--                return false;--}}
+{{--            });--}}
+
+{{--            // Prevent right-click context menu--}}
+{{--            gameArea.addEventListener('contextmenu', function(e) {--}}
+{{--                e.preventDefault();--}}
+{{--                return false;--}}
+{{--            });--}}
+
+{{--            // Prevent keyboard shortcuts for copy/paste--}}
+{{--            gameArea.addEventListener('keydown', function(e) {--}}
+{{--                // Check for Ctrl+C, Ctrl+X, Ctrl+V, Cmd+C, Cmd+X, Cmd+V--}}
+{{--                if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {--}}
+{{--                    // Allow in input fields for answers--}}
+{{--                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {--}}
+{{--                        // Allow only paste in answer fields, block copy--}}
+{{--                        if (e.key === 'v' || e.key === 'V') {--}}
+{{--                            return true;--}}
+{{--                        }--}}
+{{--                    }--}}
+{{--                    e.preventDefault();--}}
+{{--                    return false;--}}
+{{--                }--}}
+{{--            });--}}
+
+{{--            // Prevent drag and drop--}}
+{{--            gameArea.addEventListener('dragstart', function(e) {--}}
+{{--                e.preventDefault();--}}
+{{--                return false;--}}
+{{--            });--}}
+{{--        });--}}
+{{--    </script>--}}
+
     <script>
         window.gameBoard = function(initialGame, player, categories, isMyTurn, usedCombinations, activeRound) {
             return {
@@ -29,12 +93,30 @@
                 timer: null,
                 lastResult: null,
                 pollingInterval: null,
+                tabSwitchCount: 0,
+                alreadyForfeit: false,
+                showTabSwitchWarning: false,
+                showForfeitConfirmation: false,
+                consecutiveTimeouts: 0,
+                tabSwitchListenerAdded: false,
+                isPageUnloading: false,
 
                 init() {
                     this.updatePlayers();
                     this.startPolling();
 
-                    // Check if there's an active unanswered question
+                    // Restore tab switch count from localStorage
+                    const savedTabSwitchCount = localStorage.getItem(`game_${this.game.id}_tabSwitchCount`);
+                    if (savedTabSwitchCount !== null) {
+                        this.tabSwitchCount = parseInt(savedTabSwitchCount, 10);
+                    }
+
+                    // Restore consecutive timeouts from localStorage
+                    const savedTimeouts = localStorage.getItem(`game_${this.game.id}_consecutiveTimeouts`);
+                    if (savedTimeouts !== null) {
+                        this.consecutiveTimeouts = parseInt(savedTimeouts, 10);
+                    }
+
                     if (activeRound && this.isMyTurn) {
                         this.restoreActiveRound(activeRound);
                     } else if (!this.isMyTurn) {
@@ -42,6 +124,46 @@
                     }
 
                     this.startInactivityTimer();
+                    this.setupTabSwitchDetection();
+                },
+
+                setupTabSwitchDetection() {
+                    // Prevent adding multiple listeners
+                    if (this.tabSwitchListenerAdded) {
+                        return;
+                    }
+
+                    this.tabSwitchListenerAdded = true;
+
+                    // Detect when page is unloading (refresh, close, navigate away)
+                    window.addEventListener('beforeunload', () => {
+                        this.isPageUnloading = true;
+                    });
+
+                    document.addEventListener('visibilitychange', () => {
+                        // Don't count as tab switch if page is unloading
+                        if (this.isPageUnloading) {
+                            return;
+                        }
+
+                        if (document.hidden && this.phase === 'question' && this.isMyTurn) {
+                            this.tabSwitchCount++;
+
+                            // Save to localStorage
+                            localStorage.setItem(`game_${this.game.id}_tabSwitchCount`, this.tabSwitchCount);
+
+                            if (this.tabSwitchCount >= 3 && !this.alreadyForfeit) {
+                                alert('You have switched tabs 3 times during a question. The game will be forfeited.');
+                                this.forfeitGame(true);
+                            } else {
+                                this.showTabSwitchWarning = true;
+                            }
+                        }
+                    });
+                },
+
+                closeTabWarning() {
+                    this.showTabSwitchWarning = false;
                 },
 
                 restoreActiveRound(round) {
@@ -189,8 +311,8 @@
                 async submitAnswer() {
                     if (this.loading) return;
 
-                    // Allow submission even if not valid (for timeout scenarios)
-                    const forceSubmit = !this.canSubmit;
+                    // Check if this is a timeout (time expired or no valid answer)
+                    const isTimeout = this.timeRemaining <= 0 || !this.canSubmit;
 
                     this.stopTimer();
                     this.loading = true;
@@ -210,17 +332,47 @@
                             body: JSON.stringify({ answer: answerData })
                         });
 
+                        if (!response.ok) {
+                            console.error('Submit answer failed:', response.status);
+                            alert('Failed to submit answer. Please try again.');
+                            return;
+                        }
+
                         const data = await response.json();
                         this.lastResult = data;
                         this.phase = 'result';
 
+                        // Track consecutive timeouts
+                        if (isTimeout && !data.is_correct) {
+                            this.consecutiveTimeouts++;
+                            localStorage.setItem(`game_${this.game.id}_consecutiveTimeouts`, this.consecutiveTimeouts);
+
+                            // Auto-forfeit after 2 consecutive timeouts
+                            if (this.consecutiveTimeouts >= 2 && !this.alreadyForfeit) {
+                                alert('You have missed 2 consecutive questions due to timeout. The game will be forfeited.');
+                                setTimeout(() => {
+                                    this.forfeitGame(true);
+                                }, 2000);
+                                return;
+                            }
+                        } else {
+                            // Reset consecutive timeouts if answered in time
+                            this.consecutiveTimeouts = 0;
+                            localStorage.setItem(`game_${this.game.id}_consecutiveTimeouts`, 0);
+                        }
+
                         setTimeout(() => {
                             if (data.game_status === 'completed') {
+                                // Clear timeout counter from localStorage on game completion
+                                localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
                                 window.location.href = `/game/${this.game.id}/results`;
                             } else {
                                 this.resetForNextRound();
                             }
                         }, 4000);
+                    } catch (error) {
+                        console.error('Submit answer error:', error);
+                        alert('An error occurred while submitting your answer. Please refresh the page.');
                     } finally {
                         this.loading = false;
                     }
@@ -318,6 +470,7 @@
                     this.availableDifficulties = { easy: true, medium: true, hard: true };
                     this.lastResult = null;
                     this.questionTimerReady = false;
+                    this.timeRemaining = 60; // Reset timer for next round
                     this.phase = 'category';
                     this.isMyTurn = false;
 
@@ -356,6 +509,12 @@
                             }
 
                             if (data.status === 'completed') {
+                                // Clear tab switch count from localStorage
+                                localStorage.removeItem(`game_${this.game.id}_tabSwitchCount`);
+
+                                // Clear timeout counter from localStorage
+                                localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+
                                 if (data.auto_forfeit) {
                                     alert('Game ended due to inactivity!');
                                 }
@@ -367,9 +526,10 @@
                     }, 2000);
                 },
 
-                async forfeitGame() {
-                    if (!confirm('Are you sure you want to forfeit this game? Your opponent will be declared the winner.')) {
-                        return;
+                async forfeitGame(forcedForfeit = false) {
+                    // Forced forfeits (from timeout or tab switching) don't need confirmation
+                    if (forcedForfeit) {
+                        await new Promise(r => setTimeout(r, 2000));
                     }
 
                     this.stopTimer();
@@ -388,6 +548,7 @@
                         });
 
                         const data = await response.json();
+                        this.alreadyForfeit = true;
                         if (data.success) {
                             window.location.href = data.redirect_url;
                         }
@@ -401,7 +562,7 @@
                     if (!this.currentQuestion) {
                         return false;
                     }
-                    if (this.currentQuestion.type === 'text_input') {
+                    if (this.currentQuestion.type === 'text_input' || this.currentQuestion.type === 'text_input_with_image') {
                         return this.answer.trim() !== '';
                     }
                     if (this.currentQuestion.type === 'multiple_choice') {
@@ -440,7 +601,19 @@
         }
     </script>
 
-    <div class="py-6" x-data="gameBoard(@js($game), @js($player), @js($categories), {{ $isPlayerTurn ? 'true' : 'false' }}, @js($usedCombinations), @js($activeRound))">
+    <div class="py-6 no-select" x-data="gameBoard(@js($game), @js($player), @js($categories), {{ $isPlayerTurn ? 'true' : 'false' }}, @js($usedCombinations), @js($activeRound))" x-init="setTimeout(() => { $refs.loadingOverlay.style.display = 'none'; }, 2000)">
+        <!-- Loading Overlay -->
+        <div x-ref="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-lg">
+            <div class="text-center">
+                <div class="inline-flex items-center gap-3 mb-4">
+                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+                <p class="text-xl font-bold text-gray-800">Το παιχνίδι φορτώνει...</p>
+            </div>
+        </div>
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
                 <!-- Left Sidebar - Score and Turn Info -->
@@ -526,9 +699,9 @@
                     </div>
 
                     <!-- Forfeit Button -->
-                    <button @click="forfeitGame"
+                    <button @click="showForfeitConfirmation = true"
                             class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-                        <span>Forfeit Game</span>
+                        <span>Παραίτηση</span>
                     </button>
 
 
@@ -547,7 +720,7 @@
                 <div x-show="opponentMove?.phase === 'category'" class="text-center">
                     <div class="inline-flex items-center gap-3 bg-white rounded-xl p-5 shadow-md border border-gray-100">
                         <div class="text-left">
-                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Selected Category</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Επιλογη Κατηγοριας</div>
                             <div class="text-xl font-bold text-gray-900 mt-1" x-text="opponentMove?.category?.name"></div>
                         </div>
                     </div>
@@ -571,26 +744,26 @@
                     <div class="flex items-center justify-center gap-4 flex-wrap">
                         <div class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-gray-100">
                             <div class="text-left">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Category</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Κατηγορία</div>
                                 <div class="font-bold text-gray-900 mt-1" x-text="opponentMove?.category?.name"></div>
                             </div>
                         </div>
                         <div class="text-2xl text-gray-300">→</div>
                         <div class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-gray-100">
                             <div class="text-left">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Difficulty</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Επίπεδο</div>
                                 <div class="font-bold text-gray-900 mt-1" x-text="getDifficultyLabel(opponentMove?.difficulty)"></div>
                             </div>
                         </div>
                     </div>
                     <div class="bg-white rounded-xl p-4 shadow-md mt-3 border border-gray-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Question</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Ερώτηση</div>
                         <div class="text-gray-900 font-medium" x-text="opponentMove?.question"></div>
                     </div>
                     <div class="text-center text-sm text-indigo-700 font-medium">
                         <div class="inline-flex items-center gap-2">
                             <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                            Opponent is answering
+                            Απαντάει ο αντίπαλος...
                         </div>
                     </div>
                 </div>
@@ -642,8 +815,8 @@
             <div class="bg-white rounded-xl shadow-lg p-3 lg:p-4 border border-gray-100">
                 <!-- Phase 1 & 2: Combined Category & Difficulty Selection Table -->
                 <!-- Show to current player OR waiting player (to see the board) -->
-                <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak>
-                    <h3 class="text-lg lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Select Category & Difficulty</h3>
+                <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak style="display:none;">
+                    <h3 class="text-lg lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Επίλεξε Κατηγορία & Επίπεδο</h3>
 
                     <!-- Mobile: Stacked Cards View -->
                     <div class="lg:hidden space-y-3">
@@ -744,7 +917,7 @@
                 </div>
 
                 <!-- Phase 3: Question & Answer -->
-                <div x-show="phase === 'question' && currentQuestion" x-cloak>
+                <div x-show="phase === 'question' && currentQuestion" x-cloak style="display: none">
                     <div class="mb-6">
                         <!-- Timer -->
                         <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 transition-all duration-300"
@@ -762,8 +935,26 @@
 
                         <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-relaxed" x-text="currentQuestion?.text"></h3>
 
+                        <!-- Question Image (for text_input_with_image type) -->
+                        <div x-show="currentQuestion?.type === 'text_input_with_image' && currentQuestion?.image_url" class="mb-6">
+                            <div class="relative bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-4 shadow-lg border-2 border-gray-200">
+                                <img :src="'/' + currentQuestion?.image_url"
+                                     style="max-width: 350px;"
+                                     alt="Question image"
+                                     class="w-full max-w-2xl mx-auto rounded-lg shadow-md border border-gray-300">
+                            </div>
+                        </div>
+
                         <!-- Text Input Answer -->
                         <div x-show="currentQuestion?.type === 'text_input'" class="space-y-4">
+                            <input type="text" x-model="answer"
+                                   @keydown.enter="submitAnswer"
+                                   class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
+                                   placeholder="Type your answer...">
+                        </div>
+
+                        <!-- Text Input with Image Answer -->
+                        <div x-show="currentQuestion?.type === 'text_input_with_image'" class="space-y-4">
                             <input type="text" x-model="answer"
                                    @keydown.enter="submitAnswer"
                                    class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
@@ -847,6 +1038,64 @@
                     <p class="mt-4 text-gray-600 font-medium">Processing...</p>
                 </div>
             </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tab Switch Warning Modal -->
+        <div x-show="showTabSwitchWarning"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+             @click.self="closeTabWarning">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
+                 @click.stop>
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                        <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Warning!</h3>
+                    <p class="text-gray-600 mb-1">You switched tabs during a question.</p>
+                    <div class="text-red-600 font-bold text-lg mb-4">
+                        <span x-text="tabSwitchCount"></span> / 3 violations
+                    </div>
+                    <p x-show="this.tabSwitchCount == 2" class="text-sm text-gray-700 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <span class="font-semibold">⚠️ One more violation</span> and the game will be automatically forfeited!
+                    </p>
+                    <button @click="closeTabWarning"
+                            class="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                        I Understand
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forfeit Confirmation Modal -->
+        <div x-show="showForfeitConfirmation"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+             @click.self="showForfeitConfirmation = false">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
+                 @click.stop>
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
+                        <svg class="h-10 w-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Forfeit Game?</h3>
+                    <p class="text-gray-600 mb-6">Are you sure you want to forfeit this game? Your opponent will be declared the winner.</p>
+                    <div class="flex gap-3">
+                        <button @click="showForfeitConfirmation = false"
+                                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition-all duration-200">
+                            Cancel
+                        </button>
+                        <button @click="showForfeitConfirmation = false; forfeitGame(false)"
+                                class="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                            Forfeit
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\DifficultyLevel;
-use App\GameStatus;
+use App\Enums\DifficultyLevel;
+use App\Enums\GameStatus;
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\GamePlayer;
@@ -264,6 +264,7 @@ class GameService
         $currentMove['is_correct'] = $isCorrect;
         $currentMove['points_earned'] = $pointsEarned;
         $currentMove['question'] = $question->question_text;
+        $currentMove['result_created_at'] = now()->timestamp;
         // Keep result visible for 10 seconds so opponent can see it through polling
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addSeconds(10));
 
@@ -394,13 +395,23 @@ class GameService
         $currentMove = Cache::get("game:{$game->id}:current_move");
         $turnStartedAt = Cache::get("game:{$game->id}:turn_started_at");
 
+        // Check if we're displaying a result and should delay turn switch
+        $currentTurnPlayerId = $game->current_turn_player_id;
+        if ($currentMove && isset($currentMove['phase']) && $currentMove['phase'] === 'result' && isset($currentMove['result_created_at'])) {
+            $elapsed = now()->timestamp - $currentMove['result_created_at'];
+            // Keep the turn with the player who just moved for 5 seconds while result is displayed
+            if ($elapsed < 5) {
+                $currentTurnPlayerId = $currentMove['player_id'];
+            }
+        }
+
         return [
             'id' => $game->id,
             'game_code' => $game->game_code,
             'status' => $game->status->value,
             'current_round' => $game->current_round,
             'max_rounds' => $game->max_rounds,
-            'current_turn_player_id' => $game->current_turn_player_id,
+            'current_turn_player_id' => $currentTurnPlayerId,
             'used_combinations' => $usedCombinations,
             'current_move' => $currentMove,
             'turn_started_at' => $turnStartedAt,

@@ -20,7 +20,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form method="POST" action="{{ route('questions.store') }}" x-data="questionForm()">
+                    <form method="POST" action="{{ route('questions.store') }}" enctype="multipart/form-data" x-data="questionForm()">
                         @csrf
 
                         <!-- Category -->
@@ -55,6 +55,7 @@
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Select type</option>
                                 <option value="text_input" {{ old('question_type') == 'text_input' ? 'selected' : '' }}>Text Input</option>
+                                <option value="text_input_with_image" {{ old('question_type') == 'text_input_with_image' ? 'selected' : '' }}>Text Input with Image</option>
                                 <option value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
                                 <option value="top_5" {{ old('question_type') == 'top_5' ? 'selected' : '' }}>Top 5</option>
                             </select>
@@ -77,6 +78,28 @@
                             @enderror
                         </div>
 
+                        <!-- Image Upload (only for text_input_with_image) -->
+                        <div class="mb-6" x-show="questionType === 'text_input_with_image'" x-cloak>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Image *</label>
+                            <input type="file" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                   :required="questionType === 'text_input_with_image'"
+                                   @change="previewImage($event)"
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <p class="text-sm text-gray-500 mt-1">Upload an image (JPG, PNG, GIF, WebP - max 5MB). Example: player bio, team squad photo</p>
+                            
+                            <!-- Image Preview -->
+                            <div x-show="imagePreview" class="mt-3">
+                                <img :src="imagePreview" alt="Preview" class="max-w-md rounded border shadow-sm">
+                                <button type="button" @click="clearImagePreview()" class="mt-2 text-sm text-red-600 hover:text-red-800">
+                                    ✕ Remove image
+                                </button>
+                            </div>
+                            
+                            @error('image')
+                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Source URL -->
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Source URL *</label>
@@ -89,28 +112,46 @@
                             @enderror
                         </div>
 
-                        <!-- Answers - Text Input -->
-                        <div x-show="questionType === 'text_input'" x-cloak class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Correct Answer *</label>
-                            <input type="text" name="answers[0][text]" value="{{ old('answers.0.text') }}"
-                                   :required="questionType === 'text_input'"
-                                   :disabled="questionType !== 'text_input'"
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="Enter the correct answer">
-                            <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input'">
-                            @error('answers.0.text')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                            @error('answers')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
-                        </div>
+                        <!-- Answers -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Answers *</label>
 
-                        <!-- Answers - Multiple Choice -->
-                        <div x-show="questionType === 'multiple_choice'" x-cloak class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Answer Options * (Select the correct one)</label>
-                            <div class="space-y-3">
+                            <!-- Text Input -->
+                            <div x-show="questionType === 'text_input'" x-cloak>
+                                <input type="text" name="answers[0][text]" value="{{ old('answers.0.text') }}"
+                                       :required="questionType === 'text_input'"
+                                       :disabled="questionType !== 'text_input'"
+                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Enter the correct answer">
+                                <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input'">
+                                @error('answers.0.text')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('answers')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
+                            </div>
+
+                            <!-- Text Input with Image -->
+                            <div x-show="questionType === 'text_input_with_image'" x-cloak>
+                                <input type="text" name="answers[0][text]" value="{{ old('answers.0.text') }}"
+                                       :required="questionType === 'text_input_with_image'"
+                                       :disabled="questionType !== 'text_input_with_image'"
+                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Enter the correct answer">
+                                <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input_with_image'">
+                                @error('answers.0.text')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('answers')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
+                            </div>
+
+                            <!-- Multiple Choice -->
+                            <div x-show="questionType === 'multiple_choice'" x-cloak class="space-y-3">
                                 @for($i = 0; $i < 4; $i++)
                                     <div class="flex gap-3">
                                         <input type="radio" name="correct_answer_id" value="{{ $i }}"
@@ -125,39 +166,42 @@
                                                :disabled="questionType !== 'multiple_choice'">
                                     </div>
                                 @endfor
+                                @error('correct_answer_id')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('answers')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Select the radio button next to the correct answer</p>
                             </div>
-                            @error('correct_answer_id')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                            @error('answers')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Select the radio button next to the correct answer</p>
-                        </div>
 
-                        <!-- Answers - Top 5 -->
-                        <div x-show="questionType === 'top_5'" x-cloak class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Correct Answers * (At least 5 required)</label>
-                            <div class="space-y-2">
-                                <template x-for="i in answerCount" :key="i">
+                            <!-- Top 5 -->
+                            <div x-show="questionType === 'top_5'" x-cloak class="space-y-2">
+                                <template x-for="(answer, index) in top5Answers" :key="answer.id">
                                     <div class="flex gap-2">
-                                        <input type="text" :name="'answers[' + (i-1) + '][text]'"
-                                               :value="getOldAnswer(i-1)"
+                                        <input type="text" :name="'answers[' + index + '][text]'"
+                                               x-model="answer.text"
                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                               :placeholder="'Correct answer ' + i"
-                                               :required="questionType === 'top_5' && i <= 5"
+                                               :placeholder="'Correct answer ' + (index + 1)"
+                                               :required="questionType === 'top_5' && index < 5"
                                                :disabled="questionType !== 'top_5'">
-                                        <input type="hidden" :name="'answers[' + (i-1) + '][is_correct]'" value="1" :disabled="questionType !== 'top_5'">
+                                        <input type="hidden" :name="'answers[' + index + '][is_correct]'" value="1" :disabled="questionType !== 'top_5'">
+                                        <button type="button" 
+                                                @click="removeAnswer(answer.id)"
+                                                x-show="top5Answers.length > 5"
+                                                class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition">
+                                            ✕
+                                        </button>
                                     </div>
                                 </template>
+                                <button type="button" @click="addAnswer()" x-show="questionType === 'top_5'" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                                    + Add More Answers
+                                </button>
+                                @error('answers')
+                                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Players must provide 5 correct answers in any order</p>
                             </div>
-                            <button type="button" @click="answerCount++" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                                + Add More Answers
-                            </button>
-                            @error('answers')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Players must provide 5 correct answers in any order</p>
                         </div>
 
                         <div class="flex gap-4">
@@ -182,10 +226,49 @@
 
             return {
                 questionType: oldQuestionType,
-                answerCount: Object.keys(oldAnswers).length > 0 ? Math.max(5, Object.keys(oldAnswers).length) : 5,
+                top5Answers: [],
+                nextId: 0,
+                imagePreview: null,
 
-                getOldAnswer(index) {
-                    return oldAnswers[index] ? oldAnswers[index].text : '';
+                init() {
+                    // Initialize with old data or default 5 answers
+                    const count = Object.keys(oldAnswers).length > 0 ? Math.max(5, Object.keys(oldAnswers).length) : 5;
+                    for (let i = 0; i < count; i++) {
+                        this.top5Answers.push({
+                            id: this.nextId++,
+                            text: oldAnswers[i] ? oldAnswers[i].text : ''
+                        });
+                    }
+                },
+
+                addAnswer() {
+                    this.top5Answers.push({
+                        id: this.nextId++,
+                        text: ''
+                    });
+                },
+
+                removeAnswer(id) {
+                    if (this.top5Answers.length > 5) {
+                        this.top5Answers = this.top5Answers.filter(a => a.id !== id);
+                    }
+                },
+
+                previewImage(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.imagePreview = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+
+                clearImagePreview() {
+                    this.imagePreview = null;
+                    const input = document.querySelector('input[name="image"]');
+                    if (input) input.value = '';
                 }
             }
         }

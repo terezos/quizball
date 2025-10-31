@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\GameStatus;
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\User;
@@ -12,11 +12,11 @@ class GameRecoveryService
 {
     public function storeActiveGame(Game $game, ?User $user = null, ?string $sessionId = null): void
     {
+        Session::put('active_game_id', $game->id);
+
         if ($user) {
-            Session::put('active_game_id', $game->id);
             Session::put('active_game_user_id', $user->id);
         } else {
-            Session::put('active_game_id', $game->id);
             Session::put('active_game_session_id', $sessionId ?? Session::getId());
         }
 
@@ -60,7 +60,7 @@ class GameRecoveryService
         return $this->findPlayer($game, $user);
     }
 
-    protected function findPlayer(Game $game, ?User $user = null): object
+    protected function findPlayer(Game $game, ?User $user = null): object|null
     {
         if ($user) {
             return $game->players()->where('user_id', $user->id)->first();

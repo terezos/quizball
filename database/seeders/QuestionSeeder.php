@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\DifficultyLevel;
+use App\Enums\DifficultyLevel;
+use App\Enums\QuestionType;
 use App\Models\Answer;
 use App\Models\Category;
 use App\Models\Question;
 use App\Models\User;
-use App\QuestionType;
 use Illuminate\Database\Seeder;
 
 class QuestionSeeder extends Seeder

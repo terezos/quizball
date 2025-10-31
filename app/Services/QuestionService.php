@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\DifficultyLevel;
+use App\Enums\DifficultyLevel;
+use App\Enums\QuestionType;
 use App\Models\Category;
 use App\Models\Question;
-use App\QuestionType;
 
 class QuestionService
 {
@@ -31,7 +31,7 @@ class QuestionService
     public function validateAnswer(Question $question, string|array $playerAnswer): bool
     {
         return match ($question->question_type) {
-            QuestionType::TextInput => $this->validateTextInput($question, $playerAnswer),
+            QuestionType::TextInput, QuestionType::TextInputWithImage => $this->validateTextInput($question, $playerAnswer),
             QuestionType::MultipleChoice => $this->validateMultipleChoice($question, $playerAnswer),
             QuestionType::TopFive => $this->validateTopFive($question, $playerAnswer),
         };
