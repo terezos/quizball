@@ -14,6 +14,14 @@ class QuestionController extends Controller
     public function index(Request $request)
     {
         $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $editors = Question::select('created_by')
+            ->distinct()
+            ->with('creator:id,name')
+            ->get()
+            ->pluck('creator')
+            ->sortBy('name')->mapWithKeys(function ($user) {
+                return [$user->id => $user->name];
+            });
 
         $questions = Question::query()
             ->when(! auth()->user()->isAdmin(), function ($query) {
@@ -22,14 +30,18 @@ class QuestionController extends Controller
             ->when($request->has('categories') && is_array($request->categories), function ($query) use ($request) {
                 $query->whereIn('category_id', $request->categories);
             })
+            ->when($request->get('created_by'), function ($query) use ($request) {
+                $query->where('created_by', (int)$request->get('created_by'));
+            })
             ->with(['category', 'creator', 'answers'])
             ->latest()
             ->paginate(10)
-            ->appends($request->only('categories'));
+            ->appends($request->only(['categories', 'created_by']));
 
         return view('questions.index', [
             'questions' => $questions,
             'categories' => $categories,
+            'editors' => $editors,
         ]);
     }
 

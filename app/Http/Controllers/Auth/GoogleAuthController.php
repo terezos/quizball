@@ -23,9 +23,9 @@ class GoogleAuthController extends Controller
             $user = User::where('google_id', $googleUser->getId())->first();
 
             if ($user) {
-                $user->update([
-                    'avatar' => $googleUser->getAvatar(),
-                ]);
+//                $user->update([
+//                    'avatar' => $googleUser->getAvatar(),
+//                ]);
             } else {
                 $user = User::where('email', $googleUser->getEmail())->first();
 

@@ -1,6 +1,7 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Ερωτήσεις προς Έγκριση</x-slot>
     <x-slot name="header">
-        <x-page-header title="Pending Questions Approval" icon="⏳" />
+        <x-page-header title="Ερωτήσεις προς Έγκριση" icon="⏳" />
     </x-slot>
 
     <div class="py-12">
@@ -18,8 +19,7 @@
                             <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <p class="text-lg font-medium">No pending questions!</p>
-                            <p class="text-sm">All questions have been reviewed.</p>
+                            <p class="text-lg font-medium">Δεν υπάρχουν ερωτήσεις προς έγκριση!</p>
                         </div>
                     @else
                         <div class="space-y-6">

@@ -133,13 +133,7 @@
                         <button class="inline-flex items-center gap-3 px-1 py-1 border-2 border-transparent text-sm leading-4 font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
-                                    @else
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                        </svg>
-                                    @endif
+                                    <img src="{{ \App\Avatar::showAvatar(Auth::user()) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
                                 </div>
                                 <span>{{ Auth::user()->name }}</span>
                             </div>
@@ -403,13 +397,7 @@
                 <div class="px-6 py-4">
                     <div class="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-md">
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-                            @if(Auth::user()->avatar)
-                                <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
-                            @else
-                                <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                            @endif
+                            <img src="{{ \App\Avatar::showAvatar(Auth::user()) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-base text-gray-900 truncate">{{ Auth::user()->name }}</div>

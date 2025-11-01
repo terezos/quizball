@@ -1,9 +1,10 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Πληροφορίες Χρήστη</x-slot>
     <x-slot name="header">
-        <x-page-header title="User Details" icon="👤">
+        <x-page-header title="Πληροφορίες Χρήστη" icon="👤">
             <x-slot:actions>
                 <x-header-button href="{{ route('admin.users.index') }}" variant="secondary" icon="←">
-                    Back to Users
+                    Επιστροφή στους Χρήστες
                 </x-header-button>
             </x-slot:actions>
         </x-page-header>
@@ -33,27 +34,51 @@
                                     <h3 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h3>
                                     <p class="text-gray-600">{{ $user->email }}</p>
                                 </div>
-                                <div class="flex gap-2">
+                                <div class="flex flex-wrap gap-2">
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full
                                         {{ $user->role->value === 'admin' ? 'bg-purple-100 text-purple-800' : '' }}
                                         {{ $user->role->value === 'editor' ? 'bg-blue-100 text-blue-800' : '' }}
                                         {{ $user->role->value === 'user' ? 'bg-gray-100 text-gray-800' : '' }}">
-                                        {{ ucfirst($user->role->value) }}
+                                        {{ $user->role->value === 'admin' ? 'Διαχειριστής' : ($user->role->value === 'editor' ? 'Συντάκτης' : 'Χρήστης') }}
                                     </span>
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full
                                         {{ $user->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $user->is_active ? 'Active' : 'Inactive' }}
+                                        {{ $user->is_active ? 'Ενεργός' : 'Ανενεργός' }}
                                     </span>
                                     @if($user->is_pre_validated)
                                         <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                            Pre-validated ✓
+                                            Προεγκεκριμένος ✓
                                         </span>
                                     @endif
                                 </div>
                             </div>
                             <div class="text-sm text-gray-500">
-                                <p>Member since {{ $user->created_at->format('F j, Y') }}</p>
+                                <p>Μέλος από {{ $user->created_at->translatedFormat('F j, Y') }}</p>
                             </div>
+
+
+                            <!-- Toggle Status Button -->
+                            <form method="POST" action="{{ route('admin.users.toggleStatus', $user) }}" class="mt-4">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105
+                                    {{ $user->is_active
+                                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
+                                        : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' }}">
+                                    @if($user->is_active)
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                        </svg>
+                                        Απενεργοποίηση Χρήστη
+                                    @else
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Ενεργοποίηση Χρήστη
+                                    @endif
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -68,7 +93,7 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-gray-900">{{ $totalQuestionsCount }}</div>
-                            <div class="text-sm text-gray-600">Questions Created</div>
+                            <div class="text-sm break-words hyphens-auto text-gray-600">Δημιουργημένες Ερωτήσεις</div>
                         </div>
                     </div>
                 </div>
@@ -80,7 +105,7 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-gray-900">{{ $user->approved_questions_count }}</div>
-                            <div class="text-sm text-gray-600">Approved Questions</div>
+                            <div class="text-sm text-gray-600 break-words hyphens-auto">Εγκεκριμένες Ερωτήσεις</div>
                         </div>
                     </div>
                 </div>
@@ -92,7 +117,7 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-gray-900">{{ $totalGamesCount }}</div>
-                            <div class="text-sm text-gray-600">Games Played</div>
+                            <div class="text-sm text-gray-600 break-words hyphens-auto">Παιχνίδια</div>
                         </div>
                     </div>
                 </div>
@@ -104,7 +129,7 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-gray-900">{{ $totalScore }}</div>
-                            <div class="text-sm text-gray-600">Total Score</div>
+                            <div class="text-sm text-gray-600 break-words hyphens-auto">Συνολικό Σκορ</div>
                         </div>
                     </div>
                 </div>
@@ -113,7 +138,7 @@
             <!-- Actions -->
             @if($user->id !== auth()->id())
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">User Actions</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Αλλαγή Ρόλου</h3>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <!-- Change Role -->
                     <form method="POST" action="{{ route('admin.users.updateRole', $user) }}" class="flex-1">
@@ -121,23 +146,14 @@
                         @method('PATCH')
                         <div class="flex gap-2">
                             <select name="role" class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="user" {{ $user->role->value === 'user' ? 'selected' : '' }}>Player</option>
-                                <option value="editor" {{ $user->role->value === 'editor' ? 'selected' : '' }}>Editor</option>
-                                <option value="admin" {{ $user->role->value === 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="user" {{ $user->role->value === 'user' ? 'selected' : '' }}>Παίκτης</option>
+                                <option value="editor" {{ $user->role->value === 'editor' ? 'selected' : '' }}>Συντάκτης</option>
+                                <option value="admin" {{ $user->role->value === 'admin' ? 'selected' : '' }}>Διαχειριστής</option>
                             </select>
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">
-                                Update Role
+                                Ενημέρωση Ρόλου
                             </button>
                         </div>
-                    </form>
-
-                    <!-- Toggle Status -->
-                    <form method="POST" action="{{ route('admin.users.toggleStatus', $user) }}" class="flex-shrink-0">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="w-full bg-{{ $user->is_active ? 'orange' : 'green' }}-600 hover:bg-{{ $user->is_active ? 'orange' : 'green' }}-700 text-white font-semibold px-6 py-2 rounded-lg transition">
-                            {{ $user->is_active ? 'Deactivate' : 'Activate' }}
-                        </button>
                     </form>
 
                     <!-- Delete User -->
@@ -147,17 +163,16 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-lg transition">
-                            Delete User
+                            Διαγραφή Χρήστη
                         </button>
                     </form>
                 </div>
             </div>
             @endif
 
-            <!-- Recent Questions -->
             @if($user->questions->count() > 0)
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Questions</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Τελευταίες Δημιουργημένες Ερωτήσεις</h3>
                 <div class="space-y-3">
                     @foreach($user->questions as $question)
                         <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
@@ -183,8 +198,8 @@
                 </div>
                 @if($user->questions->count() >= 10)
                     <div class="mt-4 text-center">
-                        <a href="{{ route('questions.index') }}?search={{ $user->email }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            View all questions →
+                        <a href="{{ route('questions.index') }}?created_by={{ $user->id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Δες όλες τις ερωτήσεις του χρήστη →
                         </a>
                     </div>
                 @endif
@@ -193,23 +208,23 @@
 
             <!-- Game Statistics -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Game Statistics</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Στατιστικά</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                         <div class="text-2xl font-bold text-gray-900">{{ $gamesPlayed }}</div>
-                        <div class="text-sm text-gray-600">Games Played</div>
+                        <div class="text-sm text-gray-600">Παιχνίδια</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-green-600">{{ $gamesWon }}</div>
-                        <div class="text-sm text-gray-600">Games Won</div>
+                        <div class="text-sm text-gray-600">Νίκες</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-red-600">{{ $gamesLost }}</div>
-                        <div class="text-sm text-gray-600">Games Lost</div>
+                        <div class="text-sm text-gray-600">Ήττες</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-blue-600">{{ $winRate }}%</div>
-                        <div class="text-sm text-gray-600">Win Rate</div>
+                        <div class="text-sm text-gray-600">Ποσοστό Νικών</div>
                     </div>
                 </div>
             </div>
@@ -217,14 +232,14 @@
             <!-- Recent Games -->
             @if($user->gamePlayers->count() > 0)
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Games</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Πρόσφατα Παιχνίδια</h3>
                 <div class="space-y-3">
                     @foreach($user->gamePlayers->take(10) as $gamePlayer)
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">
-                                        Game #{{ $gamePlayer->game->id }} - {{ ucfirst($gamePlayer->game->game_type) }}
+                                        Παιχνίδι #{{ $gamePlayer->game->id }} - {{ ucfirst($gamePlayer->game->game_type) }}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ $gamePlayer->game->created_at->diffForHumans() }}
@@ -232,15 +247,11 @@
                                 </div>
                                 <div class="text-right">
                                     <div class="text-lg font-bold {{ $gamePlayer->score > 0 ? 'text-blue-600' : 'text-gray-400' }}">
-                                        {{ $gamePlayer->score }} pts
+                                        {{ $gamePlayer->score }} πόντοι
                                     </div>
-                                    @if($gamePlayer->game->status === 'completed')
-                                        <span class="text-xs {{ $gamePlayer->is_winner ? 'text-green-600 font-semibold' : 'text-gray-500' }}">
-                                            {{ $gamePlayer->is_winner ? '🏆 Winner' : 'Lost' }}
+                                    <span class="text-xs {{ $gamePlayer->is_winner ? 'text-green-600 font-semibold' : 'text-red-500' }}">
+                                            {{ $gamePlayer->is_winner ? '🏆 Νίκη' : 'Ήττα' }}
                                         </span>
-                                    @else
-                                        <span class="text-xs text-gray-500">{{ ucfirst($gamePlayer->game->status->value) }}</span>
-                                    @endif
                                 </div>
                             </div>
                         </div>

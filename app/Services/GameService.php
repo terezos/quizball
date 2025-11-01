@@ -4,6 +4,11 @@ namespace App\Services;
 
 use App\Enums\DifficultyLevel;
 use App\Enums\GameStatus;
+use App\Events\GameCompleted;
+use App\Events\GameStateUpdated;
+use App\Events\OpponentMoved;
+use App\Events\TurnChanged;
+use App\Jobs\ProcessTurnSwitch;
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\GamePlayer;
@@ -32,7 +37,7 @@ class GameService
             'game_code' => $this->generateGameCode(),
             'status' => GameStatus::Waiting,
             'game_type' => $gameType,
-            'current_round' => 0,
+            'current_round' => 1,
             'max_rounds' => $maxRounds,
         ]);
 
@@ -96,10 +101,17 @@ class GameService
             'started_at' => now(),
         ]);
 
-        Cache::put("game:{$game->id}:turn_started_at", now()->timestamp, now()->addMinutes(5));
+        $turnStartedAt = now()->timestamp;
+        Cache::put("game:{$game->id}:turn_started_at", $turnStartedAt, now()->addMinutes(5));
         $this->cacheGameState($game);
 
-        return $game->fresh(['players']);
+        $game = $game->fresh(['players']);
+
+        // Broadcast game state update to all players
+        broadcast(new GameStateUpdated($game));
+        broadcast(new TurnChanged($game, $firstPlayer->id, $turnStartedAt));
+
+        return $game;
     }
 
     public function selectCategory(Game $game, GamePlayer $player, Category $category): void
@@ -114,7 +126,8 @@ class GameService
         }
 
         Cache::put("game:{$game->id}:selected_category", $category->id, now()->addMinutes(5));
-        Cache::put("game:{$game->id}:current_move", [
+
+        $currentMove = [
             'player_id' => $player->id,
             'phase' => 'category',
             'category' => [
@@ -122,8 +135,13 @@ class GameService
                 'name' => $category->name,
                 'icon' => $category->icon,
             ],
-        ], now()->addMinutes(5));
+        ];
+
+        Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
         $this->cacheGameState($game);
+
+        // Broadcast opponent move
+        broadcast(new OpponentMoved($game, $currentMove))->toOthers();
     }
 
     public function getUsedCategoryDifficulties(Game $game): array
@@ -203,7 +221,7 @@ class GameService
         // Clear turn_started_at to prevent inactivity forfeit while answering question
         Cache::forget("game:{$game->id}:turn_started_at");
 
-        Cache::put("game:{$game->id}:current_move", [
+        $currentMove = [
             'player_id' => $player->id,
             'phase' => 'difficulty',
             'category' => [
@@ -213,10 +231,16 @@ class GameService
             ],
             'difficulty' => $difficulty->value,
             'question' => $question->question_text,
+            'image_url' => $question->image_url,
             'started_at' => now()->timestamp,
-        ], now()->addMinutes(5));
+        ];
+
+        Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
 
         $this->cacheGameState($game);
+
+        // Broadcast opponent move
+        broadcast(new OpponentMoved($game, $currentMove))->toOthers();
 
         return $question;
     }
@@ -263,12 +287,11 @@ class GameService
         $currentMove['points_earned'] = $pointsEarned;
         $currentMove['question'] = $question->question_text;
         $currentMove['result_created_at'] = now()->timestamp;
-        // Keep result visible for 10 seconds so opponent can see it through polling
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addSeconds(10));
 
-        $this->switchTurn($game);
-        $this->checkGameCompletion($game);
-        $this->cacheGameState($game);
+        broadcast(new OpponentMoved($game, $currentMove))->toOthers();
+
+        ProcessTurnSwitch::dispatch($game)->delay(now()->addSeconds(5));
 
         return [
             'success' => true,
@@ -314,7 +337,7 @@ class GameService
         return $answer;
     }
 
-    protected function switchTurn(Game $game): void
+    public function switchTurn(Game $game): void
     {
         $players = $game->players()->orderBy('player_order')->get();
 
@@ -331,10 +354,14 @@ class GameService
 
         // Don't clear current_move here - let it expire naturally so opponent can see the result
         // phase cache will expire after 10 seconds
-        Cache::put("game:{$game->id}:turn_started_at", now()->timestamp, now()->addMinutes(5));
+        $turnStartedAt = now()->timestamp;
+        Cache::put("game:{$game->id}:turn_started_at", $turnStartedAt, now()->addMinutes(5));
+
+        // Broadcast turn change
+        broadcast(new TurnChanged($game, $players[$nextPlayerIndex]->id, $turnStartedAt));
     }
 
-    protected function checkGameCompletion(Game $game): void
+    public function checkGameCompletion(Game $game): void
     {
         $totalRounds = GameRound::where('game_id', $game->id)->count();
 
@@ -358,6 +385,8 @@ class GameService
                     );
                 }
             }
+
+            broadcast(new GameCompleted($game->fresh(['players'])));
         }
     }
 
@@ -376,6 +405,9 @@ class GameService
         Cache::forget("game_state:{$game->id}");
         Cache::forget("game:{$game->id}:selected_category");
         Cache::forget("game:{$game->id}:current_question");
+
+        // Broadcast game completion with forfeit flag
+        broadcast(new GameCompleted($game->fresh(['players']), true));
     }
 
     protected function generateGameCode(): string
@@ -420,10 +452,12 @@ class GameService
         ];
     }
 
-    protected function cacheGameState(Game $game): void
+    public function cacheGameState(Game $game): void
     {
         $game = $game->fresh(['players']);
         Cache::put("game_state:{$game->id}", $this->getGameState($game), now()->addHours(2));
+
+        broadcast(new GameStateUpdated($game->fresh(['players'])));
     }
 
     public function getCachedGameState(int $gameId): ?array

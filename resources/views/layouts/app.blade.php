@@ -5,11 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,6 +24,8 @@
             body { font-family: 'Inter', sans-serif; }
             [x-cloak] { display: none !important; }
         </style>
+
+        @stack('head')
     </head>
     <body class="font-sans antialiased">
         <div class="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -48,8 +53,7 @@
             @endunless
         </div>
 
-        <!-- Game Notification -->
-        <x-game-notification />
+
 
         @stack('scripts')
     </body>

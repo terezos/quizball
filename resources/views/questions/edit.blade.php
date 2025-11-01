@@ -1,6 +1,7 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Επεξεργασία Ερώτησης</x-slot>
     <x-slot name="header">
-        <x-page-header title="Edit Question" icon="✏️" />
+        <x-page-header title="Επεξεργασία Ερώτησης" icon="✏️" />
     </x-slot>
 
     <div class="py-12">
@@ -24,7 +25,7 @@
 
                         <!-- Category -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Κατηγορία *</label>
                             <select name="category_id" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ $question->category_id == $category->id ? 'selected' : '' }}>
@@ -36,36 +37,39 @@
 
                         <!-- Question Text -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Text *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ερώτηση *</label>
                             <textarea name="question_text" rows="3" required
                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ $question->question_text }}</textarea>
                         </div>
 
                         <!-- Question Type -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Type *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Τύπος *</label>
                             <select name="question_type" x-model="questionType" required
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="text_input" {{ $question->question_type->value === 'text_input' ? 'selected' : '' }}>Text Input</option>
-                                <option value="text_input_with_image" {{ $question->question_type->value === 'text_input_with_image' ? 'selected' : '' }}>Text Input with Image</option>
-                                <option value="multiple_choice" {{ $question->question_type->value === 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                                <option value="top_5" {{ $question->question_type->value === 'top_5' ? 'selected' : '' }}>Top 5</option>
+                                @foreach(\App\Enums\QuestionType::cases() as $type)
+                                    <option value="{{ $type->value }}" {{ old('question_type', $question->question_type->value) == $type->value ? 'selected' : '' }}>
+                                        {{ $type->label() }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
                         <!-- Difficulty -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Difficulty *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Επίπεδο *</label>
                             <select name="difficulty" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="easy" {{ $question->difficulty->value === 'easy' ? 'selected' : '' }}>Easy (1 point)</option>
-                                <option value="medium" {{ $question->difficulty->value === 'medium' ? 'selected' : '' }}>Medium (2 points)</option>
-                                <option value="hard" {{ $question->difficulty->value === 'hard' ? 'selected' : '' }}>Hard (3 points)</option>
+                                @foreach(\App\Enums\DifficultyLevel::cases() as $difficulties)
+                                    <option value="{{ $difficulties->value }}" {{ old('difficulty', $question->difficulty->value) == $difficulties->value ? 'selected' : '' }}>
+                                        {{ $difficulties->label() }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
                         <!-- Image Upload (only for text_input_with_image) -->
                         <div class="mb-6" x-show="questionType === 'text_input_with_image'" x-cloak>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Image</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Εικόνα</label>
 
                             <!-- Current/Preview Image -->
                             @if($question->image_url)
@@ -73,7 +77,7 @@
                                 <img src="{{ asset($question->image_url) }}"
                                      alt="Question image"
                                      class="max-w-md rounded border shadow-sm">
-                                <p class="text-sm text-gray-500 mt-1">Current image</p>
+                                <p class="text-sm text-gray-500 mt-1">Τρέχουσα Εικόνα</p>
                             </div>
                             @endif
 
@@ -82,18 +86,18 @@
                                 <img :src="imagePreview"
                                      alt="Preview"
                                      class="max-w-md rounded border shadow-sm">
-                                <p class="text-sm text-gray-500 mt-1">Preview of new image</p>
+                                <p class="text-sm text-gray-500 mt-1">Προεπισκόπηση εικόνας</p>
                                 <button type="button"
                                         @click="clearImagePreview()"
                                         class="mt-2 text-sm text-red-600 hover:text-red-800">
-                                    ✕ Remove new image
+                                    ✕ Διαγραφή Εικόνας
                                 </button>
                             </div>
 
                             <input type="file" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                                    @change="previewImage($event)"
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <p class="text-sm text-gray-500 mt-1">Upload a new image to replace the current one (JPG, PNG, GIF, WebP - max 5MB)</p>
+                            <p class="text-sm text-gray-500 mt-1">Ανέβασε μια εικόνα (JPG, PNG, GIF, WebP - max 5MB). πχ: βιογραφικό παίκτη, παίκτης που λείπε</p>
                             @error('image')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
@@ -101,11 +105,11 @@
 
                         <!-- Source URL -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Source URL *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Πηγή *</label>
                             <input type="url" name="source_url" value="{{ old('source_url', $question->source_url) }}" required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                    placeholder="https://example.com/source-article">
-                            <p class="text-sm text-gray-500 mt-1">Add a link to verify the correct answer (will be shown after game ends)</p>
+                            <p class="text-sm text-gray-500 mt-1">Πρόσθεσε ένα link για επαλήθευση της απάντησης</p>
                             @error('source_url')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
@@ -113,7 +117,7 @@
 
                         <!-- Answers -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Answers *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Απαντήσεις *</label>
 
                             <!-- Text Input -->
                             <div x-show="questionType === 'text_input'" x-cloak>
@@ -130,9 +134,8 @@
                                        :required="questionType === 'text_input_with_image'"
                                        :disabled="questionType !== 'text_input_with_image'"
                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="Enter the correct answer">
+                                       placeholder="Δώσε τη σωστή απάντηση">
                                 <input type="hidden" name="answers[0][is_correct]" value="1" :disabled="questionType !== 'text_input_with_image'">
-                                <p class="text-xs text-gray-500 mt-1">Answers are case-insensitive and whitespace is normalized</p>
                             </div>
 
                             <!-- Multiple Choice -->
@@ -163,7 +166,7 @@
                                         <input type="text" :name="'answers[' + index + '][text]'"
                                                x-model="answer.text"
                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                               :placeholder="'Correct answer ' + (index + 1)"
+                                               :placeholder="'Σωστή Απάντηση ' + (index + 1)"
                                                :required="questionType === 'top_5' && index < 5"
                                                :disabled="questionType !== 'top_5'">
                                         <input type="hidden" :name="'answers[' + index + '][is_correct]'" value="1" :disabled="questionType !== 'top_5'">
@@ -176,17 +179,17 @@
                                     </div>
                                 </template>
                                 <button type="button" @click="addAnswer()" x-show="questionType === 'top_5'" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                                    + Add More Answers
+                                    + Προσθήκη Έξτρα Απάντησης
                                 </button>
                             </div>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             <button type="submit" class="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
-                                Update Question
+                                Ενημέρωση Ερώτησης
                             </button>
                             <a href="{{ route('questions.index') }}" class="w-full sm:flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
-                                Cancel
+                                Ακύρωση
                             </a>
                         </div>
                     </form>

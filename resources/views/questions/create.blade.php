@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Δημιουργία Ερώτησης</x-slot>
     <x-slot name="header">
         <x-page-header title="Δημιουργία Ερώτησης" icon="➕" />
     </x-slot>
@@ -52,10 +53,11 @@
                             <select name="question_type" x-model="questionType" required
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Επιλέξτε Τύπο Ερώτησης</option>
-                                <option value="text_input" {{ old('question_type') == 'text_input' ? 'selected' : '' }}>Απάντηση κενού</option>
-                                <option value="text_input_with_image" {{ old('question_type') == 'text_input_with_image' ? 'selected' : '' }}>Απάντηση κενού Βάση Εικόνας</option>
-                                <option value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'selected' : '' }}>Πολλαπλής</option>
-                                <option value="top_5" {{ old('question_type') == 'top_5' ? 'selected' : '' }}>Top 5</option>
+                                @foreach(\App\Enums\QuestionType::cases() as $type)
+                                    <option value="{{ $type->value }}" {{ old('question_type') == $type->value ? 'selected' : '' }}>
+                                        {{ $type->label() }}
+                                    </option>
+                                @endforeach
                             </select>
                             @error('question_type')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
@@ -67,9 +69,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Επίπεδο *</label>
                             <select name="difficulty" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Επίλεξε Επίπεδο</option>
-                                <option value="easy" {{ old('difficulty') == 'easy' ? 'selected' : '' }}>Εύκολο (1π)</option>
-                                <option value="medium" {{ old('difficulty') == 'medium' ? 'selected' : '' }}>Μέτριο (2π)</option>
-                                <option value="hard" {{ old('difficulty') == 'hard' ? 'selected' : '' }}>Δύσκολο (3π)</option>
+                                @foreach(\App\Enums\DifficultyLevel::cases() as $difficulties)
+                                    <option value="{{ $difficulties->value }}" {{ old('difficulty') == $difficulties->value ? 'selected' : '' }}>
+                                        {{ $difficulties->label() }}
+                                    </option>
+                                @endforeach
                             </select>
                             @error('difficulty')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>

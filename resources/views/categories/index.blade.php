@@ -1,9 +1,10 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Κατηγορίες</x-slot>
     <x-slot name="header">
-        <x-page-header title="Category Management" icon="📂">
+        <x-page-header title="Κατηγορίες" icon="📂">
             <x-slot:actions>
                 <x-header-button href="{{ route('categories.create') }}" icon="+">
-                    Create Category
+                    Δημιουργία Κατηγορίας
                 </x-header-button>
             </x-slot:actions>
         </x-page-header>
@@ -29,10 +30,10 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΙΚΟΝΟΔΙΟ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΟΝΟΜΑ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΣΕΙΡΑ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΡΩΤΗΣΕΙΣ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -51,28 +52,38 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {{ $category->questions_count }} questions
+                                                {{ $category->questions_count }} ερωτήσεις
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $category->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                {{ $category->is_active ? 'Active' : 'Inactive' }}
+                                                {{ $category->is_active ? 'Ενεργή' : 'Ανενεργή' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('categories.edit', $category) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                            <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline"
-                                                  onsubmit="return confirm('Are you sure you want to delete this category? This will only work if there are no questions assigned to it.');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                            </form>
+                                            <div class="flex items-center gap-2">
+                                                <a href="{{ route('categories.edit', $category) }}" 
+                                                   class="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                                    <i class="fas fa-edit"></i>
+                                                    Επεξεργασία
+                                                </a>
+                                                <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline"
+                                                      onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την κατηγορία; Αυτό θα λειτουργήσει μόνο αν δεν υπάρχουν ερωτήσεις που έχουν ανατεθεί σε αυτήν.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                        Διαγραφή
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                            No categories found. <a href="{{ route('categories.create') }}" class="text-blue-600">Create your first category</a>
+                                            Δεν βρέθηκαν κατηγορίες. <a href="{{ route('categories.create') }}" class="text-blue-600">Δημιούργησε την πρώτη κατηγορία</a>
                                         </td>
                                     </tr>
                                 @endforelse

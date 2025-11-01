@@ -175,13 +175,17 @@ class GameController extends Controller
             return redirect()->route('game.play', $game);
         }
 
-        $queuePosition = $this->matchmakingService->getQueuePosition($game);
+//        $queuePosition = $this->matchmakingService->getQueuePosition($game);
 
-        return view('game.matchmaking', [
-            'game' => $game->load('players'),
-            'player' => $player,
-            'queuePosition' => $queuePosition,
-        ]);
+        return response()
+            ->view('game.matchmaking', [
+                'game' => $game->load('players'),
+                'player' => $player,
+//                'queuePosition' => $queuePosition,
+            ])
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function cancelMatchmaking(Game $game)
@@ -235,6 +239,9 @@ class GameController extends Controller
             ->with(['question.answers', 'category'])
             ->first();
 
+        // Get turn started timestamp from cache
+        $turnStartedAt = \Illuminate\Support\Facades\Cache::get("game:{$game->id}:turn_started_at");
+
         return view('game.play', [
             'game' => $game->load('players'),
             'player' => $player,
@@ -242,6 +249,7 @@ class GameController extends Controller
             'isPlayerTurn' => $isPlayerTurn,
             'usedCombinations' => $usedCombinations,
             'activeRound' => $activeRound,
+            'turnStartedAt' => $turnStartedAt,
         ]);
     }
 
@@ -320,20 +328,10 @@ class GameController extends Controller
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
-        // Use empty string if no answer provided (timeout scenario)
         $answer = $request->answer ?? '';
 
         $result = $this->gameService->submitAnswer($game, $player, $answer);
 
-        // If next player is AI, trigger AI turn
-        $game = $game->fresh(['players']);
-        $nextPlayer = $game->players->firstWhere('id', $game->current_turn_player_id);
-
-        if ($nextPlayer && $nextPlayer->is_ai && $game->status->value === 'active') {
-            dispatch(function () use ($game, $nextPlayer) {
-                $this->aiService->playTurn($game, $nextPlayer);
-            })->afterResponse();
-        }
 
         return response()->json($result);
     }

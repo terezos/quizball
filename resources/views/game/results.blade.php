@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Αποτελέσματα Παιχνιδιού</x-slot>
     <div class="py-6 px-4">
 
         <div class="max-w-5xl mx-auto">
@@ -8,7 +9,7 @@
             @endphp
 
             <div class="text-center mb-5">
-                <div class="text-4xl mb-2">{{ $iWon ? '🏆' : '👏' }}</div>
+                <div class="text-4xl mb-2">{{ $iWon ? '🏆' : '' }}</div>
                 <h1 class="text-2xl font-bold text-slate-900 mb-1">
                     {{ $iWon ? 'Νίκησες!' : 'Έχασες!' }}
                 </h1>
@@ -36,7 +37,7 @@
             <!-- Round by Round - Side by Side -->
             @if($game->rounds->count())
             <div class="mb-5">
-                <h2 class="text-base font-semibold text-slate-800 mb-3 text-center">Ανάλυση Γύρων</h2>
+                <h2 class="font-semibold text-slate-800 mb-3 text-center text-2xl">Ανάλυση Γύρων</h2>
 
                 <div class="space-y-3">
                     @php
@@ -65,11 +66,11 @@
                                                 Γύρος {{ $roundNumber }}
                                             </span>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium {{ $round->difficulty->value === 'easy' ? 'bg-emerald-100 text-emerald-800' : ($round->difficulty->value === 'medium' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
-                                                {{ ucfirst($round->difficulty->value) }}
+                                                {{ ucfirst($round->difficulty->label()) }}
                                             </span>
                                             <span class="text-xs text-slate-600">{{ $round->category->icon }} {{ $round->category->name }}</span>
                                         </div>
-                                        <p class="text-sm text-slate-900 font-medium">{{ $round->question->question_text }}</p>
+                                        <p class="text-sm text-slate-900 font-medium p-2">{{ $round->question->question_text }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -190,7 +191,7 @@
                         rows="4"
                         required
                         class="w-full rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm p-3 transition-all duration-200"
-                        placeholder="Please describe the issue with this question..."></textarea>
+                        placeholder="Παρακαλώ περιγράψτε το πρόβλημα με αυτήν την ερώτηση..."></textarea>
                 </div>
                 <div class="flex gap-3">
                     <button

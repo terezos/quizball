@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Ερωτήσεις</x-slot>
     <x-slot name="header">
         <x-page-header title="Ερωτήσεις" icon="📝">
             <x-slot:actions>
@@ -26,7 +27,8 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Φίλτρα</h3>
                     <form method="GET" action="{{ route('questions.index') }}" id="filterForm">
-                        <div class="space-y-4">
+                        <div class="space-y-6">
+                            <!-- Categories Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
                                     Επίλεξε Κατηγορίες
@@ -50,14 +52,47 @@
                                     @endforeach
                                 </div>
                             </div>
-                            @if(request('categories'))
-                                <div class="flex justify-between items-center pt-2">
+
+                            @if(auth()->user()->isAdmin() && $editors->count() > 0)
+                                <!-- Editor Filter -->
+                                <div>
+                                    <label for="created_by" class="block text-sm font-medium text-gray-700 mb-3">
+                                        Φιλτράρισμα ανά Δημιουργό
+                                    </label>
+                                    <div class="flex gap-2">
+                                        <select name="created_by" id="created_by"
+                                            class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            onchange="document.getElementById('filterForm').submit()">
+                                            <option value="">Όλοι οι Δημιουργοί</option>
+                                            @foreach($editors as $userId => $editorName)
+                                                <option value="{{ $userId }}" {{ request('created_by') == $userId ? 'selected' : '' }}>
+                                                    {{ $editorName }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if(request('created_by'))
+                                            <a href="{{ route('questions.index', request()->except('created_by')) }}"
+                                                class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition">
+                                                ✕
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(request('categories') || request('created_by'))
+                                <div class="flex justify-between items-center pt-2 border-t border-gray-200">
                                     <span class="text-sm text-gray-600">
-                                        {{ count(request('categories')) }} κατηγορί{{ count(request('categories')) > 1 ? 'ες' : 'α' }} επιλεγμέν{{ count(request('categories')) > 1 ? 'ες' : 'η' }}.
+                                        @if(request('categories'))
+                                            {{ count(request('categories')) }} κατηγορί{{ count(request('categories')) > 1 ? 'ες' : 'α' }} επιλεγμέν{{ count(request('categories')) > 1 ? 'ες' : 'η' }}.
+                                        @endif
+                                        @if(request('created_by'))
+                                            Δημιουργός: <strong>{{ $editors[request('created_by')] ?? '' }}</strong>
+                                        @endif
                                     </span>
                                     <a href="{{ route('questions.index') }}"
-                                        class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition">
-                                        ✕ Καθαρισμός Φίλτρων
+                                        class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded-lg transition">
+                                        ✕ Καθαρισμός Όλων των Φίλτρων
                                     </a>
                                 </div>
                             @endif
@@ -74,33 +109,31 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΡΩΤΗΣΗ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΚΑΤΗΓΟΡΙΑ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΤΥΠΟΣ</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ΤΥΠΟΣ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΔΥΣΚΟΛΙΑ</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ΚΑΤΑΣΤΑΣΗ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΔΗΜΙΟΥΡΓΟΣ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΝΕΡΓΕΙΕΣ</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($questions as $question)
                                     <tr>
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 break-words w-100">
                                             <div class="text-sm text-gray-900">{{ Str::limit($question->question_text, 60) }}</div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-6 py-4 whitespace-nowrap w-20">
                                             <span class="text-sm text-gray-900">{{ $question->category->icon }} {{ $question->category->name }}</span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {{ str_replace('_', ' ', $question->question_type->value) }}
+                                                {{ str_replace('_', ' ', $question->question_type->label()) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                                {{ $question->difficulty->value === 'easy' ? 'bg-green-100 text-green-800' : '' }}
-                                                {{ $question->difficulty->value === 'medium' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $question->difficulty->value === 'hard' ? 'bg-red-100 text-red-800' : '' }}">
-                                                {{ ucfirst($question->difficulty->value) }}
+                                                {{ $question->difficulty->badgeClasses() }}">
+                                                {{ ucfirst($question->difficulty->label()) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -119,13 +152,13 @@
                                                 @endif
                                             </td>
 {{--                                        @endif--}}
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('questions.edit', $question) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                            <a href="{{ route('questions.edit', $question) }}" class="text-blue-600 hover:text-blue-900 mr-3"> <i class="fas fa-edit"></i></a>
                                             <form action="{{ route('questions.destroy', $question) }}" method="POST" class="inline"
                                                   onsubmit="return confirm('Are you sure you want to delete this question?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-900"> <i class="fas fa-trash-alt"></i></button>
                                             </form>
                                         </td>
                                     </tr>

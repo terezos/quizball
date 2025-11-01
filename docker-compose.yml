@@ -22,10 +22,10 @@ services:
       - SERVER_USER=eight
       - PHP_DEBUGGER=xdebug
       - XDEBUG_REMOTE_CONNECT_BACK=0
-      - XDEBUG_REMOTE_HOST=192.168.1.8
+      - XDEBUG_REMOTE_HOST=192.168.1.5
       - XDEBUG_REMOTE_PORT=9000
       - XDEBUG_CLIENT_PORT=9000
-      - XDEBUG_CLIENT_HOST=192.168.1.8
+      - XDEBUG_CLIENT_HOST=192.168.1.5
       - php.xdebug.mode=debug
       - php.short_open_tag=On
       - php.expose_php=Off

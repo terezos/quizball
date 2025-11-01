@@ -18,6 +18,8 @@ class GamePlayer extends Model
 	    'player_order',
     ];
 
+    protected $appends = ['display_name'];
+
     protected function casts(): array
     {
         return [
@@ -43,7 +45,7 @@ class GamePlayer extends Model
     public function getDisplayNameAttribute(): string
     {
         if ($this->is_ai) {
-            return 'AI Opponent';
+            return 'AI Αντίπαλος';
         }
 
         return $this->user?->name ?? $this->guest_name ?? 'Guest';
@@ -57,14 +59,14 @@ class GamePlayer extends Model
 
         // Get all players in this game
         $players = $this->game->gamePlayers;
-        
+
         // Find the opponent
         $opponent = $players->where('id', '!=', $this->id)->first();
-        
+
         if (!$opponent) {
             return false;
         }
-        
+
         // User wins if their score is higher than opponent's score
         return $this->score > $opponent->score;
     }

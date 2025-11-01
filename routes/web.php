@@ -37,7 +37,6 @@ Route::prefix('game')
         Route::get('', [GameController::class, 'lobby'])->name('lobby');
         Route::post('create', [GameController::class, 'create'])->name('create');
         Route::post('join', [GameController::class, 'join'])->name('join');
-        Route::get('check-active', [GameNotificationController::class, 'checkActiveGame'])->middleware('auth')->name('checkActive');
         Route::get('{game}/wait', [GameController::class, 'wait'])->name('wait');
         Route::get('{game}/matchmaking', [GameController::class, 'matchmaking'])->name('matchmaking');
         Route::post('{game}/cancel-matchmaking', [GameController::class, 'cancelMatchmaking'])->name('cancelMatchmaking');
@@ -52,14 +51,14 @@ Route::prefix('game')
     });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('game.lobby');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     Route::get('/statistics', [App\Http\Controllers\PlayerStatisticsController::class, 'index'])->name('statistics.index');
 });
 

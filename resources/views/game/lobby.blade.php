@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">QuizBall - Λόμπι Παιχνιδιού</x-slot>
     <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
         <div class="max-w-5xl mx-auto px-6">
             <!-- Page Header -->

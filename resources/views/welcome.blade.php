@@ -23,7 +23,7 @@
                     <div class="flex gap-3">
                         @auth
                             <a href="{{ url('/dashboard') }}" class="px-6 py-2.5 bg-white border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md">
-                                Πίνακας Ελέγχου
+                                Διαχείριση
                             </a>
                         @else
                             <a href="{{ route('login') }}" class="px-6 py-2.5 bg-white border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md">

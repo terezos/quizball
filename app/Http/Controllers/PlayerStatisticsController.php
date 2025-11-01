@@ -107,22 +107,18 @@ class PlayerStatisticsController extends Controller
             )')
             ->count();
 
-        $bestCategories = \DB::table('game_players')
-            ->join('games', 'game_players.game_id', '=', 'games.id')
-            ->join('game_rounds', 'games.id', '=', 'game_rounds.game_id')
+        $bestCategories = \DB::table('game_rounds')
+            ->join('game_players', 'game_rounds.game_player_id', '=', 'game_players.id')
             ->join('categories', 'game_rounds.category_id', '=', 'categories.id')
             ->where('game_players.user_id', $user->id)
-            ->where('games.status', 'completed')
-            ->whereRaw('game_players.score > (
-                SELECT gp2.score
-                FROM game_players gp2
-                WHERE gp2.game_id = game_players.game_id
-                AND gp2.id != game_players.id
-                LIMIT 1
-            )')
-            ->select('categories.name', 'categories.icon', \DB::raw('count(DISTINCT games.id) as wins'))
+            ->where('game_rounds.is_correct', true)
+            ->select(
+                'categories.name', 
+                'categories.icon', 
+                \DB::raw('count(*) as correct_answers')
+            )
             ->groupBy('categories.id', 'categories.name', 'categories.icon')
-            ->orderBy('wins', 'desc')
+            ->orderBy('correct_answers', 'desc')
             ->limit(5)
             ->get();
 

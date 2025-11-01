@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\GameStatus;
+use App\Events\MatchFound;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\User;
@@ -44,6 +45,19 @@ class MatchmakingService
                     'status' => GameStatus::Active,
                     'started_at' => now(),
                     'current_turn_player_id' => $existingGame->players()->first()->id,
+                ]);
+
+                $matchFoundEvent = new MatchFound(
+                    $existingGame,
+                    route('game.play', $existingGame)
+                );
+
+                broadcast($matchFoundEvent)->toOthers();
+
+                \Log::info('MatchFound event broadcast', [
+                    'game_id' => $existingGame->id,
+                    'channel' => 'game.' . $existingGame->id,
+                    'redirect_url' => route('game.play', $existingGame)
                 ]);
 
                 return $existingGame->load('players');
