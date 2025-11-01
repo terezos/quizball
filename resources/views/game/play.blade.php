@@ -10,58 +10,58 @@
         }
     </style>
 
-{{--    <script>--}}
-{{--        // Disable copy, paste, cut, and right-click--}}
-{{--        document.addEventListener('DOMContentLoaded', function() {--}}
-{{--            const gameArea = document.body;--}}
+    {{--    <script>--}}
+    {{--        // Disable copy, paste, cut, and right-click--}}
+    {{--        document.addEventListener('DOMContentLoaded', function() {--}}
+    {{--            const gameArea = document.body;--}}
 
-{{--            // Prevent copying--}}
-{{--            gameArea.addEventListener('copy', function(e) {--}}
-{{--                e.preventDefault();--}}
-{{--                return false;--}}
-{{--            });--}}
+    {{--            // Prevent copying--}}
+    {{--            gameArea.addEventListener('copy', function(e) {--}}
+    {{--                e.preventDefault();--}}
+    {{--                return false;--}}
+    {{--            });--}}
 
-{{--            // Prevent cutting--}}
-{{--            gameArea.addEventListener('cut', function(e) {--}}
-{{--                e.preventDefault();--}}
-{{--                return false;--}}
-{{--            });--}}
+    {{--            // Prevent cutting--}}
+    {{--            gameArea.addEventListener('cut', function(e) {--}}
+    {{--                e.preventDefault();--}}
+    {{--                return false;--}}
+    {{--            });--}}
 
-{{--            // Prevent pasting--}}
-{{--            gameArea.addEventListener('paste', function(e) {--}}
-{{--                e.preventDefault();--}}
-{{--                return false;--}}
-{{--            });--}}
+    {{--            // Prevent pasting--}}
+    {{--            gameArea.addEventListener('paste', function(e) {--}}
+    {{--                e.preventDefault();--}}
+    {{--                return false;--}}
+    {{--            });--}}
 
-{{--            // Prevent right-click context menu--}}
-{{--            gameArea.addEventListener('contextmenu', function(e) {--}}
-{{--                e.preventDefault();--}}
-{{--                return false;--}}
-{{--            });--}}
+    {{--            // Prevent right-click context menu--}}
+    {{--            gameArea.addEventListener('contextmenu', function(e) {--}}
+    {{--                e.preventDefault();--}}
+    {{--                return false;--}}
+    {{--            });--}}
 
-{{--            // Prevent keyboard shortcuts for copy/paste--}}
-{{--            gameArea.addEventListener('keydown', function(e) {--}}
-{{--                // Check for Ctrl+C, Ctrl+X, Ctrl+V, Cmd+C, Cmd+X, Cmd+V--}}
-{{--                if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {--}}
-{{--                    // Allow in input fields for answers--}}
-{{--                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {--}}
-{{--                        // Allow only paste in answer fields, block copy--}}
-{{--                        if (e.key === 'v' || e.key === 'V') {--}}
-{{--                            return true;--}}
-{{--                        }--}}
-{{--                    }--}}
-{{--                    e.preventDefault();--}}
-{{--                    return false;--}}
-{{--                }--}}
-{{--            });--}}
+    {{--            // Prevent keyboard shortcuts for copy/paste--}}
+    {{--            gameArea.addEventListener('keydown', function(e) {--}}
+    {{--                // Check for Ctrl+C, Ctrl+X, Ctrl+V, Cmd+C, Cmd+X, Cmd+V--}}
+    {{--                if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {--}}
+    {{--                    // Allow in input fields for answers--}}
+    {{--                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {--}}
+    {{--                        // Allow only paste in answer fields, block copy--}}
+    {{--                        if (e.key === 'v' || e.key === 'V') {--}}
+    {{--                            return true;--}}
+    {{--                        }--}}
+    {{--                    }--}}
+    {{--                    e.preventDefault();--}}
+    {{--                    return false;--}}
+    {{--                }--}}
+    {{--            });--}}
 
-{{--            // Prevent drag and drop--}}
-{{--            gameArea.addEventListener('dragstart', function(e) {--}}
-{{--                e.preventDefault();--}}
-{{--                return false;--}}
-{{--            });--}}
-{{--        });--}}
-{{--    </script>--}}
+    {{--            // Prevent drag and drop--}}
+    {{--            gameArea.addEventListener('dragstart', function(e) {--}}
+    {{--                e.preventDefault();--}}
+    {{--                return false;--}}
+    {{--            });--}}
+    {{--        });--}}
+    {{--    </script>--}}
 
     <script>
         window.gameBoard = function(initialGame, player, categories, isMyTurn, usedCombinations, activeRound) {
@@ -121,9 +121,11 @@
                         this.restoreActiveRound(activeRound);
                     } else if (!this.isMyTurn) {
                         this.phase = 'waiting';
+                    } else if (this.isMyTurn && this.phase === 'category') {
+                        // Only start inactivity timer if it's my turn and I'm on category selection
+                        this.startInactivityTimer();
                     }
 
-                    this.startInactivityTimer();
                     this.setupTabSwitchDetection();
                 },
 
@@ -227,6 +229,7 @@
                             this.currentCategory = categoryId;
                             this.availableDifficulties = data.available_difficulties;
                             this.phase = 'difficulty';
+                            this.stopInactivityTimer();
                             this.showInactivityWarning = false;
                         }
                     } finally {
@@ -240,6 +243,7 @@
 
                     this.loading = true;
                     this.currentCategory = categoryId;
+                    this.stopInactivityTimer();
 
                     try {
                         // First select category
@@ -267,7 +271,6 @@
                             this.currentQuestion = data.question;
                             this.phase = 'question';
                             this.questionTimerReady = true;
-                            this.stopInactivityTimer(); // Stop the inactivity timer
                             this.startTimer();
                             this.showInactivityWarning = false;
                         }
@@ -299,10 +302,60 @@
                             this.currentQuestion = data.question;
                             this.phase = 'question';
                             this.questionTimerReady = true;
-                            this.stopInactivityTimer(); // Stop the inactivity timer
                             this.startTimer();
                             this.showInactivityWarning = false;
                         }
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async passQuestion() {
+                    if (this.loading) return;
+
+                    // Stop the timer
+                    this.stopTimer();
+                    this.loading = true;
+
+                    try {
+                        // Submit with autofault flag to skip answer checking
+                        const response = await fetch(`/game/${this.game.id}/submit-answer`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                answer: '',
+                                autofault: true
+                            })
+                        });
+
+                        if (!response.ok) {
+                            console.error('Pass question failed:', response.status);
+                            alert('Failed to pass question. Please try again.');
+                            return;
+                        }
+
+                        const data = await response.json();
+                        this.lastResult = data;
+                        this.phase = 'result';
+
+                        // Reset consecutive timeouts since user actively passed
+                        this.consecutiveTimeouts = 0;
+                        localStorage.setItem(`game_${this.game.id}_consecutiveTimeouts`, 0);
+
+                        setTimeout(() => {
+                            if (data.game_status === 'completed') {
+                                localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+                                window.location.href = `/game/${this.game.id}/results`;
+                            } else {
+                                this.resetForNextRound();
+                            }
+                        }, 4000);
+                    } catch (error) {
+                        console.error('Pass question error:', error);
+                        alert('An error occurred while passing the question. Please refresh the page.');
                     } finally {
                         this.loading = false;
                     }
@@ -471,11 +524,8 @@
                     this.lastResult = null;
                     this.questionTimerReady = false;
                     this.timeRemaining = 60; // Reset timer for next round
-                    this.phase = 'category';
+                    this.phase = 'waiting';
                     this.isMyTurn = false;
-
-                    // Restart inactivity timer for next turn
-                    this.startInactivityTimer();
                 },
 
                 async startPolling() {
@@ -502,10 +552,17 @@
                             }
 
                             this.updatePlayers();
+
+                            const wasMyTurn = this.isMyTurn;
                             this.isMyTurn = data.current_turn_player_id === this.player.id;
 
                             if (this.isMyTurn && this.phase === 'waiting') {
                                 this.phase = 'category';
+                                // Start inactivity timer when turn begins
+                                this.startInactivityTimer();
+                            } else if (!this.isMyTurn && wasMyTurn) {
+                                // Stop inactivity timer when turn ends
+                                this.stopInactivityTimer();
                             }
 
                             if (data.status === 'completed') {
@@ -591,9 +648,9 @@
 
                 getDifficultyLabel(difficulty) {
                     const labels = {
-                        'easy': 'Easy (1pt)',
-                        'medium': 'Medium (2pts)',
-                        'hard': 'Hard (3pts)'
+                        'easy': 'Εύκολο (1π)',
+                        'medium': 'Μέτριο (3π)',
+                        'hard': 'Δύσκολο (3π)'
                     };
                     return labels[difficulty] || difficulty;
                 }
@@ -623,22 +680,80 @@
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 lg:pb-0">
             <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
                 <!-- Left Sidebar - Score and Turn Info -->
                 <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
-                    <!-- Mobile: Horizontal Score Display -->
-                    <div class="lg:hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 border border-slate-200">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="p-3 rounded-xl transition-all duration-300"
-                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-emerald-50 ring-1 ring-emerald-300' : 'bg-slate-50'">
-                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">You</div>
-                                <div class="text-2xl font-bold text-emerald-600" x-text="players[{{ $player->id }}]?.score || 0"></div>
-                            </div>
-                            <div class="p-3 rounded-xl transition-all duration-300"
-                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-indigo-50 ring-1 ring-indigo-300' : 'bg-slate-50'" x-show="opponent">
-                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Opponent</div>
-                                <div class="text-2xl font-bold text-indigo-600" x-text="opponent?.score || 0"></div>
+                    <!-- Mobile: Fixed Bottom Score Display -->
+                    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                        <div class="flex items-stretch border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
+                            <!-- Forfeit Flag Button -->
+                            <button @click="showForfeitConfirmation = true"
+                                    class="relative flex-shrink-0 w-14 overflow-hidden group"
+                                    style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); box-shadow: inset 0 -2px 8px rgba(0,0,0,0.2);">
+                                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+
+                                <div class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                    <svg class="w-7 h-7 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                    </svg>
+                                </div>
+                            </button>
+
+                            <div class="flex-1 p-2">
+                                <div class="grid grid-cols-2 gap-2 h-full">
+                                    <div class="relative overflow-hidden rounded-xl transition-all duration-300"
+                                         :class="game.current_turn_player_id === {{ $player->id }}
+                                             ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/50'
+                                             : 'bg-gradient-to-br from-slate-200 to-slate-300 shadow-md'">
+                                        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
+
+                                        <div class="relative px-2 py-1.5">
+                                            <div x-show="game.current_turn_player_id === {{ $player->id }}"
+                                                 class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-lg"></div>
+
+                                            <div class="text-[8px] font-black uppercase tracking-wider mb-0.5"
+                                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'text-white/90' : 'text-slate-600'">
+                                                ΕΣΥ
+                                            </div>
+                                            <div class="text-2xl font-black leading-none mb-0.5"
+                                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
+                                                 x-text="players[{{ $player->id }}]?.score || 0"></div>
+                                            <div class="text-[7px] font-semibold uppercase tracking-wide"
+                                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'text-emerald-100' : 'text-slate-500'">
+                                                ΠΟΝΤΟΙ
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Opponent Score -->
+                                    <div x-show="opponent"
+                                         class="relative overflow-hidden rounded-xl transition-all duration-300"
+                                         :class="game.current_turn_player_id !== {{ $player->id }}
+                                             ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-lg shadow-indigo-500/50'
+                                             : 'bg-gradient-to-br from-slate-200 to-slate-300 shadow-md'">
+                                        <!-- Shine Effect -->
+                                        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
+
+                                        <div class="relative px-2 py-1.5">
+                                            <!-- Turn Indicator Dot -->
+                                            <div x-show="game.current_turn_player_id !== {{ $player->id }}"
+                                                 class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-lg"></div>
+
+                                            <div class="text-[8px] font-black uppercase tracking-wider mb-0.5"
+                                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-white/90' : 'text-slate-600'">
+                                                ΑΝΤΙΠΑΛΟΣ
+                                            </div>
+                                            <div class="text-2xl font-black leading-none mb-0.5"
+                                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
+                                                 x-text="opponent?.score || 0"></div>
+                                            <div class="text-[7px] font-semibold uppercase tracking-wide"
+                                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-indigo-100' : 'text-slate-500'">
+                                                ΠΟΝΤΟΙ
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -649,12 +764,13 @@
                          :class="[
                              isMyTurn ? (showInactivityWarning ? 'bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-400' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300') : (showInactivityWarning ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-yellow-400' : 'bg-gradient-to-r from-slate-50 to-gray-50 border-2 border-gray-300'),
                              !inactivityTimerReady ? 'blur-sm' : ''
-                         ]">
+                         ]"
+                         x-bind:style="window.innerWidth >= 1024 ? 'margin-top: 0 !important;' : ''">
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full animate-pulse"
                                      :class="showInactivityWarning ? 'bg-red-500' : 'bg-blue-500'"></div>
-                                <span class="font-semibold text-gray-800 text-xs lg:text-sm">Time Left</span>
+                                <span class="font-semibold text-gray-800 text-xs lg:text-sm">Εναπομείναντας χρόνος</span>
                             </div>
                             <div class="text-xl lg:text-2xl font-bold tracking-tight"
                                  :class="showInactivityWarning ? 'text-red-600' : 'text-blue-600'"
@@ -668,8 +784,8 @@
                         </div>
                         <div x-show="showInactivityWarning" class="mt-2 text-xs font-medium px-2 py-1 rounded"
                              :class="isMyTurn ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
-                            <span x-show="isMyTurn">Time is running out!</span>
-                            <span x-show="!isMyTurn">Opponent's time running out</span>
+                            <span x-show="isMyTurn">Ο Χρόνος εξαντλείται!</span>
+                            <span x-show="!isMyTurn">Ο Χρόνος του αντιπάλου εξαντλείται!</span>
                         </div>
                     </div>
 
@@ -677,40 +793,43 @@
                     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-3 lg:p-4 border border-slate-200">
                         <div x-show="isMyTurn" class="flex items-center justify-center gap-2">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <span class="text-emerald-600 font-semibold text-sm lg:text-base">Your Turn</span>
+                            <span class="text-emerald-600 font-semibold text-sm lg:text-base">Η Σειρά σου</span>
                         </div>
                         <div x-show="!isMyTurn" class="flex items-center justify-center gap-2">
                             <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                            <span class="text-indigo-600 font-semibold text-sm lg:text-base">Opponent's Turn</span>
+                            <span class="text-indigo-600 font-semibold text-sm lg:text-base">Παίζει ο αντίπαλος</span>
                         </div>
                         <div class="text-center mt-2 text-xs lg:text-sm text-slate-600">
-                            Round <span class="font-semibold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span>
+                            Γύρος <span class="font-semibold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span>
                         </div>
                     </div>
 
                     <!-- Desktop: Vertical Score Display -->
                     <div class="hidden lg:block bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-5 border border-slate-200">
-                        <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wide mb-4">Scores</h3>
+                        <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wide mb-4">Σκορ</h3>
                         <div class="space-y-3">
                             <div class="p-4 rounded-xl transition-all duration-300"
                                  :class="game.current_turn_player_id === {{ $player->id }} ? 'bg-emerald-50 ring-1 ring-emerald-300' : 'bg-slate-50'">
-                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">You</div>
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ΕΣΥ</div>
                                 <div class="text-3xl font-bold text-emerald-600" x-text="players[{{ $player->id }}]?.score || 0"></div>
                                 <div class="text-xs text-slate-600 mt-1 truncate" x-text="players[{{ $player->id }}]?.display_name"></div>
                             </div>
                             <div class="p-4 rounded-xl transition-all duration-300"
                                  :class="game.current_turn_player_id !== {{ $player->id }} ? 'bg-indigo-50 ring-1 ring-indigo-300' : 'bg-slate-50'" x-show="opponent">
-                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Opponent</div>
+                                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ΑΝΤΙΠΑΛΟΣ</div>
                                 <div class="text-3xl font-bold text-indigo-600" x-text="opponent?.score || 0"></div>
                                 <div class="text-xs text-slate-600 mt-1 truncate" x-text="opponent?.display_name"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Forfeit Button -->
+                    <!-- Forfeit Button (Desktop Only) -->
                     <button @click="showForfeitConfirmation = true"
-                            class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-                        <span>Ματαίωση</span>
+                            class="hidden lg:flex w-full items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                        <svg class="w-6 h-6 text-red-500 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                        </svg>
+                        Ματαίωση
                     </button>
 
 
@@ -718,340 +837,223 @@
 
                 <!-- Main Content Area -->
                 <div class="flex-1 min-w-0">
-            <!-- Opponent Move Display -->
-            <div x-show="opponentMove && !isMyTurn" x-cloak class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm p-3 mb-3 border border-indigo-200">
-                <h3 class="text-sm font-semibold text-indigo-900 mb-2.5 flex items-center gap-1.5">
-                    <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
-                    <span x-text="opponent?.display_name"></span>'s Move
-                </h3>
 
-                <!-- Category Selected -->
-                <div x-show="opponentMove?.phase === 'category'" class="text-center">
-                    <div class="inline-flex items-center gap-2 bg-white rounded-lg p-2.5 shadow-sm border border-slate-200">
-                        <div class="text-left">
-                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Επιλογη Κατηγοριας</div>
-                            <div class="text-sm font-semibold text-slate-800 mt-0.5" x-text="opponentMove?.category?.name"></div>
-                        </div>
-                    </div>
-                </div>
+                    <!-- Game Phase Display -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-3 lg:p-4 border border-slate-200">
+                        <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak style="display:none;">
+                            <h3 class="text-base lg:text-lg font-semibold text-slate-800 mb-3 lg:mb-4">Επίλεξε Κατηγορία & Επίπεδο</h3>
 
-                <!-- Difficulty Selected -->
-                <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-2">
-                    <!-- Timer -->
-                    <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="font-medium text-slate-600">Time</span>
-                            <span class="font-semibold text-indigo-600" x-text="opponentTimeRemaining + 's'"></span>
-                        </div>
-                        <div class="w-full bg-slate-200 rounded-full h-1.5">
-                            <div class="h-1.5 rounded-full transition-all duration-1000"
-                                 :class="opponentTimeRemaining > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' : (opponentTimeRemaining > 10 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-600')"
-                                 :style="`width: ${(opponentTimeRemaining / 60) * 100}%`"></div>
-                        </div>
-                    </div>
+                            <!-- List View (Mobile & Desktop) -->
+                            <div class="space-y-3">
+                                <template x-for="(category, index) in categories" :key="category.id">
+                                    <div @click="!isCategoryUsed(category.id) && isMyTurn && !loading ? null : null"
+                                         :class="[
+                                     isCategoryUsed(category.id) ? 'opacity-50 grayscale pointer-events-none' : 'hover:shadow-lg transform hover:-translate-y-0.5',
+                                     index % 6 === 0 ? 'bg-gradient-to-r from-amber-700 to-amber-600' : '',
+                                     index % 6 === 1 ? 'bg-gradient-to-r from-blue-600 to-blue-500' : '',
+                                     index % 6 === 2 ? 'bg-gradient-to-r from-green-600 to-green-500' : '',
+                                     index % 6 === 3 ? 'bg-gradient-to-r from-purple-600 to-purple-500' : '',
+                                     index % 6 === 4 ? 'bg-gradient-to-r from-rose-600 to-rose-500' : '',
+                                     index % 6 === 5 ? 'bg-gradient-to-r from-teal-600 to-teal-500' : ''
+                                 ]"
+                                         class="rounded-2xl shadow-md p-2 lg:p-2 transition-all duration-300 cursor-pointer">
 
-                    <div class="flex items-center justify-center gap-2 flex-wrap text-xs">
-                        <div class="inline-flex items-center gap-1.5 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                            <span class="text-slate-500 font-medium">Κατηγορία:</span>
-                            <span class="font-semibold text-slate-800" x-text="opponentMove?.category?.name"></span>
-                        </div>
-                        <div class="text-slate-300">→</div>
-                        <div class="inline-flex items-center gap-1.5 bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                            <span class="text-slate-500 font-medium">Επίπεδο:</span>
-                            <span class="font-semibold text-slate-800" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                        <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Ερώτηση</div>
-                        <div class="text-slate-800 text-xs font-medium" x-text="opponentMove?.question"></div>
-                    </div>
-                    <div class="text-center text-xs text-indigo-700 font-medium">
-                        <div class="inline-flex items-center gap-1.5">
-                            <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
-                            Απαντάει ο αντίπαλος...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Answer Result -->
-                <div x-show="opponentMove?.phase === 'result'" class="text-center space-y-2.5">
-                    <div class="flex items-center justify-center gap-2 flex-wrap text-xs">
-                        <div class="inline-flex items-center bg-white rounded-lg px-2 py-1 shadow-sm border border-slate-200">
-                            <span class="font-semibold text-slate-700" x-text="opponentMove?.category?.name"></span>
-                        </div>
-                        <div class="inline-flex items-center bg-white rounded-lg px-2 py-1 shadow-sm border border-slate-200">
-                            <span class="font-semibold text-slate-700" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
-                        </div>
-                    </div>
-
-                    <div x-show="opponentMove?.is_correct" class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                        <div class="text-2xl text-emerald-600">✓</div>
-                        <div>
-                            <div class="text-emerald-800 font-medium text-xs">Correct</div>
-                            <div class="text-emerald-700 font-semibold text-xs">+<span x-text="opponentMove?.points_earned"></span> pts</div>
-                        </div>
-                    </div>
-
-                    <div x-show="!opponentMove?.is_correct" class="inline-flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                        <div class="text-2xl text-rose-600">×</div>
-                        <div>
-                            <div class="text-rose-800 font-medium text-xs">Incorrect</div>
-                            <div class="text-rose-700 font-semibold text-xs">0 pts</div>
-                        </div>
-                    </div>
-
-                    <!-- Question Text -->
-                    <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-lg p-2 border border-slate-200">
-                        <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Question</div>
-                        <div class="text-slate-800 text-xs font-medium" x-text="opponentMove?.question"></div>
-                    </div>
-
-                    <!-- Answer Details -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                        <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Opponent's Answer</div>
-                            <div class="text-slate-800 font-semibold" x-text="opponentMove?.answer"></div>
-                        </div>
-                        <div class="bg-white rounded-lg p-2 shadow-sm border border-slate-200">
-                            <div class="text-[10px] text-slate-500 uppercase tracking-wide font-medium mb-1">Correct Answer</div>
-                            <div class="text-emerald-700 font-semibold" x-text="opponentMove?.correct_answer"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Game Phase Display -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-3 lg:p-4 border border-slate-200">
-                <!-- Phase 1 & 2: Combined Category & Difficulty Selection Table -->
-                <!-- Show to current player OR waiting player (to see the board) -->
-                <div x-show="phase === 'category' || phase === 'difficulty' || phase === 'waiting'" x-cloak style="display:none;">
-                    <h3 class="text-base lg:text-lg font-semibold text-slate-800 mb-3 lg:mb-4">Επίλεξε Κατηγορία & Επίπεδο</h3>
-
-                    <!-- Mobile: Stacked Cards View -->
-                    <div class="lg:hidden space-y-2.5">
-                        <template x-for="category in categories" :key="category.id">
-                            <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 border border-slate-200">
-                                <div class="flex items-center gap-2 mb-2.5 pb-2.5 border-b border-slate-200">
-                                    <div class="text-xl" x-text="category.icon"></div>
-                                    <span class="font-bold text-lg text-slate-800" x-text="category.name"></span>
-                                </div>
-                                <div class="grid grid-cols-3 gap-1.5">
-                                    <!-- Easy -->
-                                    <button @click="selectCategoryAndDifficulty(category.id, 'easy')"
-                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Εύκολο<br/><span class="text-[10px] opacity-90">1pt</span></div>
-                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'easy')" class="text-[10px]">Used</div>
-                                    </button>
-                                    <!-- Medium -->
-                                    <button @click="selectCategoryAndDifficulty(category.id, 'medium')"
-                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Μέτριο<br/><span class="text-[10px] opacity-90">2pts</span></div>
-                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'medium')" class="text-[10px]">Used</div>
-                                    </button>
-                                    <!-- Hard -->
-                                    <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
-                                            :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
-                                            :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-white text-red-500 border-red-300 hover:bg-rose-600 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                            class="py-1.5 px-2 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed text-xs">
-                                        <div x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Δύσκολο<br/><span class="text-[10px] opacity-90">3pts</span></div>
-                                        <div x-show="!isCategoryDifficultyAvailable(category.id, 'hard')" class="text-[10px]">Used</div>
-                                    </button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- Desktop: Table View -->
-                    <div class="hidden lg:block overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-slate-50 to-gray-50">
-                                    <th class="border border-slate-200 px-4 py-2.5 text-left text-sm font-semibold text-slate-700">Category</th>
-                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-emerald-700">Easy<br/><span class="text-xs font-normal text-slate-500">1pt</span></th>
-                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-amber-700">Medium<br/><span class="text-xs font-normal text-slate-500">2pts</span></th>
-                                    <th class="border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-rose-700">Hard<br/><span class="text-xs font-normal text-slate-500">3pts</span></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="category in categories" :key="category.id">
-                                    <tr class="hover:bg-gradient-to-r hover:from-indigo-50/40 hover:to-purple-50/40 transition-all duration-200">
-                                        <td class="border border-slate-200 px-4 py-2.5">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="text-xl" x-text="category.icon"></div>
-                                                <span class="font-bold text-lg text-slate-800" x-text="category.name"></span>
+                                        <div class="flex items-center justify-between gap-2 lg:gap-4">
+                                            <!-- Left: Icon & Name -->
+                                            <div class="flex items-center gap-2 lg:gap-3 flex-1 min-w-0 overflow-hidden">
+                                                <div class="text-2xl lg:text-4xl flex-shrink-0" x-text="category.icon"></div>
+                                                <span class="font-bold text-sm sm:text-base lg:text-xl text-white break-words hyphens-auto"
+                                                      style="word-break: break-word; overflow-wrap: break-word; line-height: 1.2;"
+                                                      x-text="category.name"></span>
                                             </div>
-                                        </td>
 
-                                        <!-- Easy Button -->
-                                        <td class="border border-slate-200 px-2.5 py-2">
-                                            <button @click="selectCategoryAndDifficulty(category.id, 'easy')"
-                                                    :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'easy') ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
-                                                <span x-show="isCategoryDifficultyAvailable(category.id, 'easy')">Select</span>
-                                                <span x-show="!isCategoryDifficultyAvailable(category.id, 'easy')">Used</span>
-                                            </button>
-                                        </td>
+                                            <!-- Right: Circular Badges -->
+                                            <div class="flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
+                                                <!-- x1 - Easy -->
+                                                <button @click.stop="selectCategoryAndDifficulty(category.id, 'easy')"
+                                                        :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'easy')"
+                                                        :class="isCategoryDifficultyAvailable(category.id, 'easy')
+                                                    ? 'bg-white text-gray-800 hover:scale-110 hover:ring-4 hover:ring-white/50'
+                                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-40'"
+                                                        class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full font-bold text-xs sm:text-sm lg:text-base shadow-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center">
+                                                    x1
+                                                </button>
 
-                                        <!-- Medium Button -->
-                                        <td class="border border-slate-200 px-2.5 py-2">
-                                            <button @click="selectCategoryAndDifficulty(category.id, 'medium')"
-                                                    :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'medium') ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
-                                                <span x-show="isCategoryDifficultyAvailable(category.id, 'medium')">Select</span>
-                                                <span x-show="!isCategoryDifficultyAvailable(category.id, 'medium')">Used</span>
-                                            </button>
-                                        </td>
+                                                <!-- x2 - Medium -->
+                                                <button @click.stop="selectCategoryAndDifficulty(category.id, 'medium')"
+                                                        :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'medium')"
+                                                        :class="isCategoryDifficultyAvailable(category.id, 'medium')
+                                                    ? 'bg-white text-gray-800 hover:scale-110 hover:ring-4 hover:ring-white/50'
+                                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-40'"
+                                                        class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full font-bold text-xs sm:text-sm lg:text-base shadow-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center">
+                                                    x2
+                                                </button>
 
-                                        <!-- Hard Button -->
-                                        <td class="border border-slate-200 px-2.5 py-2">
-                                            <button @click="selectCategoryAndDifficulty(category.id, 'hard')"
-                                                    :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
-                                                    :class="isCategoryDifficultyAvailable(category.id, 'hard') ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm hover:shadow scale-100 hover:scale-105' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                                    class="w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 disabled:cursor-not-allowed">
-                                                <span x-show="isCategoryDifficultyAvailable(category.id, 'hard')">Select</span>
-                                                <span x-show="!isCategoryDifficultyAvailable(category.id, 'hard')">Used</span>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                                <!-- x3 - Hard -->
+                                                <button @click.stop="selectCategoryAndDifficulty(category.id, 'hard')"
+                                                        :disabled="!isMyTurn || loading || !isCategoryDifficultyAvailable(category.id, 'hard')"
+                                                        :class="isCategoryDifficultyAvailable(category.id, 'hard')
+                                                    ? 'bg-white text-gray-800 hover:scale-110 hover:ring-4 hover:ring-white/50'
+                                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-40'"
+                                                        class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full font-bold text-xs sm:text-sm lg:text-base shadow-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center">
+                                                    x3
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </template>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Phase 3: Question & Answer -->
-                <div x-show="phase === 'question' && currentQuestion" x-cloak style="display: none">
-                    <div class="mb-6">
-                        <!-- Timer -->
-                        <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 transition-all duration-300"
-                             :class="!questionTimerReady ? 'blur-sm' : ''">
-                            <div class="flex justify-between text-sm mb-2">
-                                <span class="font-semibold text-gray-700">Time Remaining</span>
-                                <span class="font-bold text-blue-600 text-lg" x-text="timeRemaining + 's'"></span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="h-3 rounded-full transition-all duration-1000"
-                                     :class="timeRemaining > 30 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : (timeRemaining > 10 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
-                                     :style="`width: ${(timeRemaining / 60) * 100}%`"></div>
                             </div>
                         </div>
 
-                        <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-relaxed" x-text="currentQuestion?.text"></h3>
-
-                        <!-- Question Image (for text_input_with_image type) -->
-                        <div x-show="currentQuestion?.type === 'text_input_with_image' && currentQuestion?.image_url" class="mb-6">
-                            <div class="relative bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-4 shadow-lg border-2 border-gray-200">
-                                <img :src="'/' + currentQuestion?.image_url"
-                                     style="max-width: 350px;"
-                                     alt="Question image"
-                                     class="w-full max-w-2xl mx-auto rounded-lg shadow-md border border-gray-300">
-                            </div>
-                        </div>
-
-                        <!-- Text Input Answer -->
-                        <div x-show="currentQuestion?.type === 'text_input'" class="space-y-4">
-                            <input type="text" x-model="answer"
-                                   @keydown.enter="submitAnswer"
-                                   class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
-                                   placeholder="Type your answer...">
-                        </div>
-
-                        <!-- Text Input with Image Answer -->
-                        <div x-show="currentQuestion?.type === 'text_input_with_image'" class="space-y-4">
-                            <input type="text" x-model="answer"
-                                   @keydown.enter="submitAnswer"
-                                   class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
-                                   placeholder="Type your answer...">
-                        </div>
-
-                        <!-- Multiple Choice Answer -->
-                        <div x-show="currentQuestion?.type === 'multiple_choice'" class="space-y-3">
-                            <template x-for="(ans, index) in currentQuestion?.answers" :key="ans.id">
-                                <button @click="answer = ans.id"
-                                        :class="answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
-                                        class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
-                                    <span class="font-bold text-blue-600 mr-3" x-text="String.fromCharCode(65 + index)"></span>
-                                    <span class="text-gray-900 font-medium" x-text="ans.text"></span>
-                                </button>
-                            </template>
-                        </div>
-
-                        <!-- Top 5 Answer -->
-                        <div x-show="currentQuestion?.type === 'top_5'" class="space-y-3">
-                            <p class="text-sm text-gray-600 font-medium mb-4">Enter 5 correct answers:</p>
-                            <template x-for="i in [0,1,2,3,4]" :key="i">
-                                <div class="flex items-center gap-3">
-                                    <span class="font-bold text-gray-600" x-text="(i + 1)"></span>
-                                    <input type="text" x-model="topFiveAnswers[i]"
-                                           class="flex-1 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 p-3 transition-all duration-200"
-                                           :placeholder="'Answer ' + (i + 1)">
+                        <div x-show="phase === 'question' && currentQuestion" x-cloak style="display: none">
+                            <div class="mb-6">
+                                <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 transition-all duration-300"
+                                     :class="!questionTimerReady ? 'blur-sm' : ''">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-semibold text-gray-700">Εναπομείναντας χρόνος</span>
+                                        <span class="font-bold text-blue-600 text-lg" x-text="timeRemaining + 's'"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div class="h-3 rounded-full transition-all duration-1000"
+                                             :class="timeRemaining > 30 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : (timeRemaining > 10 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
+                                             :style="`width: ${(timeRemaining / 60) * 100}%`"></div>
+                                    </div>
                                 </div>
-                            </template>
-                        </div>
-                    </div>
 
-                    <button @click="submitAnswer"
-                            :disabled="!canSubmit || loading"
-                            class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105">
-                        Submit Answer
-                    </button>
-                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-relaxed" x-text="currentQuestion?.text"></h3>
 
-                <!-- Phase 4: Result Display -->
-                <div x-show="phase === 'result' && lastResult" x-cloak>
-                    <div class="text-center py-8 space-y-6">
-                        <div x-show="lastResult?.is_correct" class="animate-in fade-in duration-500">
-                            <div class="text-8xl font-black mb-4 text-green-600">✓</div>
-                            <div class="text-3xl font-bold mb-3 text-green-800">Correct!</div>
-                            <div class="text-xl font-semibold text-green-700">+<span x-text="lastResult?.points_earned"></span> points</div>
-                        </div>
-                        <div x-show="!lastResult?.is_correct" class="animate-in fade-in duration-500">
-                            <div class="text-8xl font-black mb-4 text-red-600">×</div>
-                            <div class="text-3xl font-bold mb-3 text-red-800">Incorrect</div>
-                            <div class="text-xl font-semibold text-red-700">0 points</div>
-                        </div>
+                                <div x-show="currentQuestion?.type === 'text_input_with_image' && currentQuestion?.image_url" class="mb-6">
+                                    <div class="relative bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-4 shadow-lg border-2 border-gray-200">
+                                        <img :src="currentQuestion?.image_url"
+                                             style="max-width: 350px;"
+                                             alt="Question image"
+                                             class="w-full max-w-2xl mx-auto rounded-lg shadow-md border border-gray-300">
+                                    </div>
+                                </div>
 
-                        <!-- Question Text -->
-                        <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-                            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Question</div>
-                            <div class="text-gray-900 font-medium" x-text="lastResult?.question_text"></div>
-                        </div>
+                                <div x-show="currentQuestion?.type === 'text_input'" class="space-y-4">
+                                    <input type="text" x-model="answer"
+                                           @keydown.enter="submitAnswer"
+                                           class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
+                                           placeholder="Type your answer...">
+                                </div>
 
-                        <!-- Answer Details -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                            <div class="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Your Answer</div>
-                                <div class="text-gray-900 font-bold" x-text="lastResult?.player_answer"></div>
+                                <div x-show="currentQuestion?.type === 'text_input_with_image'" class="space-y-4">
+                                    <input type="text" x-model="answer"
+                                           @keydown.enter="submitAnswer"
+                                           class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
+                                           placeholder="Type your answer...">
+                                </div>
+
+                                <div x-show="currentQuestion?.type === 'multiple_choice'" class="space-y-3">
+                                    <template x-for="(ans, index) in currentQuestion?.answers" :key="ans.id">
+                                        <button @click="answer = ans.id"
+                                                :class="answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
+                                                class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                                            <span class="font-bold text-blue-600 mr-3" x-text="String.fromCharCode(65 + index)"></span>
+                                            <span class="text-gray-900 font-medium" x-text="ans.text"></span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <div x-show="currentQuestion?.type === 'top_5'" class="space-y-3">
+                                    <p class="text-sm text-gray-600 font-medium mb-4">Enter 5 correct answers:</p>
+                                    <template x-for="i in [0,1,2,3,4]" :key="i">
+                                        <div class="flex items-center gap-3">
+                                            <span class="font-bold text-gray-600" x-text="(i + 1)"></span>
+                                            <input type="text" x-model="topFiveAnswers[i]"
+                                                   class="flex-1 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 p-3 transition-all duration-200"
+                                                   :placeholder="'Answer ' + (i + 1)">
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
-                            <div class="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Correct Answer</div>
-                                <div class="text-green-700 font-bold" x-text="lastResult?.correct_answer"></div>
+
+                            <div class="flex gap-3">
+                                <button @click="passQuestion"
+                                        :disabled="loading"
+                                        class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-bold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105">
+                                    <span class="hidden sm:inline">Παράλειψη</span>
+                                    <svg class="sm:hidden w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                                <button @click="submitAnswer"
+                                        :disabled="!canSubmit || loading"
+                                        class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105">
+                                    Υποβολή Απάντησης
+                                </button>
+                            </div>
+                        </div>
+
+                        <div x-show="phase === 'result' && lastResult" x-cloak>
+                            <div class="py-6 space-y-6">
+                                <div class="mb-6">
+                                    <div x-show="lastResult?.is_correct"
+                                         x-transition:enter="transition ease-out duration-500"
+                                         x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
+                                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                         class="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-6 py-6 shadow-xl">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110 animate-pulse">
+                                                <div class="text-5xl lg:text-6xl text-white font-black">✓</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 text-left">
+                                            <div class="text-emerald-900 font-black text-3xl lg:text-4xl mb-2">Σωστό!</div>
+                                            <div class="text-emerald-700 font-bold text-xl lg:text-2xl">
+                                                +<span x-text="lastResult?.points_earned"></span> πόντοι
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 text-7xl lg:text-8xl animate-bounce">
+                                            🎉
+                                        </div>
+                                    </div>
+
+                                    <div x-show="!lastResult?.is_correct"
+                                         x-transition:enter="transition ease-out duration-500"
+                                         x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
+                                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                         class="w-full flex items-center gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-6 py-6 shadow-xl">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                                <div class="text-5xl lg:text-6xl text-white font-black">×</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 text-left">
+                                            <div class="text-rose-900 font-black text-3xl lg:text-4xl mb-2">Λάθος</div>
+                                            <div class="text-rose-700 font-bold text-xl lg:text-2xl">
+                                                0 πόντοι
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 text-7xl lg:text-8xl opacity-50">
+                                            😔
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-5 border border-slate-200 shadow-sm">
+                                    <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-2">ΕΡΩΤΗΣΗ</div>
+                                    <div class="text-slate-900 font-medium text-base lg:text-lg leading-relaxed" x-text="lastResult?.question_text"></div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-white rounded-xl p-5 shadow-lg border-2 border-slate-200 transform transition-all hover:scale-105">
+                                        <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-3">Η ΑΠΑΝΤΗΣΗ ΣΟΥ</div>
+                                        <div class="text-slate-900 font-bold text-lg break-words" x-text="lastResult?.player_answer || '-'"></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl p-5 shadow-lg border-2 border-emerald-200 transform transition-all hover:scale-105">
+                                        <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-3">ΣΩΣΤΗ ΑΠΑΝΤΗΣΗ</div>
+                                        <div class="text-emerald-700 font-bold text-lg break-words" x-text="lastResult?.correct_answer"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Loading State -->
-                <div x-show="loading" class="text-center py-12">
-                    <div class="inline-flex items-center gap-3">
-                        <div class="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                        <div class="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                        <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-                    </div>
-                    <p class="mt-4 text-gray-600 font-medium">Processing...</p>
                 </div>
             </div>
-            </div>
-        </div>
         </div>
 
-        <!-- Tab Switch Warning Modal -->
         <div x-show="showTabSwitchWarning"
              x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
@@ -1061,26 +1063,27 @@
                 <div class="text-center">
                     <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
                         <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Warning!</h3>
-                    <p class="text-gray-600 mb-1">You switched tabs during a question.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Προειδοποίηση!</h3>
+                    <p class="text-gray-600 mb-1">Άλλαξες καρτέλα κατά τη διάρκεια μιας ερώτησης.</p>
                     <div class="text-red-600 font-bold text-lg mb-4">
-                        <span x-text="tabSwitchCount"></span> / 3 violations
+                        <span x-text="tabSwitchCount"></span> / 3 παραβάσεις
                     </div>
-                    <p x-show="this.tabSwitchCount == 2" class="text-sm text-gray-700 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <span class="font-semibold">⚠️ One more violation</span> and the game will be automatically forfeited!
+                    <p x-show="this.tabSwitchCount == 2"
+                       class="text-sm text-gray-700 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <span class="font-semibold">⚠️ Μία ακόμη παράβαση</span> και το παιχνίδι θα εγκαταλειφθεί αυτόματα!
                     </p>
                     <button @click="closeTabWarning"
                             class="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                        I Understand
+                        Κατάλαβα
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Forfeit Confirmation Modal -->
         <div x-show="showForfeitConfirmation"
              x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
@@ -1093,17 +1096,211 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Forfeit Game?</h3>
-                    <p class="text-gray-600 mb-6">Are you sure you want to forfeit this game? Your opponent will be declared the winner.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Ματαίωση παιχνιδιού;</h3>
+                    <p class="text-gray-600 mb-6">Είσαι σίγουρος ότι θέλεις να εγκαταλείψεις αυτό το παιχνίδι; Ο αντίπαλός σου θα ανακηρυχθεί νικητής.</p>
                     <div class="flex gap-3">
                         <button @click="showForfeitConfirmation = false"
                                 class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition-all duration-200">
-                            Cancel
+                            Ακύρωση
                         </button>
                         <button @click="showForfeitConfirmation = false; forfeitGame(false)"
                                 class="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                            Forfeit
+                            Ματαίωση
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="loading && phase === 'question'"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+            <div class="absolute inset-0 bg-black/60"></div>
+
+            <div class="relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-2xl max-w-md w-full p-8 border-2 border-blue-300 transform transition-all">
+                <div class="text-center space-y-6">
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <div class="w-24 h-24 border-8 border-blue-200 rounded-full"></div>
+                            <div class="w-24 h-24 border-8 border-blue-600 rounded-full border-t-transparent absolute top-0 left-0 animate-spin"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Επεξεργασία...</h3>
+                        <p class="text-slate-600 font-medium">Η απάντησή σου υποβάλλεται</p>
+                    </div>
+
+                    <div class="flex justify-center gap-2">
+                        <div class="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                        <div class="w-3 h-3 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                        <div class="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opponent Move Modal - Always show when it's not my turn -->
+        <div x-show="!isMyTurn"
+             x-cloak
+             class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-32 lg:pb-4"
+             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+            <div class="absolute inset-0 bg-black/60"></div>
+
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-lg w-full p-6 border-2 border-indigo-300 transform transition-all">
+                <div class="space-y-4">
+                    <div class="text-center border-b border-indigo-200 pb-4">
+                        <h3 class="text-xl lg:text-2xl font-bold text-indigo-900 mb-2 flex items-center justify-center gap-2">
+                            <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+                            <span x-text="opponent?.display_name"></span> Παίζει
+                        </h3>
+                    </div>
+
+                    <!-- Selecting Category Phase -->
+                    <div x-show="!opponentMove || opponentMove?.phase === 'category'" class="text-center py-8">
+                        <div class="flex flex-col items-center gap-4">
+                            <!-- Loading Animation -->
+                            <div class="relative w-20 h-20">
+                                <div class="absolute inset-0 rounded-full border-4 border-indigo-200"></div>
+                                <div class="absolute inset-0 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+                            </div>
+
+                            <!-- Message -->
+                            <div class="space-y-2">
+                                <p class="text-lg font-bold text-indigo-900">
+                                    Ο παίκτης επιλέγει κατηγορία...
+                                </p>
+                                <p class="text-sm text-slate-600">
+                                    Παρακαλώ περιμένετε
+                                </p>
+                            </div>
+
+                            <!-- Category Icon if selected -->
+                            <div x-show="opponentMove?.category" class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-slate-200 mt-4">
+                                <div class="text-4xl" x-text="opponentMove?.category?.icon || '📝'"></div>
+                                <div class="text-left">
+                                    <div class="text-xs text-slate-500 uppercase tracking-wide font-medium">Επέλεξε Κατηγορία</div>
+                                    <div class="text-lg font-bold text-slate-800 mt-1" x-text="opponentMove?.category?.name"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Answering Question Phase -->
+                    <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-4">
+                        <div class="text-center py-2">
+                            <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 font-bold px-5 py-2.5 rounded-full text-lg">
+                                <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full animate-pulse"></div>
+                                Απαντάει στην ερώτηση...
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="font-semibold text-slate-600">Χρόνος</span>
+                                <span class="font-bold text-indigo-600 text-xl" x-text="opponentTimeRemaining + 's'"></span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                                <div class="h-3 rounded-full transition-all duration-1000 shadow-sm"
+                                     :class="opponentTimeRemaining > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' : (opponentTimeRemaining > 10 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-600')"
+                                     :style="`width: ${(opponentTimeRemaining / 60) * 100}%`"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-3 flex-wrap">
+                            <div class="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-md border border-slate-200">
+                                <span class="text-slate-600 font-medium text-sm">Κατηγορία:</span>
+                                <span class="font-bold text-slate-900" x-text="opponentMove?.category?.name"></span>
+                            </div>
+                            <div class="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-md border border-slate-200">
+                                <span class="text-slate-600 font-medium text-sm">Επίπεδο:</span>
+                                <span class="font-bold text-slate-900" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
+                            <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερώτηση</div>
+                            <div class="text-slate-900 font-medium leading-relaxed" x-text="opponentMove?.question"></div>
+                        </div>
+
+                        <div x-show="opponentMove?.image_url" class="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-3 shadow-md border border-slate-200">
+                            <img :src="opponentMove?.image_url"
+                                 style="max-width: 300px;"
+                                 alt="Question image"
+                                 class="w-full mx-auto rounded-lg shadow-sm border border-gray-300">
+                        </div>
+                    </div>
+
+                    <div x-show="opponentMove?.phase === 'result'" class="space-y-4">
+                        <div class="flex items-center justify-center gap-3 flex-wrap">
+                            <div class="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-md border border-slate-200">
+                                <span class="font-bold text-slate-800" x-text="opponentMove?.category?.name"></span>
+                            </div>
+                            <div class="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-md border border-slate-200">
+                                <span class="font-bold text-slate-800" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
+                            </div>
+                        </div>
+
+                        <div class="py-4">
+                            <div x-show="opponentMove?.is_correct"
+                                 x-transition:enter="transition ease-out duration-500"
+                                 x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 class="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-6 py-5 shadow-xl animate-pulse-slow">
+                                <div class="flex-shrink-0">
+                                    <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                        <div class="text-4xl lg:text-5xl text-white font-black">✓</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <div class="text-emerald-900 font-black text-2xl lg:text-3xl mb-1">Σωστό!</div>
+                                    <div class="text-emerald-700 font-bold text-lg lg:text-xl">
+                                        +<span x-text="opponentMove?.points_earned"></span> πόντοι
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 text-6xl lg:text-7xl animate-bounce">
+                                    🎉
+                                </div>
+                            </div>
+
+                            <div x-show="!opponentMove?.is_correct"
+                                 x-transition:enter="transition ease-out duration-500"
+                                 x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 class="w-full flex items-center gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-6 py-5 shadow-xl">
+                                <div class="flex-shrink-0">
+                                    <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                        <div class="text-4xl lg:text-5xl text-white font-black">×</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <div class="text-rose-900 font-black text-2xl lg:text-3xl mb-1">Λάθος</div>
+                                    <div class="text-rose-700 font-bold text-lg lg:text-xl">
+                                        0 πόντοι
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 text-6xl lg:text-7xl opacity-50">
+                                    😔
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200 shadow-sm">
+                            <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερώτηση</div>
+                            <div class="text-slate-900 font-medium" x-text="opponentMove?.question"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
+                                <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Απάντηση Αντιπάλου</div>
+                                <div class="text-slate-900 font-bold break-words" x-text="opponentMove?.answer || '-'"></div>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
+                                <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Σωστή Απάντηση</div>
+                                <div class="text-emerald-700 font-bold break-words" x-text="opponentMove?.correct_answer"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

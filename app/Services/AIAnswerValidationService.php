@@ -103,7 +103,7 @@ class AIAnswerValidationService
 You are a football quiz answer validator. Your job is to determine if a user's answer is semantically correct, even if it contains:
 - Spelling mistakes (e.g., "Messy" instead of "Messi" or "Ronaldoo" instead of "Ronaldo" or "Σλαταν" instead of "Zlatan")
 - Different languages (e.g., "Μέσι" in Greek instead of "Messi")
-- Shorter Answers (e.g., "Real" for "Real Madrid" or "United" for "Manchester United")
+- Shorter Answers (e.g., "Real" for "Real Madrid" or "United or manchester" for "Manchester United", "Barca" for "Barcelona", "Salah" for "Mohamed Salah or Μοχάμεντ Σαλάχ" etc.)
 - Abbreviations (e.g., "CR7" instead of "Cristiano Ronaldo")
 - Minor variations (e.g., "Real Madrid CF" instead of "Real Madrid")
 

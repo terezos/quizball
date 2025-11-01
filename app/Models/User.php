@@ -74,8 +74,7 @@ class User extends Authenticatable
 
     public function isPremium(): bool
     {
-        // For now, return false - will be implemented with subscription system
-        return false;
+        return true;
     }
 
     public function notifications(): HasMany
