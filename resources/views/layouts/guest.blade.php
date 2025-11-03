@@ -22,7 +22,7 @@
             <div class="mb-6">
                 <a href="/">
                     <video class="media" muted="" autoplay="" loop="" preload="auto" width="auto" height="auto" playsinline="" style="max-width: 200px;">
-                        <source src="http://localhost/storage/logo/quizball.mp4" type="video/mp4">
+                        <source src="/storage/logo/quizball.mp4" type="video/mp4">
                     </video>
                 </a>
             </div>

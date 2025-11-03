@@ -778,7 +778,7 @@
 
                 <a href="#" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
                     <video class="media" muted autoplay loop preload="auto" width="auto" height="auto" playsinline="" style="max-width: 100px;">
-                        <source src="http://localhost/storage/logo/quizball.mp4" type="video/mp4">
+                        <source src="/storage/logo/quizball.mp4" type="video/mp4">
                     </video>
                 </a>
             </div>
