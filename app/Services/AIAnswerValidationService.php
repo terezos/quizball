@@ -6,15 +6,6 @@ use OpenAI\Laravel\Facades\OpenAI;
 
 class AIAnswerValidationService
 {
-    /**
-     * Validate if a user's answer is semantically correct
-     *
-     * Handles:
-     * - Misspellings (e.g., "Messy" vs "Messi")
-     * - Different languages (e.g., "Μέσι" vs "Messi")
-     * - Abbreviations (e.g., "CR7" vs "Cristiano Ronaldo")
-     * - Minor variations (e.g., "Real Madrid CF" vs "Real Madrid")
-     */
     public function validateAnswer(
         string $question,
         array $correctAnswers,
@@ -22,10 +13,8 @@ class AIAnswerValidationService
         ?float $threshold = null
     ): array {
 
-        // Use config threshold if not provided
         $threshold = $threshold ?? config('quiz.ai_confidence_threshold', 0.85);
 
-        // If AI validation is disabled, only exact match
         if (! config('quiz.ai_validation_enabled', true)) {
             foreach ($correctAnswers as $correct) {
                 if (strcasecmp(trim($userAnswer), trim($correct)) === 0) {
@@ -46,7 +35,6 @@ class AIAnswerValidationService
             ];
         }
 
-        // If exact match, no need for AI
         foreach ($correctAnswers as $correct) {
             if (strcasecmp(trim($userAnswer), trim($correct)) === 0) {
                 return [
@@ -58,7 +46,6 @@ class AIAnswerValidationService
             }
         }
 
-        // If OpenAI is not configured, fall back to exact match only
         if (empty(config('openai.api_key'))) {
             return [
                 'is_correct' => false,
@@ -71,7 +58,6 @@ class AIAnswerValidationService
         try {
             return $this->validateWithAI($question, $correctAnswers, $userAnswer, $threshold);
         } catch (\Exception $e) {
-            // If AI fails, fall back to exact match
             \Log::error('AI Answer Validation failed', [
                 'error' => $e->getMessage(),
                 'question' => $question,
@@ -88,9 +74,6 @@ class AIAnswerValidationService
         }
     }
 
-    /**
-     * Validate answer using OpenAI
-     */
     private function validateWithAI(
         string $question,
         array $correctAnswers,
@@ -129,13 +112,12 @@ PROMPT;
                 ['role' => 'system', 'content' => 'You are a precise answer validator. Always respond with valid JSON only.'],
                 ['role' => 'user', 'content' => $prompt],
             ],
-            'temperature' => 0.1, // Low temperature for consistency
+            'temperature' => 0.1,
             'max_tokens' => 150,
         ]);
 
         $content = $response->choices[0]->message->content;
 
-        // Extract JSON from response (in case there's any extra text)
         if (preg_match('/\{.*\}/s', $content, $matches)) {
             $content = $matches[0];
         }
@@ -146,7 +128,6 @@ PROMPT;
             throw new \Exception('Invalid AI response format');
         }
 
-        // Apply confidence threshold
         $isCorrect = $result['is_correct'] && $result['confidence'] >= $threshold;
 
         return [
@@ -156,37 +137,5 @@ PROMPT;
             'reasoning' => $result['reasoning'] ?? null,
             'method' => 'ai_validation',
         ];
-    }
-
-    /**
-     * Get a user-friendly message for the validation result
-     */
-    public function getValidationMessage(array $result): string
-    {
-        if ($result['is_correct']) {
-            if ($result['method'] === 'exact_match') {
-                return 'Correct!';
-            }
-
-            if ($result['confidence'] >= 0.95) {
-                return 'Correct! (accepted)';
-            }
-
-            return sprintf(
-                'Correct! We accepted "%s" as equivalent to "%s"',
-                request()->input('answer'),
-                $result['matched_answer']
-            );
-        }
-
-        if ($result['method'] === 'exact_match_failed') {
-            return 'Incorrect answer.';
-        }
-
-        if (isset($result['reasoning'])) {
-            return sprintf('Incorrect. %s', $result['reasoning']);
-        }
-
-        return 'Incorrect answer.';
     }
 }

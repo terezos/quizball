@@ -73,7 +73,7 @@
                 players: {},
                 opponent: null,
                 isMyTurn: isMyTurn,
-                phase: 'category', // category, difficulty, question, result
+                phase: 'category',
                 loading: false,
                 currentQuestion: null,
                 currentCategory: null,
@@ -272,7 +272,6 @@
                             body: JSON.stringify({ category_id: categoryId })
                         });
 
-                        // Then select difficulty
                         const response = await fetch(`/game/${this.game.id}/select-difficulty`, {
                             method: 'POST',
                             headers: {
