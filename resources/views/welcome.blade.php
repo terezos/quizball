@@ -13,11 +13,13 @@
 </head>
 <body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
     <!-- Header -->
-    <header class="sticky top-0 z-50 backdrop-blur-sm bg-white/80 border-b border-gray-200">
-        <div class="container mx-auto px-6 py-4">
+    <header class="sticky top-0 z-50 backdrop-blur-sm bg-white border-b border-gray-200">
+        <div class="container mx-auto px-6 py-2">
             <div class="flex justify-between items-center">
                 <a href="/" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
-                    QuizBall
+                    <video class="media" muted autoplay loop preload="auto" width="auto" height="auto" playsinline="" style="max-width: 100px;">
+                        <source src="http://localhost/storage/logo/quizball.mp4" type="video/mp4">
+                    </video>
                 </a>
                 @if (Route::has('login'))
                     <div class="flex gap-3">
@@ -46,15 +48,15 @@
         <div class="max-w-4xl mx-auto text-center space-y-8">
             <!-- Main Headline -->
             <div class="space-y-4">
-                <div class="inline-block px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-full text-sm">
-                    Δοκιμάστε τις Ποδοσφαιρικές σας Γνώσεις
-                </div>
+{{--                <div class="inline-block px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-full text-sm">--}}
+{{--                    Δοκιμάστε τις Γνώσεις σας--}}
+{{--                </div>--}}
                 <h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">
                     Νομίζετε ότι Ξέρετε
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ποδόσφαιρο</span>;
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ποδόσφαιρο ή Μπάσκετ</span>;
                 </h1>
                 <p class="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
-                    Προκαλέστε φίλους ή AI.
+                    Προκαλέστε φίλους για να το αποδείξετε.
                 </p>
             </div>
 
@@ -73,7 +75,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-2">Επιλέξτε τη Μάχη σας</h3>
                     <p class="text-gray-600">
-                        Παίξτε εναντίον AI ή προκαλέστε έναν φίλο με κωδικό παιχνιδιού
+                        Παίξτε εναντίον AI, με έναν άγνωστο ή προκαλέστε έναν φίλο με κωδικό παιχνιδιού
                     </p>
                 </div>
 
@@ -105,15 +107,15 @@
                     <ul class="space-y-4">
                         <li class="flex items-start gap-3">
                             <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</span>
+                            <span class="text-gray-700"><strong>60 δευτερόλεπτα</strong> για να επιλέξετε κατηγορία/επίπεδο</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</span>
                             <span class="text-gray-700"><strong>60 δευτερόλεπτα</strong> για να απαντήσετε σε κάθε ερώτηση</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</span>
-                            <span class="text-gray-700"><strong>24 συνολικοί συνδυασμοί</strong> - μόλις επιλεγούν, δεν μπορούν να χρησιμοποιηθούν ξανά</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</span>
-                            <span class="text-gray-700"><strong>Χωρίς χάσιμο χρόνου</strong> - Το παιχνίδι τελειώνει όταν απαντηθούν όλες οι ερωτήσεις</span>
+                            <span class="text-gray-700"><strong>Χωρίς χάσιμο χρόνου</strong> - Το παιχνίδι τελειώνει όταν απαντηθούν όλες οι ερωτήσεις ή όταν κάποιο παραιτηθεί</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</span>

@@ -362,6 +362,76 @@ class GameController extends Controller
         return response()->json($gameState);
     }
 
+    public function getRounds(Game $game)
+    {
+        $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
+
+        if (! $player) {
+            return response()->json(['error' => 'Invalid player'], 403);
+        }
+
+        $rounds = $game->rounds()
+            ->with(['category:id,name,icon', 'gamePlayer', 'question.answers'])
+            ->orderBy('round_number', 'asc')
+            ->get()
+            ->map(function ($round) {
+                $questionData = null;
+                $playerAnswerText = null;
+                $correctAnswerText = null;
+
+                if ($round->question) {
+                    $questionData = [
+                        'id' => $round->question->id,
+                        'text' => $round->question->question_text,
+                        'type' => $round->question->question_type->value,
+                    ];
+
+                    // Get correct answer(s)
+                    $correctAnswers = $round->question->answers->where('is_correct', true);
+                    if ($round->question->question_type->value === 'top_5') {
+                        $correctAnswerText = $correctAnswers->take(5)->pluck('answer_text')->implode(', ');
+                    } else {
+                        $correctAnswerText = $correctAnswers->first()?->answer_text;
+                    }
+
+                    // Get player's answer text
+                    if ($round->player_answer) {
+                        if ($round->question->question_type->value === 'multiple_choice') {
+                            $answerId = is_numeric($round->player_answer) ? $round->player_answer : json_decode($round->player_answer, true);
+                            $playerAnswerText = $round->question->answers->find($answerId)?->answer_text ?? 'No answer';
+                        } elseif ($round->question->question_type->value === 'top_5') {
+                            $answers = json_decode($round->player_answer, true);
+                            $playerAnswerText = is_array($answers) ? implode(', ', $answers) : $round->player_answer;
+                        } else {
+                            $playerAnswerText = $round->player_answer;
+                        }
+                    }
+                }
+
+                return [
+                    'id' => $round->id,
+                    'round_number' => $round->round_number,
+                    'category' => $round->category ? [
+                        'id' => $round->category->id,
+                        'name' => $round->category->name,
+                        'icon' => $round->category->icon,
+                    ] : null,
+                    'difficulty' => $round->difficulty ? [
+                        'value' => $round->difficulty->value,
+                        'label' => $round->difficulty->label(),
+                    ] : null,
+                    'points_earned' => $round->points_earned ?? 0,
+                    'is_correct' => $round->is_correct ?? false,
+                    'time_taken' => $round->time_taken,
+                    'question' => $questionData,
+                    'player_answer' => $playerAnswerText,
+                    'correct_answer' => $correctAnswerText,
+                ];
+            });
+
+        return response()->json(['rounds' => $rounds]);
+    }
+
     public function forfeit(Game $game)
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());

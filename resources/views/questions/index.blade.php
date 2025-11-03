@@ -102,8 +102,8 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <div class="overflow-x-auto">
+                <div class="p-2">
+                    <div class="">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -133,16 +133,24 @@
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full
                                                 {{ $question->difficulty->badgeClasses() }}">
-                                                {{ ucfirst($question->difficulty->label()) }}
+                                                {{ $question->difficulty->label() }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                                {{ $question->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                                                {{ $question->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $question->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                                                {{ ucfirst($question->status) }}
-                                            </span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                                    {{ $question->status->badgeClasses() }}">
+                                                    {{ $question->status->label() }}
+                                                </span>
+                                                @if($question->status === \App\Enums\QuestionStatus::Rejected && $question->rejection_reason)
+                                                    <button
+                                                        onclick="openRejectionModal({{ $question->id }})"
+                                                        class="text-red-600 hover:text-red-800 transition"
+                                                        title="Δες λόγο απόρριψης">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
 {{--                                        @if(auth()->user()->isAdmin())--}}
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -180,4 +188,75 @@
             </div>
         </div>
     </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejectionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-lg bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-semibold text-red-600">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Λόγος Απόρριψης
+                </h3>
+                <button onclick="closeRejectionModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="mt-4">
+                <div id="rejectionContent" class="text-gray-700 text-base leading-relaxed mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <!-- Content will be inserted here -->
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeRejectionModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition">
+                        Κλείσιμο
+                    </button>
+                    <a id="editQuestionLink" href="#" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                        <i class="fas fa-edit mr-1"></i> Διόρθωση Ερώτησης
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        const rejectionData = {
+            @foreach($questions as $question)
+                @if($question->status === \App\Enums\QuestionStatus::Rejected && $question->rejection_reason)
+                    {{ $question->id }}: {
+                        reason: {!! json_encode(e($question->rejection_reason)) !!},
+                        editUrl: "{{ route('questions.edit', $question) }}"
+                    },
+                @endif
+            @endforeach
+        };
+
+        function openRejectionModal(questionId) {
+            const data = rejectionData[questionId];
+            if (data) {
+                document.getElementById('rejectionContent').textContent = data.reason;
+                document.getElementById('editQuestionLink').href = data.editUrl;
+                document.getElementById('rejectionModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeRejectionModal() {
+            document.getElementById('rejectionModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('rejectionModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectionModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRejectionModal();
+            }
+        });
+    </script>
+    @endpush
 </x-app-layout>

@@ -48,6 +48,7 @@ Route::prefix('game')
         Route::post('{game}/submit-answer', [GameController::class, 'submitAnswer'])->name('submitAnswer');
         Route::post('{game}/forfeit', [GameController::class, 'forfeit'])->name('forfeit');
         Route::get('{game}/state', [GameController::class, 'getState'])->name('state');
+        Route::get('{game}/rounds', [GameController::class, 'getRounds'])->name('rounds');
     });
 
 Route::get('/dashboard', function () {

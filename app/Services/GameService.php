@@ -37,7 +37,7 @@ class GameService
             'game_code' => $this->generateGameCode(),
             'status' => GameStatus::Waiting,
             'game_type' => $gameType,
-            'current_round' => 1,
+            'current_round' => 0,
             'max_rounds' => $maxRounds,
         ]);
 

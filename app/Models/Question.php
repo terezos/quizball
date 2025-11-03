@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DifficultyLevel;
+use App\Enums\QuestionStatus;
 use App\Enums\QuestionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,7 @@ class Question extends Model
         return [
             'question_type' => QuestionType::class,
             'difficulty' => DifficultyLevel::class,
+            'status' => QuestionStatus::class,
             'is_active' => 'boolean',
             'approved_at' => 'datetime',
         ];

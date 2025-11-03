@@ -50,10 +50,15 @@
                                             <div class="font-semibold text-sm text-slate-900">{{ $notification->title }}</div>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <div class="text-sm text-slate-600">{{ Str::limit($notification->message, 60) }}</div>
+                                            <div class="text-sm text-slate-600">{{ $notification->message }}</div>
                                             @if($notification->type === 'question_report' && $notification->data && auth()->user()->isEditor())
                                                 <a href="{{ route('reports.index') }}" class="inline-block mt-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                                                    View Report →
+                                                    Δες την αναφορά →
+                                                </a>
+                                            @endif
+                                            @if($notification->type === 'question' && $notification->data && auth()->user()->isEditor())
+                                                <a href="{{ route('questions.edit', $notification->data['question_id']) }}" class="inline-block mt-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                                    Δες την ερώτηση →
                                                 </a>
                                             @endif
                                         </td>

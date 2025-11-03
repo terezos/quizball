@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DifficultyLevel;
+use App\Enums\QuestionStatus;
 use App\Enums\QuestionType;
+use App\Enums\UserRole;
 use App\Models\Answer;
 use App\Models\Category;
+use App\Models\Notification;
 use App\Models\Question;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class QuestionController extends Controller
@@ -156,12 +160,24 @@ class QuestionController extends Controller
             abort(403);
         }
 
-        // Filter out empty answer fields before validation
         if ($request->has('answers')) {
             $answers = array_filter($request->answers, function ($answer) {
                 return ! empty($answer['text']);
             });
             $request->merge(['answers' => array_values($answers)]);
+        }
+
+        $status = $question->status;
+        if ($question->status == QuestionStatus::Rejected){
+            if ((auth()->user()->isAdmin() || auth()->user()->is_pre_validated)) {
+                $status = QuestionStatus::Approved;
+                $approvedBy = auth()->user()->id;
+                $approvedAt = now();
+            }else{
+                $status = QuestionStatus::Pending;
+                $approvedBy = null;
+                $approvedAt = null;
+            }
         }
 
         $request->validate([
@@ -180,14 +196,12 @@ class QuestionController extends Controller
         // Handle image upload
         $imageUrl = $question->image_url;
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($question->image_url && \Storage::disk('public')->exists(str_replace('storage/', '', $question->image_url))) {
                 \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
             }
             $imagePath = $request->file('image')->store('questions', 'public');
             $imageUrl = 'storage/' . $imagePath;
         } elseif ($request->question_type !== 'text_input_with_image') {
-            // Clear image if question type changed from text_input_with_image
             if ($question->image_url && \Storage::disk('public')->exists(str_replace('storage/', '', $question->image_url))) {
                 \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
             }
@@ -201,6 +215,9 @@ class QuestionController extends Controller
             'question_type' => $request->question_type,
             'difficulty' => $request->difficulty,
             'source_url' => $request->source_url,
+            'status' => $status ?? $question->status,
+            'approved_by' => $approvedBy ?? $question->approved_by,
+            'approved_at' => $approvedAt ?? $question->approved_at,
         ]);
 
         $question->answers()->delete();
@@ -218,6 +235,37 @@ class QuestionController extends Controller
                 'is_correct' => $isCorrect,
                 'order' => $index + 1,
             ]);
+        }
+
+        if ($status == QuestionStatus::Approved){
+            $creator = $question->creator;
+            $creator->increment('approved_questions_count');
+
+            if ($creator->approved_questions_count >= 10 && ! $creator->is_pre_validated) {
+                $creator->update(['is_pre_validated' => true]);
+            }
+        }
+
+        if ($status == QuestionStatus::Pending){
+            $admins = User::where('role', UserRole::Admin)->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'type' => 'question',
+                    'title' => 'Η Ερώτηση Ανανεώθηκε. Χρειάζεται Έγκριση',
+                    'message' => "Μια ερώτηση έχει ανανεωθεί από τον/την δημιουργό της και χρειάζεται έγκριση από τον διαχειριστή.",
+                    'data' => [
+                        'report_id' => $question->id,
+                        'question_id' => $question->id,
+                        'question_text' => $question->question_text,
+                        'reporter_id' => auth()->id(),
+                        'is_guest_report' => false,
+                    ],
+                ]);
+            }
+
+            return redirect()->route('questions.index')
+                ->with('success', 'Question updated successfully. Waiting for admin approval.');
         }
 
         return redirect()->route('questions.index')

@@ -100,6 +100,7 @@
                 alreadyForfeit: false,
                 showTabSwitchWarning: false,
                 showForfeitConfirmation: false,
+                showMoveHistory: false,
                 consecutiveTimeouts: 0,
                 tabSwitchListenerAdded: false,
                 isPageUnloading: false,
@@ -107,6 +108,7 @@
                 init() {
                     this.updatePlayers();
                     this.setupEcho();
+                    this.loadGameHistory();
 
                     const savedTabSwitchCount = localStorage.getItem(`game_${this.game.id}_tabSwitchCount`);
                     if (savedTabSwitchCount !== null) {
@@ -153,9 +155,11 @@
 
                             localStorage.setItem(`game_${this.game.id}_tabSwitchCount`, this.tabSwitchCount);
 
-                            if (this.tabSwitchCount >= 3 && !this.alreadyForfeit) {
-                                alert('You have switched tabs 3 times during a question. The game will be forfeited.');
-                                this.forfeitGame(true);
+                            if (this.tabSwitchCount >= 2 && !this.alreadyForfeit) {
+                                this.showTabSwitchWarning = true;
+                                setTimeout(() => {
+                                    this.forfeitGame(true);
+                                }, 2000);
                             } else {
                                 this.showTabSwitchWarning = true;
                             }
@@ -201,6 +205,26 @@
                             this.opponent = p;
                         }
                     });
+                },
+
+                async loadGameHistory() {
+                    try {
+                        const response = await fetch(`/game/${this.game.id}/rounds`, {
+                            headers: {
+                                'Accept': 'application/json',
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to load game history');
+                        }
+
+                        const data = await response.json();
+                        this.game.rounds = data.rounds || [];
+                    } catch (error) {
+                        console.error('Failed to load game history:', error);
+                        this.game.rounds = [];
+                    }
                 },
 
                 async selectCategory(categoryId) {
@@ -477,7 +501,7 @@
                         this.showInactivityWarning = this.inactivityTimeRemaining < 60;
 
                         if (this.inactivityTimeRemaining <= 0) {
-                            this.freezeTime();
+                            this.stopInactivityTimer();
                             alert('Έχετε μείνει ανενεργός για πολύ ώρα. Το παιχνίδι θα κατακυρωθεί υπέρ του αντιπάλου σας.');
                             this.forfeitGame(true);
                         }
@@ -512,7 +536,7 @@
                         this.opponentInactivityTimeRemaining = Math.max(0, 120 - elapsed);
 
                         if (this.opponentInactivityTimeRemaining <= 0) {
-                            this.freezeTime();
+                            this.stopInactivityTimer();
                             alert('Ο αντίπαλός σας έχει μείνει ανενεργός για πολύ ώρα. Το παιχνίδι θα κατακυρωθεί υπέρ σας.');
                             this.forfeitGame(true);
                         }
@@ -569,6 +593,7 @@
                     this.usedCombinations = data.game.used_combinations || [];
                     this.turnStartedAt = data.game.turn_started_at;
                     this.updatePlayers();
+                    this.loadGameHistory();
 
                     const wasMyTurn = this.isMyTurn;
                     this.isMyTurn = data.game.current_turn_player_id === this.player.id;
@@ -622,7 +647,6 @@
                 },
 
                 handleOpponentMove(data) {
-                    console.log(data);
                     if (data.move.player_id !== this.player.id) {
                         this.opponentMove = data.move;
 
@@ -753,8 +777,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
             <div class="flex flex-col items-center justify-center py-3">
 
-                <a href="{{ route('dashboard') }}" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
-                    QuizBall
+                <a href="#" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
+                    <video class="media" muted autoplay loop preload="auto" width="auto" height="auto" playsinline="" style="max-width: 100px;">
+                        <source src="http://localhost/storage/logo/quizball.mp4" type="video/mp4">
+                    </video>
                 </a>
             </div>
 
@@ -797,38 +823,14 @@
             }
         </style>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 lg:pb-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-0">
             <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                <!-- Left Sidebar - Score and Turn Info -->
                 <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
-                    <!-- Mobile: Fixed Bottom Score Display -->
                     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
-                        <div class="flex items-stretch border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
-                            <!-- Forfeit Flag Button -->
-                            <button @click="showForfeitConfirmation = true"
-                                    class="relative flex-shrink-0 w-14 overflow-hidden group"
-                                    style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); box-shadow: inset 0 -2px 8px rgba(0,0,0,0.2);">
-                                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-
-                                <div
-                                    class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
-                                    <svg class="w-12 h-12 text-white drop-shadow-lg" viewBox="-28 -28 336.00 336.00"
-                                         xml:space="preserve" transform="matrix(-1, 0, 0, 1, 0, 0)rotate(0)"
-                                         stroke="#000000" stroke-width="0.0028">
-                                        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"
-                                           stroke="#CCCCCC" stroke-width="0.56"/>
-                                        <g id="SVGRepo_iconCarrier">
-                                            <path color-rendering="auto" image-rendering="auto" shape-rendering="auto"
-                                                  color-interpolation="sRGB"
-                                                  d="M5,65 c-2.761,0-5,2.239-5,5v30c0,2.195,1.431,4.133,3.529,4.779l126.564,38.943C132.04,183.362,164.886,215,205,215 c13.7,0,26.544-3.707,37.607-10.146c4.007,7.062,12.035,11.136,20.272,9.938c9.32-1.356,16.474-9.106,17.08-18.504 c0.5-7.757-3.573-14.963-10.108-18.676C276.292,166.547,280,153.702,280,140c0-41.362-33.638-75-75-75h-70c-2.761,0-5,2.239-5,5v5 h-30v-5c0-2.761-2.239-5-5-5H5L5,65z M10,75h80v5c0,2.761,2.239,5,5,5h40c2.761,0,5-2.239,5-5v-5h27.652 c-20.658,11.914-35.129,33.375-37.34,58.326L10,96.307L10,75L10,75z M205,75c35.958,0,65,29.042,65,65c0,35.958-29.042,65-65,65 c-35.958,0-65-29.042-65-65C140,104.042,169.042,75,205,75L205,75z M205,85c-2.761-0.039-5.032,2.168-5.071,4.929 c-0.039,2.761,2.168,5.032,4.929,5.071c0.047,0.001,0.094,0.001,0.141,0c24.912,0,45,20.088,45,45 c-0.039,2.761,2.168,5.032,4.929,5.071c2.761,0.039,5.032-2.168,5.071-4.929c0.001-0.047,0.001-0.094,0-0.141 C260,109.684,235.317,85,205,85L205,85z M264.229,185.94c3.701,1.713,6.02,5.512,5.75,9.703c-0.306,4.743-3.836,8.57-8.539,9.254 c-4.427,0.644-8.647-1.677-10.5-5.67C255.904,195.368,260.37,190.904,264.229,185.94z"/>
-                                        </g>
-                                    </svg>
-                                </div>
-                            </button>
-
-                            <div class="flex-1 p-2">
-                                <div class="grid grid-cols-2 gap-2 h-full">
+                        <div class="border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
+                            <div class="p-2">
+                                <!-- Score Cards Row -->
+                                <div class="grid grid-cols-2 gap-2 mb-2">
                                     <div class="relative overflow-hidden rounded-xl transition-all duration-300"
                                          :class="game.current_turn_player_id === {{ $player->id }}
                                              ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/50'
@@ -880,6 +882,79 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- Forfeit Button & Round Info Row -->
+                                <div class="flex items-stretch gap-2">
+                                    <button @click="showForfeitConfirmation = true"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg"
+                                            style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); box-shadow: inset 0 -2px 8px rgba(0,0,0,0.2);">
+                                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+
+                                        <div class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                            <svg class="w-8 h-8 text-white drop-shadow-lg" viewBox="-28 -28 336.00 336.00"
+                                                 xml:space="preserve" transform="matrix(-1, 0, 0, 1, 0, 0)rotate(0)"
+                                                 stroke="#000000" stroke-width="0.0028">
+                                                <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+                                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"
+                                                   stroke="#CCCCCC" stroke-width="0.56"/>
+                                                <g id="SVGRepo_iconCarrier">
+                                                    <path color-rendering="auto" image-rendering="auto" shape-rendering="auto"
+                                                          color-interpolation="sRGB"
+                                                          d="M5,65 c-2.761,0-5,2.239-5,5v30c0,2.195,1.431,4.133,3.529,4.779l126.564,38.943C132.04,183.362,164.886,215,205,215 c13.7,0,26.544-3.707,37.607-10.146c4.007,7.062,12.035,11.136,20.272,9.938c9.32-1.356,16.474-9.106,17.08-18.504 c0.5-7.757-3.573-14.963-10.108-18.676C276.292,166.547,280,153.702,280,140c0-41.362-33.638-75-75-75h-70c-2.761,0-5,2.239-5,5v5 h-30v-5c0-2.761-2.239-5-5-5H5L5,65z M10,75h80v5c0,2.761,2.239,5,5,5h40c2.761,0,5-2.239,5-5v-5h27.652 c-20.658,11.914-35.129,33.375-37.34,58.326L10,96.307L10,75L10,75z M205,75c35.958,0,65,29.042,65,65c0,35.958-29.042,65-65,65 c-35.958,0-65-29.042-65-65C140,104.042,169.042,75,205,75L205,75z M205,85c-2.761-0.039-5.032,2.168-5.071,4.929 c-0.039,2.761,2.168,5.032,4.929,5.071c0.047,0.001,0.094,0.001,0.141,0c24.912,0,45,20.088,45,45 c-0.039,2.761,2.168,5.032,4.929,5.071c2.761,0.039,5.032-2.168,5.071-4.929c0.001-0.047,0.001-0.094,0-0.141 C260,109.684,235.317,85,205,85L205,85z M264.229,185.94c3.701,1.713,6.02,5.512,5.75,9.703c-0.306,4.743-3.836,8.57-8.539,9.254 c-4.427,0.644-8.647-1.677-10.5-5.67C255.904,195.368,260.37,190.904,264.229,185.94z"/>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </button>
+
+                                    <!-- History Button -->
+                                    <button @click="showMoveHistory = true"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg"
+                                            style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
+
+                                        <div class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                            <svg class="w-7 h-7 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                    </button>
+
+                                    <!-- Round Info Banner -->
+                                    <div class="flex-1 relative overflow-hidden rounded-lg shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10"></div>
+                                        <div class="absolute inset-0 animate-pulse bg-white/5"></div>
+                                        <div class="relative h-14 flex items-center justify-center gap-2">
+                                            <svg class="w-5 h-5 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-white font-bold text-base tracking-wide drop-shadow-lg">
+                                                ΓΥΡΟΣ <span x-text="game.current_round || 1"></span> / 10
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Power-up Buttons -->
+                                    <button :disabled="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting')"
+                                            :class="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting') ? 'opacity-50 cursor-not-allowed' : ''"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-opacity duration-200"
+                                            style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
+                                        <div class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                            <span class="text-white font-black text-lg drop-shadow-lg">2X</span>
+                                        </div>
+                                    </button>
+
+                                    <button :disabled="!(phase === 'question' && currentQuestion)"
+                                            :class="!(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : ''"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-opacity duration-200"
+                                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
+                                        <div class="relative h-full flex flex-col items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                            <span class="text-white font-black text-base leading-none drop-shadow-lg">50</span>
+                                            <span class="text-white font-black text-base leading-none drop-shadow-lg">50</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -936,6 +1011,44 @@
                             <strong>Γύρος <span class="font-semibold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span></strong>
                         </div>
                     </div>
+
+                    <!-- Power-up Buttons (Desktop Only) -->
+                    <div class="hidden lg:grid grid-cols-2 gap-3">
+                        <button :disabled="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting')"
+                                :class="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting') ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'"
+                                class="relative overflow-hidden rounded-xl shadow-md transition-all duration-200 p-4"
+                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
+                            <div class="relative flex flex-col items-center justify-center gap-1">
+                                <span class="text-white font-black text-3xl drop-shadow-lg">2X</span>
+                                <span class="text-white text-xs font-semibold drop-shadow">Διπλοί Πόντοι</span>
+                            </div>
+                        </button>
+
+                        <button :disabled="!(phase === 'question' && currentQuestion)"
+                                :class="!(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'"
+                                class="relative overflow-hidden rounded-xl shadow-md transition-all duration-200 p-4"
+                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
+                            <div class="relative flex flex-col items-center justify-center gap-1">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-white font-black text-2xl leading-none drop-shadow-lg">50</span>
+                                    <span class="text-white font-black text-xs leading-none drop-shadow-lg">/</span>
+                                    <span class="text-white font-black text-2xl leading-none drop-shadow-lg">50</span>
+                                </div>
+                                <span class="text-white text-xs font-semibold drop-shadow">Μισές Επιλογές</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- History Button (Desktop Only) -->
+                    <button @click="showMoveHistory = true"
+                            class="hidden lg:flex w-full items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Ιστορικό Κινήσεων
+                    </button>
 
                     <!-- Forfeit Button (Desktop Only) -->
                     <button @click="showForfeitConfirmation = true"
@@ -1177,27 +1290,48 @@
 
         <div x-show="showTabSwitchWarning"
              x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-             @click.self="closeTabWarning">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
-                 @click.stop>
-                <div class="text-center">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                        <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                <div class="text-center" >
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full  mb-4" x-show="tabSwitchCount == 1">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
+                            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                                <path d="M 56.35 62.537 l 0.63 -3.584 c 0.575 -3.271 3.722 -5.477 6.993 -4.902 h 0 c 3.271 0.575 5.477 3.722 4.902 6.993 l -1.345 7.647 L 64.085 90 h -7.517 C 53.808 80.129 53.398 70.884 56.35 62.537 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(253,218,170); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                                <path d="M 54.932 62.504 c 3.739 0 6.771 -3.031 6.771 -6.771 V 6.771 C 61.703 3.031 58.672 0 54.932 0 H 36.04 c -4.052 0 -7.337 3.285 -7.337 7.337 v 47.829 c 0 4.052 3.285 7.337 7.337 7.337" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(247,211,62); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                                <path d="M 29.703 55.167 V 7.337 C 29.703 3.285 32.988 0 37.04 0 h -8.669 c -4.052 0 -7.337 3.285 -7.337 7.337 v 47.829 c 0 4.052 3.285 7.337 7.337 7.337 h 8.669 C 32.988 62.504 29.703 59.219 29.703 55.167 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(237,198,36); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                                <path d="M 56.358 62.491 l -9.951 0.013 l -1.841 -11.575 c -0.495 -3.115 -3.449 -5.259 -6.565 -4.763 c -0.432 0.069 -0.843 0.189 -1.233 0.346 c -0.33 0.941 -1.935 1.809 -1.769 2.858 l 3.257 20.11 c 0.792 4.45 3.371 8.617 6.587 12.481 c 1.49 2.223 1.068 5.008 1.725 8.04 l 10 0 L 56.358 62.491 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(253,218,170); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                                <path d="M 39.669 69.491 l -3.174 -19.958 c -0.167 -1.049 -0.057 -2.081 0.273 -3.022 c -2.424 0.976 -3.957 3.535 -3.53 6.219 l 2.923 18.381 c 0.729 4.098 2.856 7.859 5.818 11.417 c 1.372 2.047 2.144 4.679 2.75 7.471 h 4.243 c -0.658 -3.032 -1.496 -5.889 -2.986 -8.112 C 42.77 78.024 40.461 73.941 39.669 69.491 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(254,196,120); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                                <path d="M 38.612 54.644 l 4.703 -0.864 l -0.552 -3.472 c -0.301 -1.893 -2.096 -3.196 -3.989 -2.895 c -0.431 0.069 -0.832 0.215 -1.19 0.422" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(254,196,120); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            </g>
+                            </svg>
+                    </div>
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full  mb-4" x-show="tabSwitchCount == 2">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
+                        <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                            <path d="M 56.35 62.537 l 0.63 -3.584 c 0.575 -3.271 3.722 -5.477 6.993 -4.902 h 0 c 3.271 0.575 5.477 3.722 4.902 6.993 l -1.345 7.647 L 64.085 90 h -7.517 C 53.808 80.129 53.398 70.884 56.35 62.537 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(253,218,170); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            <path d="M 54.932 62.504 c 3.739 0 6.771 -3.031 6.771 -6.771 V 6.771 C 61.703 3.031 58.672 0 54.932 0 H 36.04 c -4.052 0 -7.337 3.285 -7.337 7.337 v 47.829 c 0 4.052 3.285 7.337 7.337 7.337" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(247,62,66); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            <path d="M 29.703 55.167 V 7.337 C 29.703 3.285 32.988 0 37.04 0 h -8.669 c -4.052 0 -7.337 3.285 -7.337 7.337 v 47.829 c 0 4.052 3.285 7.337 7.337 7.337 h 8.669 C 32.988 62.504 29.703 59.219 29.703 55.167 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(229,57,61); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            <path d="M 56.358 62.491 l -9.951 0.013 l -1.841 -11.575 c -0.495 -3.115 -3.449 -5.259 -6.565 -4.763 c -0.432 0.069 -0.843 0.189 -1.233 0.346 c -0.33 0.941 -1.935 1.809 -1.769 2.858 l 3.257 20.11 c 0.792 4.45 3.371 8.617 6.587 12.481 c 1.49 2.223 1.068 5.008 1.725 8.04 l 10 0 L 56.358 62.491 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(253,218,170); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            <path d="M 39.669 69.491 l -3.174 -19.958 c -0.167 -1.049 -0.057 -2.081 0.273 -3.022 c -2.424 0.976 -3.957 3.535 -3.53 6.219 l 2.923 18.381 c 0.729 4.098 2.856 7.859 5.818 11.417 c 1.372 2.047 2.144 4.679 2.75 7.471 h 4.243 c -0.658 -3.032 -1.496 -5.889 -2.986 -8.112 C 42.77 78.024 40.461 73.941 39.669 69.491 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(254,196,120); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                            <path d="M 38.612 54.644 l 4.703 -0.864 l -0.552 -3.472 c -0.301 -1.893 -2.096 -3.196 -3.989 -2.895 c -0.431 0.069 -0.832 0.215 -1.19 0.422" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(254,196,120); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                        </g>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Προειδοποίηση!</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-show="tabSwitchCount == 1">Προειδοποίηση!</h3>
                     <p class="text-gray-600 mb-1">Άλλαξες καρτέλα κατά τη διάρκεια μιας ερώτησης.</p>
                     <div class="text-red-600 font-bold text-lg mb-4">
-                        <span x-text="tabSwitchCount"></span> / 3 παραβάσεις
+                        <span x-text="tabSwitchCount"></span> / 2 παραβάσεις
                     </div>
-                    <p x-show="this.tabSwitchCount == 2"
+                    <p x-show="tabSwitchCount == 1"
                        class="text-sm text-gray-700 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <span class="font-semibold">⚠️ Μία ακόμη παράβαση</span> και το παιχνίδι θα εγκαταλειφθεί αυτόματα!
+                        <span class="font-semibold">⚠️ Μία ακόμη παράβαση</span> και το παιχνίδι θα τερματιστεί αυτόματα!
+                    </p>
+                    <p x-show="tabSwitchCount == 2"
+                       class="text-sm text-gray-700 mb-6 bg-red-50 border border-red-200 rounded-lg p-3">
+                        <span class="font-semibold"> Το παιχνίδι θα τερματιστεί </span> λόγω υπέρβασης του ορίου αλλαγής καρτέλας.
                     </p>
                     <button @click="closeTabWarning"
+                            x-show="tabSwitchCount == 1"
                             class="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
                         Κατάλαβα
                     </button>
@@ -1262,7 +1396,6 @@
             </div>
         </div>
 
-        <!-- Opponent Move Modal - Always show when it's not my turn -->
         <div x-show="!isMyTurn"
              x-cloak
              class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-32 lg:pb-4"
@@ -1455,5 +1588,133 @@
                 </div>
             </div>
         </div>
+
+        <!-- Move History Panel -->
+        <div x-show="showMoveHistory"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center p-0 lg:p-4"
+             @click.self="showMoveHistory = false">
+            <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+
+            <div class="relative bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl w-full lg:max-w-2xl max-h-[85vh] lg:max-h-[80vh] flex flex-col"
+                 @click.stop>
+
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 lg:p-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <h3 class="text-xl lg:text-2xl font-bold text-slate-900">Ιστορικό Κινήσεων</h3>
+                    <button @click="showMoveHistory = false"
+                            class="p-2 hover:bg-white rounded-lg transition-colors">
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+                    <template x-if="game.rounds && game.rounds.length > 0">
+                        <div class="space-y-3">
+                            <template x-for="round in game.rounds.slice().reverse()" :key="round.id">
+                                <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 shadow-sm border border-slate-200">
+                                    <!-- Round Header -->
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm bg-gradient-to-br from-indigo-500 to-purple-600"
+                                                  x-text="round.round_number">
+                                            </span>
+                                            <span class="font-semibold text-slate-700">Γύρος <span x-text="round.round_number"></span></span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-xs font-semibold px-2 py-1 rounded-lg"
+                                                  :class="{
+                                                      'bg-emerald-100 text-emerald-700': round.difficulty?.value === 'easy',
+                                                      'bg-amber-100 text-amber-700': round.difficulty?.value === 'medium',
+                                                      'bg-rose-100 text-rose-700': round.difficulty?.value === 'hard'
+                                                  }"
+                                                  x-text="round.difficulty?.label()">
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Round Details -->
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-start gap-2">
+                                            <span class="text-slate-500 min-w-24">Κατηγορία:</span>
+                                            <span class="font-medium text-slate-700 flex items-center gap-1">
+                                                <span x-text="round.category?.icon"></span>
+                                                <span x-text="round.category?.name"></span>
+                                            </span>
+                                        </div>
+
+                                        <template x-if="round.question">
+                                            <div class="flex items-start gap-2">
+                                                <span class="text-slate-500 min-w-24">Ερώτηση:</span>
+                                                <span class="font-medium text-slate-700" x-text="round.question.text"></span>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="round.player_answer">
+                                            <div class="flex items-start gap-2">
+                                                <span class="text-slate-500 min-w-24">Η απάντησή σου:</span>
+                                                <span class="font-semibold"
+                                                      :class="round.is_correct ? 'text-green-700' : 'text-red-700'"
+                                                      x-text="round.player_answer"></span>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="round.correct_answer && !round.is_correct">
+                                            <div class="flex items-start gap-2">
+                                                <span class="text-slate-500 min-w-24">Σωστή:</span>
+                                                <span class="font-semibold text-emerald-700" x-text="round.correct_answer"></span>
+                                            </div>
+                                        </template>
+
+                                        <div class="flex items-center gap-4">
+                                            <template x-if="round.points_earned !== undefined">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-slate-500">Πόντοι:</span>
+                                                    <span class="font-bold text-lg"
+                                                          :class="round.points_earned > 0 ? 'text-green-600' : 'text-red-600'"
+                                                          x-text="round.points_earned > 0 ? '+' + round.points_earned : '0'">
+                                                    </span>
+                                                </div>
+                                            </template>
+
+                                            <template x-if="round.time_taken">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-slate-500">Χρόνος:</span>
+                                                    <span class="font-medium text-slate-700" x-text="round.time_taken + 's'"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="!game.rounds || game.rounds.length === 0">
+                        <div class="text-center py-12">
+                            <div class="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <p class="text-slate-600">Δεν υπάρχουν προηγούμενες κινήσεις ακόμα</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 lg:p-6 border-t border-slate-200 bg-slate-50">
+                    <button @click="showMoveHistory = false"
+                            class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                        Κλείσιμο
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </x-app-layout>
