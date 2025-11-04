@@ -14,10 +14,14 @@ Broadcast::channel('game.{gameId}', function ($user, $gameId) {
         return false;
     }
 
+    $sessionId = session()->getId();
+    
     return $game->players()
-        ->where(function($query) use ($user) {
-            $query->where('user_id', $user?->id)
-                  ->orWhere('session_id', session()->getId());
+        ->where(function($query) use ($user, $sessionId) {
+            if ($user) {
+                $query->where('user_id', $user->id);
+            }
+            $query->orWhere('session_id', $sessionId);
         })
         ->exists();
 });
