@@ -232,14 +232,12 @@ class GameController extends Controller
         $isPlayerTurn = $this->recoveryService->isPlayersTurn($game, $player);
         $usedCombinations = $this->gameService->getUsedCategoryDifficulties($game);
 
-        // Check if player has an unanswered question
         $activeRound = \App\Models\GameRound::where('game_id', $game->id)
             ->where('game_player_id', $player->id)
             ->whereNull('answered_at')
-            ->with(['question.answers', 'category'])
+            ->with(['question.answers', 'category', 'question.creator'])
             ->first();
 
-        // Get turn started timestamp from cache
         $turnStartedAt = \Illuminate\Support\Facades\Cache::get("game:{$game->id}:turn_started_at");
 
         return view('game.play', [
@@ -305,11 +303,12 @@ class GameController extends Controller
                 'text' => $question->question_text,
                 'type' => $question->question_type->value,
                 'difficulty' => $question->difficulty->value,
+                'created_by' => $question->creator->name,
                 'image_url' => $question->image_url,
                 'answers' => $question->question_type->value === 'multiple_choice'
                     ? $question->answers->map(fn ($a) => [
                         'id' => $a->id,
-                        'text' => $a->answer_text,
+                        'answer_text' => $a->answer_text,
                     ])
                     : null,
             ],
@@ -436,7 +435,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 

@@ -1,10 +1,5 @@
 <x-app-layout>
     <x-slot name="title">QuizBall - Αναμονή για Αντίπαλο</x-slot>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Αναμονή για Αντίπαλο
-        </h2>
-    </x-slot>
 
     <div class="py-12" x-data="{ polling: true }" x-init="
         setInterval(async () => {
@@ -16,7 +11,7 @@
         }, 2000);
     ">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-transparent overflow-hidden">
                 <div class="p-8 text-center">
                     <div class="mb-6">
                         <div class="animate-bounce text-6xl mb-4">⚽</div>

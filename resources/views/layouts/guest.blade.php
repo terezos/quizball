@@ -20,10 +20,8 @@
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-white/80 from-indigo-50 via-white to-purple-50">
             <div class="mb-6">
-                <a href="/">
-                    <video class="media" muted="" autoplay="" loop="" preload="auto" width="auto" height="auto" playsinline="" style="max-width: 200px;">
-                        <source src="/storage/logo/quizball.mp4" type="video/mp4">
-                    </video>
+                <a href="{{ route('welcome') }}" class="text-3xl font-black text-transparent bg-clip-text  bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                    quizball.io
                 </a>
             </div>
 

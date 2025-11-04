@@ -58,27 +58,32 @@
 
 
                             <!-- Toggle Status Button -->
-                            <form method="POST" action="{{ route('admin.users.toggleStatus', $user) }}" class="mt-4">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105
+                            @if($user->id !== auth()->id())
+                                <form method="POST" action="{{ route('admin.users.toggleStatus', $user) }}"
+                                      class="mt-4">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105
                                     {{ $user->is_active
                                         ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
                                         : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' }}">
-                                    @if($user->is_active)
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                                        </svg>
-                                        Απενεργοποίηση Χρήστη
-                                    @else
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Ενεργοποίηση Χρήστη
-                                    @endif
-                                </button>
-                            </form>
+                                        @if($user->is_active)
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                            </svg>
+                                            Απενεργοποίηση Χρήστη
+                                        @else
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Ενεργοποίηση Χρήστη
+                                        @endif
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>

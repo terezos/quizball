@@ -2,7 +2,7 @@
     <x-slot name="title">QuizBall - Αποτελέσματα Παιχνιδιού</x-slot>
     <div class="py-6 px-4">
 
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-5xl mx-auto @if($game->rounds->count() <= 0 ) mt-8 @endif">
             @php
                 $opponent = $game->players->firstWhere('id', '!=', $player->id);
                 $iWon = $winner->id === $player->id;
@@ -15,7 +15,6 @@
                 </h1>
             </div>
 
-            <!-- Score Comparison - Compact -->
             <div class="grid grid-cols-2 gap-5 mb-8 max-w-md mx-auto">
                 <div class="text-center p-5 rounded-xl {{ $player->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100' }}">
                     <div class="text-sm font-semibold text-slate-600 mb-2">ΕΣΥ</div>
@@ -27,14 +26,12 @@
                 </div>
             </div>
 
-            <!-- Play Again Button -->
             <div class="flex justify-center mb-8">
                 <a href="{{ route('game.lobby') }}" class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold py-5 px-10 rounded-xl text-center text-lg transition-all duration-200 shadow-md hover:shadow-lg">
                     Παίξε ξανά
                 </a>
             </div>
 
-            <!-- Round by Round - Side by Side -->
             @if($game->rounds->count())
             <div class="mb-8">
                 <h2 class="font-bold text-slate-800 mb-6 text-center text-3xl">Ανάλυση Γύρων</h2>
@@ -75,9 +72,7 @@
                                 </div>
                             </div>
 
-                            <!-- Answers Side by Side -->
                             <div class="grid md:grid-cols-2 divide-x divide-slate-200">
-                                <!-- My Answer -->
                                 <div class="p-4 {{ $myRound && $myRound->is_correct ? 'bg-emerald-50' : ($myRound ? 'bg-rose-50' : 'bg-slate-50') }}">
                                     <div class="flex items-start justify-between mb-3">
                                         <span class="text-sm font-bold text-slate-900">Εσύ</span>
@@ -107,7 +102,6 @@
                                     @endif
                                 </div>
 
-                                <!-- Opponent Answer -->
                                 <div class="p-4 {{ $opponentRound && $opponentRound->is_correct ? 'bg-emerald-50' : ($opponentRound ? 'bg-rose-50' : 'bg-slate-50') }}">
                                     <div class="flex items-start justify-between mb-3">
                                         <span class="text-sm font-bold text-slate-900">{{ $opponent->display_name }}</span>
@@ -138,7 +132,6 @@
                                 </div>
                             </div>
 
-                            <!-- Correct Answer Footer -->
                             @if($correctAnswer && (($myRound && !$myRound->is_correct) || ($opponentRound && !$opponentRound->is_correct)))
                                 <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-3 border-t border-emerald-200">
                                     <div class="flex items-center gap-2 text-sm">
@@ -148,7 +141,6 @@
                                 </div>
                             @endif
 
-                            <!-- Footer with Source Link and Report Button -->
                             <div class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex items-center justify-between">
                                 @if($round->question->source_url)
                                     <a href="{{ $round->question->source_url }}" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5 font-medium">
@@ -176,7 +168,6 @@
         </div>
     </div>
 
-    <!-- Report Question Modal -->
     <div id="reportModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black bg-opacity-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
             <h3 class="text-xl font-bold text-slate-900 mb-4">Αναφορά Ερώτησης</h3>

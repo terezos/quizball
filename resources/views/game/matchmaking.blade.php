@@ -7,8 +7,8 @@
         <meta http-equiv="Expires" content="0">
     @endpush
 
-    <div class="min-h-screen bg-gradient-to-br p-8 from-indigo-50 via-white to-purple-50 py-8">
-        <div class="max-w-2xl mx-auto p-8">
+    <div class="bg-gradient-to-br p-8 from-indigo-50 via-white to-purple-50 py-8 flex items-center justify-center h-full">
+        <div class="max-w-2xl p-8">
             <div class="text-center mb-10">
                 <div class="inline-block mb-4">
                     <div
@@ -34,22 +34,10 @@
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-6 mb-6">
-                <div class="flex items-start gap-3">
-                    <div class="text-2xl">💡</div>
-                    <div>
-                        <h3 class="font-bold text-gray-900 mb-1">Όσο περιμένεις...</h3>
-                        <p class="text-sm text-gray-600">
-                            Θυμήσου: Διάλεξε με σύνεση! Κάθε συνδυασμός κατηγορίας-δυσκολίας μπορεί να χρησιμοποιηθεί μόνο μία φορά.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             <form method="POST" action="{{ route('game.cancelMatchmaking', $game) }}" class="text-center">
                 @csrf
                 <button type="submit"
-                        class="px-6 py-3 bg-white border-2 border-gray-200 hover:border-red-500 hover:text-red-600 text-gray-700 font-semibold rounded-xl transition-all duration-200">
+                        class="px-6 py-3 bg-red-600 border-2 border-red-500 hover:border-red-500  text-white font-semibold rounded-xl transition-all duration-200">
                     Ακύρωση Αντιστοίχισης
                 </button>
             </form>

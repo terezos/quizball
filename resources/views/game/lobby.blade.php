@@ -3,49 +3,57 @@
     <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
         <div class="max-w-5xl mx-auto px-6">
             <!-- Page Header -->
-            <div class="text-center mb-10">
-                <h1 class="text-4xl font-black text-gray-900 mb-3">
-                    Έτοιμοι να <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Παίξετε</span>;
-                </h1>
-                <p class="text-lg text-gray-600">Επιλέξτε τον τρόπο παιχνιδιού και ας ξεκινήσουμε</p>
-            </div>
+            <div class="max-w-4xl mx-auto text-center space-y-8">
+                <div class="space-y-8">
+                    <h1 class="text-4xl md:text-5xl font-black mt-3 text-gray-900 leading-tight">
+                        Νομίζετε ότι ξέρετε <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ποδόσφαιρο ή Μπάσκετ</span>;
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
+                        Προκαλέστε φίλους ή το AI για να το αποδείξετε.
+                    </p>
 
-            @if(session('error'))
-                <div class="mb-6 bg-red-100 border-2 border-red-400 text-red-700 px-6 py-4 rounded-xl shadow-md max-w-2xl mx-auto">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-semibold">{{ session('error') }}</span>
+                    @if(session('error'))
+                        <div class="mb-6 bg-red-100 border-2 border-red-400 text-red-700 px-6 py-4 rounded-xl shadow-md max-w-2xl mx-auto">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="font-semibold">{{ session('error') }}</span>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
+                        <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ $categoriesCount }}</div>
+                            <div class="text-sm text-gray-600">Κατηγορίες</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
+                            <div class="text-2xl font-bold text-purple-600">{{ $questionsCount }}</div>
+                            <div class="text-sm text-gray-600">Ερωτήσεις</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
+                            <div class="text-2xl font-bold text-pink-600">60s</div>
+                            <div class="text-sm text-gray-600">Για κάθε απάντηση</div>
+                        </div>
                     </div>
-                </div>
-            @endif
 
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-                <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
-                    <div class="text-2xl font-bold text-blue-600">{{ $categoriesCount }}</div>
-                    <div class="text-sm text-gray-600">Κατηγορίες</div>
-                </div>
-                <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
-                    <div class="text-2xl font-bold text-purple-600">{{ $questionsCount }}</div>
-                    <div class="text-sm text-gray-600">Ερωτήσεις</div>
-                </div>
-                <div class="bg-white p-4 rounded-xl border-2 border-gray-100 text-center">
-                    <div class="text-2xl font-bold text-pink-600">60s</div>
-                    <div class="text-sm text-gray-600">Για κάθε απάντηση</div>
                 </div>
             </div>
+
+
 
             <!-- Game Modes -->
-            <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="grid md:grid-cols-2 gap-6 mb-8 mt-5">
                 <!-- Create Game -->
-                <div class="bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl">
-                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl mb-4">
+                <div class="bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl relative">
+                    <div class="w-14 h-14 flex items-center justify-center text-white text-2xl mb-4" style="position: absolute; right: 5px; top: 5px;">
                         ⚡
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-3">Δημιουργία Παιχνιδιού</h2>
-                    <p class="text-gray-600 mb-6">Ξεκινήστε ένα νέο παιχνίδι και προκαλέστε έναν φίλο ή το AI</p>
+                    <p class="text-gray-600 mb-6">Προκαλέστε έναν φίλο ή το AI</p>
 
                     <form method="POST" action="{{ route('game.create') }}" class="space-y-4">
                         @csrf
@@ -60,7 +68,6 @@
                         @endguest
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-3">Τύπος Παιχνιδιού</label>
                             <div class="space-y-3">
                                 <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200">
                                     <input type="radio" name="game_type" value="ai" checked class="w-5 h-5 text-blue-600">
@@ -78,9 +85,9 @@
                                     </div>
                                 </label>
 
-                                <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 {{ auth()->guest() ? 'opacity-60' : '' }}" 
+                                <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 {{ auth()->guest() ? 'opacity-60' : '' }}"
                                        x-data="{ open: false }">
-                                    <input type="radio" name="game_type" value="human" class="w-5 h-5 text-purple-600" 
+                                    <input type="radio" name="game_type" value="human" class="w-5 h-5 text-purple-600"
                                            {{ auth()->guest() ? 'disabled' : '' }}
                                            @click="@guest open = true; $event.preventDefault(); @endguest">
                                     <div class="flex-1">
@@ -100,10 +107,10 @@
                                         </div>
                                         <div class="text-sm text-gray-600">Λάβετε κωδικό για να μοιραστείτε με φίλο</div>
                                     </div>
-                                    
+
                                     @guest
                                     <!-- Modal for guest users -->
-                                    <div x-show="open" 
+                                    <div x-show="open"
                                          x-cloak
                                          @click.away="open = false"
                                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -116,7 +123,7 @@
                                                 </div>
                                                 <h3 class="text-2xl font-bold text-gray-900 mb-2">Απαιτείται Λογαριασμός</h3>
                                                 <p class="text-gray-600 mb-6">Για να δημιουργήσετε ιδιωτικά παιχνίδια πρέπει να συνδεθείτε ή να εγγραφείτε.</p>
-                                                
+
                                                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                                                     <div class="text-sm font-semibold text-blue-900 mb-2">Δωρεάν Λογαριασμός:</div>
                                                     <ul class="text-sm text-blue-800 space-y-1 text-left">
@@ -125,13 +132,13 @@
                                                         <li>✓ Στατιστικά & Επιτεύγματα</li>
                                                     </ul>
                                                 </div>
-                                                
+
                                                 <div class="flex gap-3">
-                                                    <a href="{{ route('login') }}" 
+                                                    <a href="{{ route('login') }}"
                                                        class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all duration-200 text-center">
                                                         Σύνδεση
                                                     </a>
-                                                    <a href="{{ route('register') }}" 
+                                                    <a href="{{ route('register') }}"
                                                        class="flex-1 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-bold py-3 rounded-xl transition-all duration-200 text-center">
                                                         Εγγραφή
                                                     </a>
@@ -151,8 +158,8 @@
                 </div>
 
                 <!-- Join Game -->
-                <div class="bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-green-300 transition-all duration-200 shadow-lg hover:shadow-xl">
-                    <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl mb-4">
+                <div class="bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-green-300 transition-all duration-200 shadow-lg hover:shadow-xl relative">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-4" style="position: absolute; right: 5px; top: 5px;">
                         🎯
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-3">Συμμετοχή σε Παιχνίδι</h2>
@@ -168,7 +175,7 @@
                             <div class="text-sm flex-1">
                                 <div class="font-semibold text-blue-900 mb-1">Περιορισμένη πρόσβαση</div>
                                 <div class="text-blue-700">
-                                    Οι επισκέπτες μπορούν να συμμετέχουν μόνο σε AI παιχνίδια. 
+                                    Οι επισκέπτες μπορούν να συμμετέχουν μόνο σε AI παιχνίδια.
                                     <a href="{{ route('login') }}" class="font-semibold underline hover:text-blue-900">Συνδεθείτε</a> για ιδιωτικά παιχνίδια!
                                 </div>
                             </div>
@@ -222,30 +229,45 @@
             </div>
 
             <!-- Game Rules -->
-            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-8">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Γρήγοροι Κανόνες</h3>
-                <div class="grid md:grid-cols-4 gap-6 text-center">
-                    <div>
-                        <div class="text-3xl mb-2">📝</div>
-                        <div class="font-bold text-gray-900 mb-1">Επιλέξτε Κατηγορία</div>
-                        <div class="text-sm text-gray-600">Από Premier League μέχρι Παγκόσμιο Κύπελλο</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl mb-2">🎚️</div>
-                        <div class="font-bold text-gray-900 mb-1">Επιλέξτε Επίπεδο</div>
-                        <div class="text-sm text-gray-600">Εύκολο, Μεσαίο ή Δύσκολο</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl mb-2">⏱️</div>
-                        <div class="font-bold text-gray-900 mb-1">Νικήστε το Χρόνο</div>
-                        <div class="text-sm text-gray-600">60 δευτερόλεπτα ανά ερώτηση</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl mb-2">🏆</div>
-                        <div class="font-bold text-gray-900 mb-1">Κερδίστε Πόντους</div>
-                        <div class="text-sm text-gray-600">Ο υψηλότερος βαθμός κερδίζει</div>
-                    </div>
+            <div class="bg-white rounded-2xl border-2 border-gray-100 p-8 shadow-lg" aria-labelledby="quick-rules-title">
+                <div class="text-center mb-8">
+                    <h3 id="quick-rules-title" class="text-3xl font-bold text-gray-900">Κανόνες</h3>
+                    <p class="text-gray-600 mt-2">Απλοί κανόνες για μέγιστη διασκέδαση</p>
                 </div>
+
+                <ul class="grid md:grid-cols-4 gap-6 list-none p-0 m-0" role="list">
+                    <li class="flex flex-col items-center text-center group" role="listitem">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                            📝
+                        </div>
+                        <div class="font-bold text-gray-900 mb-2">Επιλέξτε Κατηγορία</div>
+                        <div class="text-sm text-gray-600 leading-relaxed">Από Premier League μέχρι Παγκόσμιο Κύπελλο</div>
+                    </li>
+
+                    <li class="flex flex-col items-center text-center group" role="listitem">
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                            🎚️
+                        </div>
+                        <div class="font-bold text-gray-900 mb-2">Επιλέξτε Επίπεδο</div>
+                        <div class="text-sm text-gray-600 leading-relaxed">Εύκολο, Μεσαίο ή Δύσκολο</div>
+                    </li>
+
+                    <li class="flex flex-col items-center text-center group" role="listitem">
+                        <div class="w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                            ⏱️
+                        </div>
+                        <div class="font-bold text-gray-900 mb-2">Νικήστε το Χρόνο</div>
+                        <div class="text-sm text-gray-600 leading-relaxed">60 δευτερόλεπτα ανά ερώτηση</div>
+                    </li>
+
+                    <li class="flex flex-col items-center text-center group" role="listitem">
+                        <div class="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                            🏆
+                        </div>
+                        <div class="font-bold text-gray-900 mb-2">Κερδίστε Πόντους</div>
+                        <div class="text-sm text-gray-600 leading-relaxed">Ο υψηλότερος βαθμός κερδίζει</div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

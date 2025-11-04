@@ -66,11 +66,7 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                                    @if($user->avatar)
-                                                        <img src="{{ $user->avatar }}" alt="{{ $user->name }}" class="w-full h-full rounded-full object-cover">
-                                                    @else
-                                                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                                                    @endif
+                                                    <img src="{{ \App\Avatar::showAvatar($user) }}" alt="{{ $user->name }}" class="w-full h-full rounded-full object-cover">
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>

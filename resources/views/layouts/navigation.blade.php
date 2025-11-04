@@ -1,14 +1,12 @@
 <nav x-data="{ open: false }" class="sticky top-0 z-50 backdrop-blur-sm bg-white border-b border-gray-200">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-6 py-2 sm:px-6 lg:px-8">
         <div class="flex @auth justify-between @else justify-center @endauth items-center h-30">
             <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('welcome') }}" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
-                        <video class="media" muted="" autoplay="" loop="" preload="auto" width="auto" height="auto" playsinline="" style="max-width: 100px;">
-                            <source src="/storage/logo/quizball.mp4" type="video/mp4">
-                        </video>
+                    <a href="{{ route('welcome') }}" class="text-3xl p-1 font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                        quizball.io
                     </a>
 
 
@@ -310,31 +308,29 @@
     </div>
 
     <!-- Guest Promo Banner -->
-    @guest
-    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 border-b border-blue-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-4 text-white">
-                    <svg class="w-8 h-8 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    <div>
-                        <div class="font-bold text-lg">Γίνε Μέλος & Ξεκλείδωσε &nbsp; Όλα τα Χαρακτηριστικά!</div>
-                        <div class="text-sm text-blue-100">Παρακολούθηση προόδου • Leaderboards • Στατιστικά παιχνιδιών • Προσωπικό ιστορικό</div>
+   @guest
+                    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 border-b border-blue-700">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 sm:py-2 py-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-3 text-white">
+                                    <svg class="w-6 h-6 md:w-8 md:h-8 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <div>
+                                        <div class="font-bold text-sm md:text-lg leading-tight">Γίνε Μέλος Δωρεάν &amp; Ξεκλείδωσε Όλα τα Χαρακτηριστικά!</div>
+                                        <div class="text-xs md:text-sm text-blue-100 sm:block">Στατιστικά παιχνιδιών, Προσωπικό ιστορικό, Ιδιωτικά παιχνίδια</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex-shrink-0">
+                                    <a href="{{ route('register') }}" class="sm:inline-flex lg:inline-flex items-center justify-center px-5 py-2.5 bg-white text-blue-600 font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                        Σύνδεση
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="flex gap-3 flex-shrink-0">
-                    <a href="{{ route('register') }}" class="px-6 py-2.5 bg-white hover:bg-gray-100 text-blue-600 font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-                        Εγγραφή Δωρεάν
-                    </a>
-                    <a href="{{ route('login') }}" class="px-6 py-2.5 bg-transparent border-2 border-white hover:bg-white/10 text-white font-semibold rounded-xl transition-all duration-200">
-                        Σύνδεση
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endguest
+                    @endguest
 
     <!-- Responsive Navigation Menu -->
     <div x-show="open"

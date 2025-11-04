@@ -140,7 +140,6 @@ class GameService
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
         $this->cacheGameState($game);
 
-        // Broadcast opponent move
         broadcast(new OpponentMoved($game, $currentMove))->toOthers();
     }
 
@@ -165,14 +164,12 @@ class GameService
 
     public function selectDifficulty(Game $game, GamePlayer $player, DifficultyLevel $difficulty): ?Question
     {
-        // Check if player has an unanswered question
         $activeRound = GameRound::where('game_id', $game->id)
             ->where('game_player_id', $player->id)
             ->whereNull('answered_at')
             ->first();
 
         if ($activeRound) {
-            // Player must answer current question, return existing question
             $question = Question::find($activeRound->question_id);
             Cache::put("game:{$game->id}:current_round", $activeRound->id, now()->addMinutes(5));
 
@@ -231,9 +228,11 @@ class GameService
             ],
             'difficulty' => $difficulty->value,
             'question' => $question->question_text,
+            'created_by' => $question->creator->name,
             'image_url' => $question->image_url,
             'started_at' => now()->timestamp,
         ];
+
 
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
 
@@ -398,7 +397,7 @@ class GameService
         ]);
 
         $opponent = $game->players->where('id', '!=', $player->id)->first();
-        if ($opponent) {
+        if ($opponent && $opponent->score <= 0) {
             $opponent->increment('score', 10);
         }
 
@@ -406,7 +405,6 @@ class GameService
         Cache::forget("game:{$game->id}:selected_category");
         Cache::forget("game:{$game->id}:current_question");
 
-        // Broadcast game completion with forfeit flag
         broadcast(new GameCompleted($game->fresh(['players']), true));
     }
 

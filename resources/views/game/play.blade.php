@@ -176,9 +176,11 @@
                         id: round.question.id,
                         text: round.question.question_text,
                         type: round.question.question_type,
+                        created_by: round.question.creator.name,
                         difficulty: round.difficulty,
                         answers: round.question.answers || null
                     };
+
                     this.phase = 'question';
 
                     const now = Math.floor(Date.now() / 1000);
@@ -412,6 +414,8 @@
 
                             if (this.consecutiveTimeouts >= 2 && !this.alreadyForfeit) {
                                 alert('You have missed 2 consecutive questions due to timeout. The game will be forfeited.');
+                                this.freezeTime()
+                                this.loading = true;
                                 setTimeout(() => {
                                     this.forfeitGame(true);
                                 }, 2000);
@@ -500,8 +504,9 @@
                         this.showInactivityWarning = this.inactivityTimeRemaining < 60;
 
                         if (this.inactivityTimeRemaining <= 0) {
-                            this.stopInactivityTimer();
+                            this.freezeTime()
                             alert('Έχετε μείνει ανενεργός για πολύ ώρα. Το παιχνίδι θα κατακυρωθεί υπέρ του αντιπάλου σας.');
+                            this.loading = true;
                             this.forfeitGame(true);
                         }
                     };
@@ -535,8 +540,9 @@
                         this.opponentInactivityTimeRemaining = Math.max(0, 120 - elapsed);
 
                         if (this.opponentInactivityTimeRemaining <= 0) {
-                            this.stopInactivityTimer();
+                            this.freezeTime();
                             alert('Ο αντίπαλός σας έχει μείνει ανενεργός για πολύ ώρα. Το παιχνίδι θα κατακυρωθεί υπέρ σας.');
+                            this.loading = true;
                             this.forfeitGame(true);
                         }
                     };
@@ -648,6 +654,7 @@
                 handleOpponentMove(data) {
                     if (data.move.player_id !== this.player.id) {
                         this.opponentMove = data.move;
+                        console.log(this.opponentMove)
 
                         if (data.move.phase === 'difficulty' && data.move.started_at) {
                             this.startOpponentTimer(data.move.started_at);
@@ -772,18 +779,23 @@
 {{--            </div>--}}
 {{--        </div>--}}
 
-        <!-- Logo Header -->
+        <div x-show="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50/45 backdrop-blur-sm">
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 mb-3">
+                    <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
             <div class="flex flex-col items-center justify-center py-3">
-
                 <a href="#" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
-                    <video class="media" muted autoplay loop preload="auto" width="auto" height="auto" playsinline="" style="max-width: 100px;">
-                        <source src="/storage/logo/quizball.mp4" type="video/mp4">
-                    </video>
+                    quizball.io
                 </a>
             </div>
 
-            <!-- Your Turn Banner -->
             <div x-show="isMyTurn && phase !== 'result'"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 -translate-y-2"
@@ -1155,7 +1167,8 @@
                                     </div>
                                 </div>
 
-                                <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-relaxed" x-text="currentQuestion?.text"></h3>
+                                <h3 class="text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
+                                <h3 class="text-sm font-bold text-gray-500 mb-6 leading-relaxed" x-text="'H Ερώτηση δημιουργήθηκε από τον χρήστη: ' + currentQuestion?.created_by"></h3>
 
                                 <div x-show="currentQuestion?.type === 'text_input_with_image'" class="mb-6">
                                     <div class="relative bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-4 shadow-lg border-2 border-gray-200">
@@ -1186,7 +1199,7 @@
                                                 :class="answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
                                                 class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
                                             <span class="font-bold text-blue-600 mr-3" x-text="String.fromCharCode(65 + index)"></span>
-                                            <span class="text-gray-900 font-medium" x-text="ans.text"></span>
+                                            <span class="text-gray-900 font-medium" x-text="ans.answer_text"></span>
                                         </button>
                                     </template>
                                 </div>
@@ -1411,20 +1424,15 @@
                         </h3>
                     </div>
 
-                    <!-- Selecting Category Phase -->
                     <div x-show="!opponentMove || opponentMove?.phase === 'category'" class="text-center py-8">
                         <div class="flex flex-col items-center gap-4">
-                            <!-- Loading Animation with Countdown -->
                             <div class="relative w-32 h-32">
-                                <!-- Outer ring (background) -->
                                 <div class="absolute inset-0 rounded-full border-4"
                                      :class="opponentInactivityTimeRemaining < 30 ? 'border-red-200' : (opponentInactivityTimeRemaining < 60 ? 'border-amber-200' : 'border-indigo-200')"></div>
 
-                                <!-- Animated spinner with urgency color -->
                                 <div class="absolute inset-0 rounded-full border-4 border-r-transparent border-b-transparent border-l-transparent animate-spin"
                                      :class="opponentInactivityTimeRemaining < 30 ? 'border-t-red-600' : (opponentInactivityTimeRemaining < 60 ? 'border-t-amber-500' : 'border-t-indigo-600')"></div>
 
-                                <!-- Center countdown timer -->
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <div class="text-center">
                                         <div class="text-3xl font-black"
@@ -1434,7 +1442,6 @@
                                 </div>
                             </div>
 
-                            <!-- Message with urgency indicator -->
                             <div class="space-y-2">
                                 <p class="text-lg font-bold"
                                    :class="opponentInactivityTimeRemaining < 30 ? 'text-red-700' : (opponentInactivityTimeRemaining < 60 ? 'text-amber-700' : 'text-indigo-900')">
@@ -1510,6 +1517,7 @@
                         <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">ΕΡΩΤΗΣΗ</div>
                             <div class="text-slate-900 font-medium leading-relaxed" x-text="opponentMove?.question"></div>
+                            <div class="text-slate-400 font-medium text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div x-show="opponentMove?.image_url" class="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-3 shadow-md border border-slate-200">
@@ -1571,6 +1579,7 @@
                         <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200 shadow-sm">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερώτηση</div>
                             <div class="text-slate-900 font-medium" x-text="opponentMove?.question"></div>
+                            <div class="text-slate-400 font-medium text-sm" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

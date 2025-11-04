@@ -10,29 +10,36 @@ use App\Models\Question;
 
 class AIOpponentService
 {
+    /**
+     * @throws \Exception
+     */
     public function playTurn(Game $game, GamePlayer $aiPlayer): void
     {
-        $gameService = app(GameService::class);
+        try {
+            $gameService = app(GameService::class);
 
-        sleep(rand(2, 5));
+            sleep(rand(2, 5));
 
-        $category = $this->selectCategory($game);
-        $gameService->selectCategory($game, $aiPlayer, $category);
+            $category = $this->selectCategory($game);
+            $gameService->selectCategory($game, $aiPlayer, $category);
 
-        sleep(rand(1, 2));
+            sleep(rand(1, 2));
 
-        $difficulty = $this->selectDifficulty($game, $aiPlayer);
-        $question = $gameService->selectDifficulty($game, $aiPlayer, $difficulty);
+            $difficulty = $this->selectDifficulty($game, $aiPlayer);
+            $question = $gameService->selectDifficulty($game, $aiPlayer, $difficulty);
 
-        if (!$question) {
-            return;
+            if (!$question) {
+                return;
+            }
+
+            $answerDelay = rand(5, 45);
+            sleep(min($answerDelay, 10));
+
+            $answer = $this->generateAnswer($question, $difficulty);
+            $gameService->submitAnswer($game, $aiPlayer, $answer);
+        }catch (\Exception $exception){
+            throw new \Exception($exception->getMessage());
         }
-
-        $answerDelay = rand(5, 45);
-        sleep(min($answerDelay, 10));
-
-        $answer = $this->generateAnswer($question, $difficulty);
-        $gameService->submitAnswer($game, $aiPlayer, $answer);
     }
 
     protected function selectCategory(Game $game): Category
@@ -53,35 +60,11 @@ class AIOpponentService
 
         $scoreDifference = $aiPlayer->score - $opponent->score;
 
-        if ($scoreDifference < -3) {
-            $rand = rand(1, 100);
-            if ($rand <= 20) {
-                return DifficultyLevel::Easy;
-            }
-            if ($rand <= 70) {
-                return DifficultyLevel::Medium;
-            }
-
-            return DifficultyLevel::Hard;
-        }
-
-        if ($scoreDifference > 3) {
-            $rand = rand(1, 100);
-            if ($rand <= 10) {
-                return DifficultyLevel::Easy;
-            }
-            if ($rand <= 40) {
-                return DifficultyLevel::Medium;
-            }
-
-            return DifficultyLevel::Hard;
-        }
-
         $rand = rand(1, 100);
-        if ($rand <= 30) {
+        if ($rand <= 20) {
             return DifficultyLevel::Easy;
         }
-        if ($rand <= 80) {
+        if ($rand <= 70) {
             return DifficultyLevel::Medium;
         }
 

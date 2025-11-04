@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GameStatus;
 use App\Models\GamePlayer;
 use App\Models\GameRound;
 use Illuminate\Http\Request;
@@ -45,6 +46,9 @@ class PlayerStatisticsController extends Controller
         $statistics = $user->statistics;
 
         $recentGames = GamePlayer::where('user_id', $user->id)
+            ->whereHas('game', function($q) {
+                $q->where('status', GameStatus::Completed);
+            })
             ->with(['game.rounds.category', 'game.gamePlayers.user'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -57,7 +61,7 @@ class PlayerStatisticsController extends Controller
                     ->whereColumn('gp_ai.game_id', 'games.id')
                     ->where('gp_ai.is_ai', true);
             })
-            ->where('games.status', 'completed')
+            ->where('games.status', GameStatus::Completed)
             ->count();
 
         $winsVsAI = GamePlayer::where('game_players.user_id', $user->id)
@@ -113,8 +117,8 @@ class PlayerStatisticsController extends Controller
             ->where('game_players.user_id', $user->id)
             ->where('game_rounds.is_correct', true)
             ->select(
-                'categories.name', 
-                'categories.icon', 
+                'categories.name',
+                'categories.icon',
                 \DB::raw('count(*) as correct_answers')
             )
             ->groupBy('categories.id', 'categories.name', 'categories.icon')
