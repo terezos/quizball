@@ -418,7 +418,7 @@ class GameController extends Controller
                     ] : null,
                     'difficulty' => $round->difficulty ? [
                         'value' => $round->difficulty->value,
-                        'label' => $round->difficulty->label(),
+                        'label' => $round->difficulty->value,
                     ] : null,
                     'points_earned' => $round->points_earned ?? 0,
                     'is_correct' => $round->is_correct ?? false,
