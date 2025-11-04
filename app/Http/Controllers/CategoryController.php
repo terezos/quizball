@@ -43,11 +43,15 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
+        // Get the next order number for this sport
+        $maxOrder = Category::where('sport', $request->sport)->max('order') ?? -1;
+        
         Category::create([
             'name' => $request->name,
             'icon' => $request->icon,
-            'order' => $request->order,
+            'order' => $maxOrder + 1,
             'is_active' => $request->boolean('is_active', true),
+            'sport' => $request->sport,
         ]);
 
         return redirect()->route('categories.index')
@@ -74,8 +78,8 @@ class CategoryController extends Controller
         $category->update([
             'name' => $request->name,
             'icon' => $request->icon,
-            'order' => $request->order,
             'is_active' => $request->boolean('is_active', true),
+            'sport' => $request->sport,
         ]);
 
         return redirect()->route('categories.index')

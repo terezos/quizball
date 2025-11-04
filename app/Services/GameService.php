@@ -27,19 +27,27 @@ class GameService
     {
     }
 
-    public function createGame(string $gameType, ?User $user = null, ?string $guestName = null, ?string $sessionId = null): Game
+    public function createGame(string $gameType, ?User $user = null, ?string $guestName = null, ?string $sessionId = null, int $gamePace = 6, string $sport = 'football', int $aiDifficulty = 2): Game
     {
-        $totalCategories = Category::where('is_active', true)->count();
         $totalDifficulties = 3;
-        $maxRounds = $totalCategories * $totalDifficulties;
+        $maxRounds = $gamePace * $totalDifficulties;
 
         $game = Game::create([
             'game_code' => $this->generateGameCode(),
             'status' => GameStatus::Waiting,
             'game_type' => $gameType,
+            'sport' => $sport,
+            'ai_difficulty' => $aiDifficulty,
             'current_round' => 0,
             'max_rounds' => $maxRounds,
         ]);
+
+        $categories = Category::where('is_active', true)
+            ->inRandomOrder()
+            ->limit($gamePace)
+            ->get();
+
+        $game->categories()->attach($categories->pluck('id'));
 
         $player = GamePlayer::create([
             'game_id' => $game->id,
@@ -107,7 +115,6 @@ class GameService
 
         $game = $game->fresh(['players']);
 
-        // Broadcast game state update to all players
         broadcast(new GameStateUpdated($game));
         broadcast(new TurnChanged($game, $firstPlayer->id, $turnStartedAt));
 

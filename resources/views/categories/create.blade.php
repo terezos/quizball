@@ -34,14 +34,21 @@
                             @enderror
                         </div>
 
-                        <!-- Σειρά Εμφάνισης -->
+                        <!-- Άθλημα -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Σειρά Εμφάνισης *</label>
-                            <input type="number" name="order" value="{{ old('order', 0) }}" required min="0"
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="0">
-                            <p class="text-sm text-gray-500 mt-1">Οι μικρότεροι αριθμοί εμφανίζονται πρώτοι</p>
-                            @error('order')
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Άθλημα *</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                    <input type="radio" name="sport" value="football" {{ old('sport', 'football') === 'football' ? 'checked' : '' }} required class="w-5 h-5 text-blue-600">
+                                    <span class="font-semibold text-gray-900">⚽ Ποδόσφαιρο</span>
+                                </label>
+                                <label class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition-all duration-200 has-[:checked]:bg-orange-50 has-[:checked]:border-orange-500">
+                                    <input type="radio" name="sport" value="basketball" {{ old('sport') === 'basketball' ? 'checked' : '' }} required class="w-5 h-5 text-orange-600">
+                                    <span class="font-semibold text-gray-900">🏀 Μπάσκετ</span>
+                                </label>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Η σειρά εμφάνισης θα οριστεί αυτόματα</p>
+                            @error('sport')
                             <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                             @enderror
                         </div>

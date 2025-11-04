@@ -40,10 +40,23 @@ class GameController extends Controller
 
     public function create(Request $request)
     {
-        $request->validate([
+        $validationRules = [
             'game_type' => 'required|in:ai,human,matchmaking',
             'guest_name' => 'nullable|string|max:255',
-        ]);
+        ];
+
+        // Only require pace and sport for non-matchmaking games
+        if ($request->game_type !== 'matchmaking') {
+            $validationRules['game_pace'] = 'required|in:4,6,8';
+            $validationRules['sport'] = 'required|in:football,basketball';
+        }
+
+        // AI difficulty only for AI games
+        if ($request->game_type === 'ai') {
+            $validationRules['ai_difficulty'] = 'required|in:1,2,3';
+        }
+
+        $request->validate($validationRules);
 
         // Check if private game requires authentication
         if ($request->game_type === 'human' && auth()->guest()) {
@@ -64,7 +77,7 @@ class GameController extends Controller
             }
         }
 
-        // Handle matchmaking
+        // Handle matchmaking (uses default pace and sport for now)
         if ($request->game_type === 'matchmaking') {
             $game = $this->matchmakingService->joinQueue(
                 auth()->user(),
@@ -87,7 +100,10 @@ class GameController extends Controller
             $request->game_type,
             auth()->user(),
             $request->guest_name,
-            Session::getId()
+            Session::getId(),
+            (int) $request->game_pace,
+            $request->sport,
+            (int) $request->input('ai_difficulty', 2)
         );
 
         $this->recoveryService->storeActiveGame($game, auth()->user(), Session::getId());
@@ -228,7 +244,7 @@ class GameController extends Controller
             return redirect()->route('game.lobby');
         }
 
-        $categories = Category::where('is_active', true)->orderBy('order')->get();
+        $categories = $game->categories()->orderBy('order')->get();
         $isPlayerTurn = $this->recoveryService->isPlayersTurn($game, $player);
         $usedCombinations = $this->gameService->getUsedCategoryDifficulties($game);
 

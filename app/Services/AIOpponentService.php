@@ -7,11 +7,12 @@ use App\Models\Category;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\Question;
+use Exception;
 
 class AIOpponentService
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function playTurn(Game $game, GamePlayer $aiPlayer): void
     {
@@ -25,7 +26,7 @@ class AIOpponentService
 
             sleep(rand(1, 2));
 
-            $difficulty = $this->selectDifficulty($game, $aiPlayer);
+            $difficulty = $this->selectDifficulty($game, $aiPlayer, $category);
             $question = $gameService->selectDifficulty($game, $aiPlayer, $difficulty);
 
             if (!$question) {
@@ -33,50 +34,106 @@ class AIOpponentService
             }
 
             $answerDelay = rand(5, 45);
-            sleep(min($answerDelay, 10));
+            sleep(min($answerDelay, 5));
 
-            $answer = $this->generateAnswer($question, $difficulty);
+            $answer = $this->generateAnswer($question, $difficulty, $game);
             $gameService->submitAnswer($game, $aiPlayer, $answer);
-        }catch (\Exception $exception){
-            throw new \Exception($exception->getMessage());
+        }catch (Exception $exception){
+            throw new Exception($exception->getMessage());
         }
     }
 
     protected function selectCategory(Game $game): Category
     {
-        return Category::where('is_active', true)
-            ->inRandomOrder()
-            ->first();
+        $usedCombinations = app(GameService::class)->getUsedCategoryDifficulties($game);
+
+        $categoryUsage = collect($usedCombinations)->groupBy('category_id')
+            ->map(fn($rounds) => $rounds->count());
+
+        $gameCategories = $game->categories()->get();
+
+        $availableCategories = $gameCategories->filter(function($category) use ($categoryUsage) {
+            $usedCount = $categoryUsage->get($category->id, 0);
+            return $usedCount < 3;
+        });
+
+        if ($availableCategories->isEmpty()) {
+            /** @var Category $category */
+            $category = $gameCategories->random();
+            return $category;
+        }
+
+        /** @var Category $category */
+        $category = $availableCategories->random();
+        return $category;
     }
 
-    protected function selectDifficulty(Game $game, GamePlayer $aiPlayer): DifficultyLevel
+    protected function selectDifficulty(Game $game, GamePlayer $aiPlayer, Category $category): DifficultyLevel
     {
         $players = $game->players;
         $opponent = $players->where('id', '!=', $aiPlayer->id)->first();
 
-        if (!$opponent) {
+        // Get used difficulties for this category
+        $usedDifficulties = \App\Models\GameRound::where('game_id', $game->id)
+            ->where('category_id', $category->id)
+            ->pluck('difficulty')
+            ->map(fn($d) => $d->value)
+            ->toArray();
+
+        // Get available difficulties
+        $allDifficulties = [
+            DifficultyLevel::Easy,
+            DifficultyLevel::Medium,
+            DifficultyLevel::Hard,
+        ];
+
+        $availableDifficulties = collect($allDifficulties)
+            ->filter(fn($diff) => !in_array($diff->value, $usedDifficulties));
+
+        if ($availableDifficulties->isEmpty()) {
+            // Fallback
             return DifficultyLevel::Medium;
         }
 
-        $scoreDifference = $aiPlayer->score - $opponent->score;
-
+        // AI strategy with available difficulties
         $rand = rand(1, 100);
-        if ($rand <= 20) {
+
+        // Try to select based on AI strategy
+        if ($rand <= 20 && $availableDifficulties->contains(DifficultyLevel::Easy)) {
             return DifficultyLevel::Easy;
         }
-        if ($rand <= 70) {
+        if ($rand <= 70 && $availableDifficulties->contains(DifficultyLevel::Medium)) {
             return DifficultyLevel::Medium;
         }
+        if ($availableDifficulties->contains(DifficultyLevel::Hard)) {
+            return DifficultyLevel::Hard;
+        }
 
-        return DifficultyLevel::Hard;
+        // Return random available difficulty
+        return $availableDifficulties->random();
     }
 
-    protected function generateAnswer(Question $question, DifficultyLevel $difficulty): string|array
+    protected function generateAnswer(Question $question, DifficultyLevel $difficulty, Game $game): string|array
     {
-        $accuracyRate = match ($difficulty) {
-            DifficultyLevel::Easy => 90,
-            DifficultyLevel::Medium => 70,
-            DifficultyLevel::Hard => 50,
+        $aiLevel = $game->ai_difficulty ?? 2;
+
+        $accuracyRate = match ($aiLevel) {
+            1 => match ($difficulty) {
+                DifficultyLevel::Easy => 60,
+                DifficultyLevel::Medium => 40,
+                DifficultyLevel::Hard => 20,
+            },
+            2 => match ($difficulty) {
+                DifficultyLevel::Easy => 85,
+                DifficultyLevel::Medium => 70,
+                DifficultyLevel::Hard => 50,
+            },
+            3 => match ($difficulty) {
+                DifficultyLevel::Easy => 95,
+                DifficultyLevel::Medium => 90,
+                DifficultyLevel::Hard => 80,
+            },
+            default => 70,
         };
 
         $isCorrect = rand(1, 100) <= $accuracyRate;

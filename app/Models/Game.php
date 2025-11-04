@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GameStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Game extends Model
@@ -20,6 +21,8 @@ class Game extends Model
         'current_turn_player_id',
         'started_at',
         'completed_at',
+        'sport',
+        'ai_difficulty',
     ];
 
     protected function casts(): array
@@ -51,5 +54,10 @@ class Game extends Model
     public function currentTurnPlayer(): BelongsTo
     {
         return $this->belongsTo(GamePlayer::class, 'current_turn_player_id');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'game_category');
     }
 }

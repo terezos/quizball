@@ -32,7 +32,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΙΚΟΝΟΔΙΟ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΟΝΟΜΑ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΣΕΙΡΑ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΑΘΛΗΜΑ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ΕΡΩΤΗΣΕΙΣ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -48,7 +48,7 @@
                                             <div class="text-sm font-medium text-gray-900">{{ $category->name }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="text-sm text-gray-500">{{ $category->order }}</span>
+                                            <span class="text-sm text-gray-500">{{ $category->sport->label() }}</span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -62,19 +62,17 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex items-center gap-2">
-                                                <a href="{{ route('categories.edit', $category) }}" 
+                                                <a href="{{ route('categories.edit', $category) }}"
                                                    class="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                                                     <i class="fas fa-edit"></i>
-                                                    Επεξεργασία
                                                 </a>
                                                 <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline"
                                                       onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την κατηγορία; Αυτό θα λειτουργήσει μόνο αν δεν υπάρχουν ερωτήσεις που έχουν ανατεθεί σε αυτήν.');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" 
+                                                    <button type="submit"
                                                             class="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
                                                         <i class="fas fa-trash-alt"></i>
-                                                        Διαγραφή
                                                     </button>
                                                 </form>
                                             </div>
