@@ -1630,7 +1630,7 @@
                                                       'bg-amber-100 text-amber-700': round.difficulty?.value === 'medium',
                                                       'bg-rose-100 text-rose-700': round.difficulty?.value === 'hard'
                                                   }"
-                                                  x-text="round.difficulty?.label()">
+                                                  x-text="round.difficulty?.label">
                                             </span>
                                         </div>
                                     </div>
