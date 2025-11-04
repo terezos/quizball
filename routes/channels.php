@@ -15,13 +15,13 @@ Broadcast::channel('game.{gameId}', function ($user, $gameId) {
     }
 
     $sessionId = session()->getId();
-    
+
     return $game->players()
         ->where(function($query) use ($user, $sessionId) {
+            $query->where('session_id', $sessionId);
             if ($user) {
-                $query->where('user_id', $user->id);
+                $query->orWhere('user_id', $user->id);
             }
-            $query->orWhere('session_id', $sessionId);
         })
         ->exists();
 });

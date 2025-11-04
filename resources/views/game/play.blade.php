@@ -568,7 +568,7 @@
                 },
 
                 setupEcho() {
-                    this.echoChannel = window.Echo.private(`game.${this.game.id}`);
+                    this.echoChannel = window.Echo.channel(`game.${this.game.id}`);
 
                     this.echoChannel.listen('GameStateUpdated', (e) => {
                         this.handleGameStateUpdate(e);
