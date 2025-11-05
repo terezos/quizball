@@ -265,12 +265,20 @@
                         const data = await response.json();
                         this.game.rounds = data.rounds || [];
 
-                        // Check if player has already used 2x powerup in this game
                         const hasUsed2x = this.game.rounds.some(round =>
                             round.game_player_id === {{ $player->id }} && round.used_2x_powerup
                         );
+
+                        const hasUsed5050 = this.game.rounds.some(round =>
+                            round.game_player_id === {{ $player->id }} && round.used_5050_powerup
+                        );
+
                         if (hasUsed2x) {
                             this.has2xPowerupAvailable = false;
+                        }
+
+                        if (hasUsed5050) {
+                            this.has5050PowerupAvailable = false;
                         }
                     } catch (error) {
                         console.error('Failed to load game history:', error);
@@ -861,18 +869,16 @@
 
                     const basePoints = {
                         'easy': 1,
-                        'medium': 3,
-                        'hard': 5
+                        'medium': 2,
+                        'hard': 3
                     };
 
                     let points = basePoints[this.currentQuestion.difficulty] || 0;
 
-                    // Apply 50/50 penalty (reduces to 1 point)
                     if (this.used5050Powerup) {
                         points = 1;
                     }
 
-                    // Apply 2x multiplier
                     if (this.used2xPowerup) {
                         points *= 2;
                     }
@@ -887,8 +893,8 @@
 
                     const basePoints = {
                         'easy': 1,
-                        'medium': 3,
-                        'hard': 5
+                        'medium': 2,
+                        'hard': 3
                     };
 
                     const difficultyNames = {
@@ -899,16 +905,18 @@
 
                     let parts = [];
                     let base = basePoints[this.currentQuestion.difficulty] || 0;
+                    let current = base;
 
                     parts.push(`${difficultyNames[this.currentQuestion.difficulty]}: ${base}π`);
 
-                    if (this.used5050Powerup) {
-                        parts.push(`50/50: -${base - 1}π`);
-                        base = 1;
+                    if (this.used2xPowerup) {
+                        current = current * 2;
+                        parts.push(`2x: ×2 = ${current}π`);
                     }
 
-                    if (this.used2xPowerup) {
-                        parts.push(`2x: ×2`);
+                    if (this.used5050Powerup && current > 1) {
+                        parts.push(`50/50: ↓1π`);
+                        current = 1;
                     }
 
                     return parts.join(' • ');
@@ -1191,7 +1199,7 @@
                                         <div class="absolute inset-0 animate-pulse bg-white/5"></div>
                                         <div class="relative h-14 flex items-center justify-center gap-2">
 
-                                            <span class="text-white font-bold text-base tracking-wide drop-shadow-lg">
+                                            <span class="text-white font-bold text-base tracking-wide drop-shadow-lg text-center">
                                                 ΓΥΡΟΣ <span x-text="game.current_round || 1"></span>/<span x-text="game.max_rounds"></span>
                                             </span>
                                         </div>
@@ -1488,7 +1496,7 @@
                                     </div>
                                 </div>
 
-                                <h3 class="text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
+                                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
                                 <h3 class="text-sm font-bold text-gray-500 mb-6 leading-relaxed" x-text="'H Ερώτηση δημιουργήθηκε από τον χρήστη: ' + currentQuestion?.created_by"></h3>
 
                                 <div x-show="currentQuestion?.type === 'text_input_with_image'" class="mb-6">
@@ -1585,19 +1593,19 @@
                                          x-transition:enter="transition ease-out duration-500"
                                          x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
                                          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                         class="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-6 py-6 shadow-xl">
+                                         class="w-full flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-4 sm:px-6 py-4 sm:py-6 shadow-xl">
                                         <div class="flex-shrink-0">
-                                            <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110 animate-pulse">
-                                                <div class="text-5xl lg:text-6xl text-white font-black">✓</div>
+                                            <div class="w-14 h-14 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110 animate-pulse">
+                                                <div class="text-3xl sm:text-5xl lg:text-6xl text-white font-black">✓</div>
                                             </div>
                                         </div>
-                                        <div class="flex-1 text-left">
-                                            <div class="text-emerald-900 font-black text-3xl lg:text-4xl mb-2">Σωστό!</div>
-                                            <div class="text-emerald-700 font-bold text-xl lg:text-2xl">
+                                        <div class="flex-1 text-left min-w-0">
+                                            <div class="text-emerald-900 font-black text-xl sm:text-3xl lg:text-4xl mb-1 sm:mb-2">Σωστό!</div>
+                                            <div class="text-emerald-700 font-bold text-base sm:text-xl lg:text-2xl">
                                                 +<span x-text="lastResult?.points_earned"></span> πόντοι
                                             </div>
                                         </div>
-                                        <div class="flex-shrink-0 text-7xl lg:text-8xl animate-bounce">
+                                        <div class="flex-shrink-0 text-4xl sm:text-7xl lg:text-8xl animate-bounce">
                                             🎉
                                         </div>
                                     </div>
@@ -1606,15 +1614,15 @@
                                          x-transition:enter="transition ease-out duration-500"
                                          x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
                                          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                         class="w-full flex items-center gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-6 py-6 shadow-xl">
+                                         class="w-full flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-4 sm:px-6 py-4 sm:py-6 shadow-xl">
                                         <div class="flex-shrink-0">
-                                            <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
-                                                <div class="text-5xl lg:text-6xl text-white font-black">×</div>
+                                            <div class="w-14 h-14 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                                <div class="text-3xl sm:text-5xl lg:text-6xl text-white font-black">×</div>
                                             </div>
                                         </div>
-                                        <div class="flex-1 text-left">
-                                            <div class="text-rose-900 font-black text-3xl lg:text-4xl mb-2">Λάθος</div>
-                                            <div class="text-rose-700 font-bold text-xl lg:text-2xl">
+                                        <div class="flex-1 text-left min-w-0">
+                                            <div class="text-rose-900 font-black text-xl sm:text-3xl lg:text-4xl mb-1 sm:mb-2">Λάθος</div>
+                                            <div class="text-rose-700 font-bold text-base sm:text-xl lg:text-2xl">
                                                 0 πόντοι
                                             </div>
                                         </div>
@@ -1760,7 +1768,7 @@
              style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[calc(100vh-8rem)] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[600px] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="space-y-1">
                     <div class="text-center mb-4">
                         <h2 class="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
@@ -2034,6 +2042,17 @@
                                                   }"
                                                   x-text="round.difficulty?.label">
                                             </span>
+                                            <!-- Powerup Indicators -->
+                                            <template x-if="round.used_2x_powerup">
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 border border-orange-300" title="2x Πόντοι">
+                                                    2X
+                                                </span>
+                                            </template>
+                                            <template x-if="round.used_5050_powerup">
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-emerald-100 to-green-100 text-green-700 border border-green-300" title="50/50">
+                                                    50/50
+                                                </span>
+                                            </template>
                                         </div>
                                     </div>
 
@@ -2056,7 +2075,7 @@
 
                                         <template x-if="round.player_answer">
                                             <div class="flex items-start gap-2">
-                                                <span class="text-slate-500 min-w-24">Η απάντησή σου:</span>
+                                                <span class="text-slate-500 min-w-24">Απάντηση:</span>
                                                 <span class="font-semibold"
                                                       :class="round.is_correct ? 'text-green-700' : 'text-red-700'"
                                                       x-text="round.player_answer"></span>

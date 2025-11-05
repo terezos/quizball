@@ -249,7 +249,7 @@ class GameController extends Controller
         $turnStartedAt = \Illuminate\Support\Facades\Cache::get("game:{$game->id}:turn_started_at");
 
         return view('game.play', [
-            'game' => $game->load('players'),
+            'game' => $game->load('players', 'rounds.category', 'rounds.question'),
             'player' => $player,
             'categories' => $categories,
             'isPlayerTurn' => $isPlayerTurn,
@@ -493,6 +493,7 @@ class GameController extends Controller
                     'points_earned' => $round->points_earned ?? 0,
                     'is_correct' => $round->is_correct ?? false,
                     'used_2x_powerup' => $round->used_2x_powerup ?? false,
+                    'used_5050_powerup' => $round->used_5050_powerup ?? false,
                     'time_taken' => $round->time_taken,
                     'question' => $questionData,
                     'player_answer' => $playerAnswerText,
