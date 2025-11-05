@@ -198,7 +198,7 @@
                         type: round.question.question_type,
                         created_by: round.question.creator.name,
                         difficulty: round.difficulty,
-                        answers: round.question.answers || null
+                        answers: round.question.answers ? round.question.answers.map(ans => ({...ans, disabled: false})) : null
                     };
 
                     // Restore 50/50 powerup state if it was used for this question
@@ -593,6 +593,9 @@
                 freezeTime(){
                     clearInterval(this.inactivityTimer);
                 },
+                freezeOpponentTime(){
+                    clearInterval(this.opponentInactivityTimer);
+                },
 
                 startOpponentInactivityTimer(turnStartedAt) {
                     this.stopOpponentInactivityTimer();
@@ -605,6 +608,7 @@
                         this.opponentInactivityTimeRemaining = Math.max(0, 120 - elapsed);
 
                         if (this.opponentInactivityTimeRemaining <= 0) {
+                            this.freezeOpponentTime();
                             this.freezeTime();
                             alert('Ο αντίπαλός σας έχει μείνει ανενεργός για πολύ ώρα. Το παιχνίδι θα κατακυρωθεί υπέρ σας.');
                             this.loading = true;
@@ -629,7 +633,7 @@
                     if (this.currentQuestion && this.currentQuestion.id) {
                         localStorage.removeItem(`game_${this.game.id}_5050Data_${this.currentQuestion.id}`);
                     }
-                    
+
                     // Clear 50/50 powerup localStorage flag
                     localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
 
@@ -974,9 +978,9 @@
                                 this.currentQuestion.converted_to_choice = true;
                                 localStorage.setItem(
                                     `game_${this.game.id}_5050Data_${this.currentQuestion.id}`,
-                                    JSON.stringify({ 
+                                    JSON.stringify({
                                         answer_text: data.answer_text,
-                                        fake_answer: data.fake_answer 
+                                        fake_answer: data.fake_answer
                                     })
                                 );
                             }
@@ -1057,7 +1061,7 @@
 {{--                            <div class="absolute inset-0 w-3 h-3 bg-white rounded-full animate-ping"></div>--}}
 {{--                        </div>--}}
 
-                        <span class="text-white font-black lg:text-xl sm:text-sm tracking-wide drop-shadow-lg">
+                        <span class="text-white font-black text-sm sm:text-base lg:text-xl tracking-wide drop-shadow-lg">
                             Η ΜΠΑΛΑ ΕΙΝΑΙ ΣΤΟ ΓΗΠΕΔΟ ΣΟΥ!
                         </span>
 
@@ -1530,10 +1534,10 @@
                                 <!-- Multiple Choice (with potential disabled answers) -->
                                 <div x-show="currentQuestion?.type === 'multiple_choice'" class="space-y-3">
                                     <template x-for="(ans, index) in currentQuestion?.answers" :key="ans.id">
-                                        <button @click="!ans.disabled ? answer = ans.id : null"
-                                                :disabled="ans.disabled"
+                                        <button @click="ans.disabled !== true ? answer = ans.id : null"
+                                                :disabled="ans.disabled === true"
                                                 :class="[
-                                                    ans.disabled ? 'opacity-30 grayscale cursor-not-allowed bg-gray-100 border-gray-200' :
+                                                    ans.disabled === true ? 'opacity-30 grayscale cursor-not-allowed bg-gray-100 border-gray-200' :
                                                     (answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30')
                                                 ]"
                                                 class="relative w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
@@ -1750,11 +1754,13 @@
 
         <div x-show="!isMyTurn"
              x-cloak
-             class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-52 lg:pb-32"
+             @click.self="null"
+             x-init="$watch('!isMyTurn', value => { if(value) { document.body.style.overflow = 'hidden' } else { document.body.style.overflow = '' } })"
+             class="fixed inset-0 z-30 flex items-start sm:items-center justify-center p-4 pb-24 sm:pb-32 lg:pb-32"
              style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-6 border-2 border-indigo-300 transform transition-all overflow-y-auto lg:overflow-visible max-h-[85vh] lg:max-h-none">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[calc(100vh-8rem)] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="space-y-1">
                     <div class="text-center mb-4">
                         <h2 class="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
