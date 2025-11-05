@@ -27,10 +27,14 @@
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Κατηγορία *</label>
                             <select name="category_id" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ $question->category_id == $category->id ? 'selected' : '' }}>
-                                        {{ $category->icon }} {{ $category->name }}
-                                    </option>
+                                @foreach($categoriesBySport as $sport => $categories)
+                                    <optgroup label="{{ $sport === 'football' ? '⚽ Ποδόσφαιρο' : '🏀 Μπάσκετ' }}">
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ $question->category_id == $category->id ? 'selected' : '' }}>
+                                                {{ $category->icon }} {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
                         </div>

@@ -33,24 +33,33 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
                                     Επίλεξε Κατηγορίες
                                 </label>
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    @foreach($categories as $category)
-                                        <label class="relative flex items-center p-3 cursor-pointer rounded-lg border-2 transition-all
-                                            {{ in_array($category->id, request('categories', [])) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white' }}">
-                                            <input type="checkbox" name="categories[]" value="{{ $category->id }}"
-                                                {{ in_array($category->id, request('categories', [])) ? 'checked' : '' }}
-                                                class="sr-only peer"
-                                                onchange="document.getElementById('filterForm').submit()">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-2xl">{{ $category->icon }}</span>
-                                                <span class="text-sm font-medium text-gray-900">{{ $category->name }}</span>
-                                            </div>
-                                            <svg class="absolute top-2 right-2 w-5 h-5 text-blue-600 {{ in_array($category->id, request('categories', [])) ? '' : 'hidden' }}" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </label>
-                                    @endforeach
-                                </div>
+                                
+                                @foreach($categoriesBySport as $sport => $categories)
+                                    <div class="mb-6">
+                                        <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                            <span class="text-2xl">{{ $sport === 'football' ? '⚽' : '🏀' }}</span>
+                                            <span>{{ $sport === 'football' ? 'Ποδόσφαιρο' : 'Μπάσκετ' }}</span>
+                                        </h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            @foreach($categories as $category)
+                                                <label class="relative flex items-center p-3 cursor-pointer rounded-lg border-2 transition-all
+                                                    {{ in_array($category->id, request('categories', [])) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white' }}">
+                                                    <input type="checkbox" name="categories[]" value="{{ $category->id }}"
+                                                        {{ in_array($category->id, request('categories', [])) ? 'checked' : '' }}
+                                                        class="sr-only peer"
+                                                        onchange="document.getElementById('filterForm').submit()">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-2xl">{{ $category->icon }}</span>
+                                                        <span class="text-sm font-medium text-gray-900">{{ $category->name }}</span>
+                                                    </div>
+                                                    <svg class="absolute top-2 right-2 w-5 h-5 text-blue-600 {{ in_array($category->id, request('categories', [])) ? '' : 'hidden' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
 
                             @if(auth()->user()->isAdmin() && $editors->count() > 0)

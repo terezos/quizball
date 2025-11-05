@@ -17,7 +17,12 @@ class QuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categoriesBySport = Category::where('is_active', true)
+            ->orderBy('sport')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('sport');
+        
         $editors = Question::select('created_by')
             ->distinct()
             ->with('creator:id,name')
@@ -44,17 +49,21 @@ class QuestionController extends Controller
 
         return view('questions.index', [
             'questions' => $questions,
-            'categories' => $categories,
+            'categoriesBySport' => $categoriesBySport,
             'editors' => $editors,
         ]);
     }
 
     public function create()
     {
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categoriesBySport = Category::where('is_active', true)
+            ->orderBy('sport')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('sport');
 
         return view('questions.create', [
-            'categories' => $categories,
+            'categoriesBySport' => $categoriesBySport,
             'questionTypes' => QuestionType::cases(),
             'difficulties' => DifficultyLevel::cases(),
         ]);
@@ -144,11 +153,15 @@ class QuestionController extends Controller
             abort(403);
         }
 
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categoriesBySport = Category::where('is_active', true)
+            ->orderBy('sport')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('sport');
 
         return view('questions.edit', [
             'question' => $question->load('answers'),
-            'categories' => $categories,
+            'categoriesBySport' => $categoriesBySport,
             'questionTypes' => QuestionType::cases(),
             'difficulties' => DifficultyLevel::cases(),
         ]);

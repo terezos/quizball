@@ -1,0 +1,458 @@
+[
+    {
+        "question": "Ποια ομάδα κατέχει το ρεκόρ για τους περισσότερους τίτλους στην ιστορία της Premier League;",
+        "source": "https://www.premierleague.com/history/champions",
+        "type": "text_input",
+        "category": "Premier League",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Manchester United",
+                "is_correct": true
+            },
+            {
+                "answer": "Μάντσεστερ Γιουνάιτεντ",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο κορυφαίος σκόρερ όλων των εποχών στην Premier League;",
+        "source": "https://www.premierleague.com/stats/all-time",
+        "type": "multiple_choice",
+        "category": "Premier League",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Wayne Rooney",
+                "is_correct": false
+            },
+            {
+                "answer": "Alan Shearer",
+                "is_correct": true
+            },
+            {
+                "answer": "Thierry Henry",
+                "is_correct": false
+            },
+            {
+                "answer": "Harry Kane",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα της Premier League ολοκλήρωσε μία σεζόν αήττητη, κερδίζοντας το παρατσούκλι 'The Invincibles';",
+        "source": "https://www.premierleague.com/history/the-invincibles",
+        "type": "text_input",
+        "category": "Premier League",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Arsenal (2003-04)",
+                "is_correct": true
+            },
+            {
+                "answer": "Άρσεναλ (2003-04)",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος σύλλογος έχει κατακτήσει τους περισσότερους τίτλους Champions League/Ευρωπαϊκού Κυπέλλου;",
+        "source": "https://www.uefa.com/uefachampionsleague/history/winners/",
+        "type": "text_input",
+        "category": "Champions League",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Real Madrid",
+                "is_correct": true
+            },
+            {
+                "answer": "Ρεάλ Μαδρίτης",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα ήταν η πρώτη που υπερασπίστηκε επιτυχώς τον τίτλο του Champions League (από την αλλαγή της μορφής το 1992-93);",
+        "source": "https://www.uefa.com/uefachampionsleague/history/",
+        "type": "multiple_choice",
+        "category": "Champions League",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "AC Milan",
+                "is_correct": false
+            },
+            {
+                "answer": "Real Madrid",
+                "is_correct": true
+            },
+            {
+                "answer": "Barcelona",
+                "is_correct": false
+            },
+            {
+                "answer": "Bayern Munich",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης είναι ο μοναδικός που έχει σκοράρει σε τρεις διαφορετικούς τελικούς Champions League;",
+        "source": "https://www.uefa.com/uefachampionsleague/history/all-time-facts/",
+        "type": "text_input",
+        "category": "Champions League",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Cristiano Ronaldo",
+                "is_correct": true
+            },
+            {
+                "answer": "Κριστιάνο Ρονάλντο",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια χώρα έχει κατακτήσει τα περισσότερα Παγκόσμια Κύπελλα FIFA;",
+        "source": "https://www.fifa.com/tournaments/mens/worldcup/history/winners",
+        "type": "multiple_choice",
+        "category": "Παγκόσμιο Κύπελλο",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Ιταλία",
+                "is_correct": false
+            },
+            {
+                "answer": "Γερμανία",
+                "is_correct": false
+            },
+            {
+                "answer": "Βραζιλία",
+                "is_correct": true
+            },
+            {
+                "answer": "Αργεντινή",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια χώρα κέρδισε το Παγκόσμιο Κύπελλο του 1966;",
+        "source": "https://www.fifa.com/tournaments/mens/worldcup/1966england/results",
+        "type": "text_input",
+        "category": "Παγκόσμιο Κύπελλο",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Αγγλία",
+                "is_correct": true
+            },
+            {
+                "answer": "England",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο μοναδικός παίκτης που έχει κερδίσει τρία Παγκόσμια Κύπελλα FIFA;",
+        "source": "https://www.fifa.com/tournaments/mens/worldcup/history",
+        "type": "text_input",
+        "category": "Παγκόσμιο Κύπελλο",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Pele",
+                "is_correct": true
+            },
+            {
+                "answer": "Πελέ",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης κέρδισε τη Χρυσή Μπάλα (Ballon d'Or) τις περισσότερες φορές;",
+        "source": "https://www.francefootball.fr/ballon-dor",
+        "type": "multiple_choice",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Cristiano Ronaldo",
+                "is_correct": false
+            },
+            {
+                "answer": "Lionel Messi",
+                "is_correct": true
+            },
+            {
+                "answer": "Michel Platini",
+                "is_correct": false
+            },
+            {
+                "answer": "Johan Cruyff",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο μοναδικός τερματοφύλακας που έχει κερδίσει τη Χρυσή Μπάλα (Ballon d'Or);",
+        "source": "https://www.francefootball.fr/ballon-dor",
+        "type": "text_input",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Lev Yashin",
+                "is_correct": true
+            },
+            {
+                "answer": "Λεβ Γιασίν",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης σημείωσε το πιο γρήγορο χατ-τρικ στην ιστορία της Premier League;",
+        "source": "https://www.premierleague.com/stats/records",
+        "type": "text_input",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Sadio Mané",
+                "is_correct": true
+            },
+            {
+                "answer": "Σαντιό Μανέ",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιο είναι το παρατσούκλι της ποδοσφαιρικής ομάδας της Λίβερπουλ (Liverpool);",
+        "source": "https://www.liverpoolfc.com/history/club/nicknames",
+        "type": "multiple_choice",
+        "category": "Ομάδες & Γήπεδα",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "The Blues",
+                "is_correct": false
+            },
+            {
+                "answer": "The Reds",
+                "is_correct": true
+            },
+            {
+                "answer": "The Gunners",
+                "is_correct": false
+            },
+            {
+                "answer": "The Citizens",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια είναι η έδρα της Barcelona;",
+        "source": "https://www.fcbarcelona.com/en/club/camp-nou/info",
+        "type": "text_input",
+        "category": "Ομάδες & Γήπεδα",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Camp Nou",
+                "is_correct": true
+            },
+            {
+                "answer": "Spotify Camp Nou",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιο γήπεδο είναι γνωστό ως 'The Theatre of Dreams';",
+        "source": "https://www.manutd.com/en/old-trafford",
+        "type": "text_input",
+        "category": "Ομάδες & Γήπεδα",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Old Trafford",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Πόσο διαρκεί κάθε ημίχρονο σε έναν κανονικό αγώνα ποδοσφαίρου;",
+        "source": "https://www.fifa.com/development/laws-of-the-game/laws/law-7-the-duration-of-the-match",
+        "type": "text_input",
+        "category": "Τακτικές & Κανόνες",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "45 λεπτά",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια από τις παρακάτω ενέργειες ΔΕΝ αποτελεί λόγο για την εφαρμογή του κανονισμού του οφσάιντ (offside);",
+        "source": "https://www.thefa.com/football-rules-governance/laws/football-rules/law-11-offside",
+        "type": "multiple_choice",
+        "category": "Τακτικές & Κανόνες",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Παρεμπόδιση αντιπάλου.",
+                "is_correct": false
+            },
+            {
+                "answer": "Επέμβαση στο παιχνίδι.",
+                "is_correct": false
+            },
+            {
+                "answer": "Λήψη της μπάλας απευθείας από επαναφορά (throw-in).",
+                "is_correct": true
+            },
+            {
+                "answer": "Αποκόμιση πλεονεκτήματος.",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Τι σημαίνει η τακτική ονομασία 'Tiki-Taka' και με ποια ομάδα συνδέθηκε στενά;",
+        "source": "https://www.uefa.com/uefachampionsleague/news/0255-0e31846b4129-e0d0144f77c3-1000--how-tiki-taka-changed-football/",
+        "type": "text_input",
+        "category": "Τακτικές & Κανόνες",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Τακτική που βασίζεται σε γρήγορες, μικρές πάσες και συνεχή κίνηση για τη διατήρηση της κατοχής. Συνδέθηκε με την Barcelona και την Εθνική Ισπανίας.",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιο έτος διεξήχθη το πρώτο επίσημο Παγκόσμιο Κύπελλο FIFA;",
+        "source": "https://www.fifa.com/tournaments/mens/worldcup/history",
+        "type": "text_input",
+        "category": "Ιστορία Ποδοσφαίρου",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "1930",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Σε ποια χώρα εφευρέθηκε το σύγχρονο ποδόσφαιρο;",
+        "source": "https://www.fifa.com/news/football-history-origins-and-beginnings",
+        "type": "multiple_choice",
+        "category": "Ιστορία Ποδοσφαίρου",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Βραζιλία",
+                "is_correct": false
+            },
+            {
+                "answer": "Αγγλία",
+                "is_correct": true
+            },
+            {
+                "answer": "Ιταλία",
+                "is_correct": false
+            },
+            {
+                "answer": "Ουρουγουάη",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα κέρδισε το πρώτο Ευρωπαϊκό Κύπελλο (το σημερινό Champions League) το 1956;",
+        "source": "https://www.uefa.com/uefachampionsleague/history/winners/",
+        "type": "text_input",
+        "category": "Ιστορία Ποδοσφαίρου",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Real Madrid",
+                "is_correct": true
+            },
+            {
+                "answer": "Ρεάλ Μαδρίτης",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης είναι κάτοχος του ρεκόρ της ακριβότερης μεταγραφής στην ιστορία του ποδοσφαίρου;",
+        "source": "https://www.transfermarkt.com/transfers/transferrekorde/statistik/top/plus/0/galerie/0?saison_id=gesamtauswahl&land_id=gesamtauswahl&ausrichtung=&spielerposition_id=gesamtauswahl&altersklasse=&leihe=&w_s=&plus=1",
+        "type": "text_input",
+        "category": "Μεταγραφές & Ρεκόρ",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Neymar",
+                "is_correct": true
+            },
+            {
+                "answer": "Νεϊμάρ",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Από ποια ομάδα πήγε ο Cristiano Ronaldo στη Real Madrid το 2009;",
+        "source": "https://www.transfermarkt.com/cristiano-ronaldo/transfers/spieler/8198/transfer_id/424905",
+        "type": "multiple_choice",
+        "category": "Μεταγραφές & Ρεκόρ",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Sporting Lisbon",
+                "is_correct": false
+            },
+            {
+                "answer": "Manchester United",
+                "is_correct": true
+            },
+            {
+                "answer": "Juventus",
+                "is_correct": false
+            },
+            {
+                "answer": "Porto",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια είναι η μεγαλύτερη νίκη που έχει σημειωθεί σε αγώνα Παγκοσμίου Κυπέλλου FIFA;",
+        "source": "https://www.fifa.com/tournaments/mens/worldcup/history",
+        "type": "text_input",
+        "category": "Μεταγραφές & Ρεκόρ",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Ουγγαρία 10-1 Ελ Σαλβαδόρ (1982)",
+                "is_correct": true
+            },
+            {
+                "answer": "Hungary 10-1 El Salvador (1982)",
+                "is_correct": true
+            }
+        ]
+    }
+]

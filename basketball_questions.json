@@ -1,0 +1,584 @@
+[
+    {
+        "question": "Ποιος παίκτης είναι ο κορυφαίος σκόρερ όλων των εποχών στο NBA;",
+        "source": "https://www.nba.com/stats/alltime",
+        "type": "text_input",
+        "category": "NBA",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "LeBron James",
+                "is_correct": true
+            },
+            {
+                "answer": "Λεμπρόν Τζέιμς",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα έχει κατακτήσει τους περισσότερους τίτλους NBA στην ιστορία;",
+        "source": "https://www.nba.com/history/finals/champions",
+        "type": "multiple_choice",
+        "category": "NBA",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Los Angeles Lakers",
+                "is_correct": false
+            },
+            {
+                "answer": "Boston Celtics",
+                "is_correct": true
+            },
+            {
+                "answer": "Chicago Bulls",
+                "is_correct": false
+            },
+            {
+                "answer": "San Antonio Spurs",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο μοναδικός παίκτης που έχει κερδίσει το βραβείο MVP και το βραβείο Αμυντικού της Χρονιάς (DPOY) στην ίδια σεζόν;",
+        "source": "https://www.basketball-reference.com",
+        "type": "text_input",
+        "category": "NBA",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Hakeem Olajuwon",
+                "is_correct": true
+            },
+            {
+                "answer": "Χακίμ Ολάζουον",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια Ελληνική ομάδα κέρδισε την πρώτη της EuroLeague το 1996;",
+        "source": "https://www.euroleague.net/main/history/trophies",
+        "type": "multiple_choice",
+        "category": "EuroLeague",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Ολυμπιακός",
+                "is_correct": false
+            },
+            {
+                "answer": "Παναθηναϊκός",
+                "is_correct": true
+            },
+            {
+                "answer": "ΑΕΚ",
+                "is_correct": false
+            },
+            {
+                "answer": "Άρης",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Στον τελικό του 2007, ποια ομάδα νίκησε ο Παναθηναϊκός στο ΟΑΚΑ για να κατακτήσει τον τίτλο της EuroLeague;",
+        "source": "https://www.euroleague.net/main/results/showgame?gamecode=207&seasoncode=E2006",
+        "type": "text_input",
+        "category": "EuroLeague",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "CSKA Moscow",
+                "is_correct": true
+            },
+            {
+                "answer": "ΤΣΣΚΑ Μόσχας",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης κατέχει το ρεκόρ για τον υψηλότερο συνολικό αριθμό πόντων στην ιστορία της EuroLeague (από το 2000-01);",
+        "source": "https://www.euroleague.net/main/stats/alltime",
+        "type": "text_input",
+        "category": "EuroLeague",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Vassilis Spanoulis",
+                "is_correct": true
+            },
+            {
+                "answer": "Βασίλης Σπανούλης",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια χώρα κατέκτησε το χρυσό μετάλλιο στους Ολυμπιακούς Αγώνες του 2004 στην Αθήνα;",
+        "source": "https://www.fiba.basketball/olympics/men/2004",
+        "type": "multiple_choice",
+        "category": "Παγκόσμιο Κύπελλο / Ολυμπιακοί Αγώνες",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "ΗΠΑ",
+                "is_correct": false
+            },
+            {
+                "answer": "Αργεντινή",
+                "is_correct": true
+            },
+            {
+                "answer": "Ιταλία",
+                "is_correct": false
+            },
+            {
+                "answer": "Λιθουανία",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος ήταν ο προπονητής της Εθνικής Ελλάδος όταν κατέκτησε το Ευρωμπάσκετ του 1987;",
+        "source": "https://www.fiba.basketball/eurobasket/1987/news/thirty-years-since-the-greek-dream-team-took-gold-at-eurobasket-1987",
+        "type": "text_input",
+        "category": "Παγκόσμιο Κύπελλο / Ολυμπιακοί Αγώνες",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Κώστας Πολίτης",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Στον τελικό του Παγκοσμίου Κυπέλλου FIBA του 2006, ποιες δύο χώρες αναμετρήθηκαν;",
+        "source": "https://www.fiba.basketball/worldcup/2006/schedule",
+        "type": "text_input",
+        "category": "Παγκόσμιο Κύπελλο / Ολυμπιακοί Αγώνες",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Ισπανία - Ελλάδα",
+                "is_correct": true
+            },
+            {
+                "answer": "Ελλάδα - Ισπανία",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης είναι γνωστός με το παρατσούκλι 'Air' και 'His Airness';",
+        "source": "https://www.nba.com/history/legends/profiles/michael-jordan",
+        "type": "text_input",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Michael Jordan",
+                "is_correct": true
+            },
+            {
+                "answer": "Μάικλ Τζόρνταν",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο μόνος παίκτης που έχει κατακτήσει 11 πρωταθλήματα NBA ως παίκτης;",
+        "source": "https://www.nba.com/history/legends/profiles/bill-russell",
+        "type": "multiple_choice",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Kareem Abdul-Jabbar",
+                "is_correct": false
+            },
+            {
+                "answer": "Bill Russell",
+                "is_correct": true
+            },
+            {
+                "answer": "Michael Jordan",
+                "is_correct": false
+            },
+            {
+                "answer": "Magic Johnson",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα του ΝΒΑ επέλεξε τον Kobe Bryant κατευθείαν από το λύκειο το 1996, πριν τον ανταλλάξει στους Lakers;",
+        "source": "https://www.basketball-reference.com/players/b/bryanko01.html",
+        "type": "text_input",
+        "category": "Παίκτες & Θρύλοι",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Charlotte Hornets",
+                "is_correct": true
+            },
+            {
+                "answer": "Σάρλοτ Χόρνετς",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια είναι η έδρα των Golden State Warriors;",
+        "source": "https://www.nba.com/warriors/chase-center",
+        "type": "text_input",
+        "category": "Ομάδες & Αρένες",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Chase Center",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποια είναι η μεγαλύτερη σε χωρητικότητα αρένα στην EuroLeague;",
+        "source": "https://www.euroleague.net/main/venues",
+        "type": "multiple_choice",
+        "category": "Ομάδες & Αρένες",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "WiZink Center (Ρεάλ Μαδρίτης)",
+                "is_correct": false
+            },
+            {
+                "answer": "O.A.K.A. (Παναθηναϊκός)",
+                "is_correct": true
+            },
+            {
+                "answer": "Sinan Erdem Dome (Αναντολού Εφές)",
+                "is_correct": false
+            },
+            {
+                "answer": "La Fonteta (Βαλένθια)",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα έχει το μεγαλύτερο σερί νικών στην ιστορία του NBA;",
+        "source": "https://www.nba.com/history/records/winning-streaks",
+        "type": "text_input",
+        "category": "Ομάδες & Αρένες",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Los Angeles Lakers (33 νίκες - 1971/72)",
+                "is_correct": true
+            },
+            {
+                "answer": "Λος Άντζελες Λέικερς (33 νίκες - 1971/72)",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Πόσα δευτερόλεπτα επιτρέπεται να μείνει ένας παίκτης στη ρακέτα (ζωγραφιστό) χωρίς να φυλάει αντίπαλο στο NBA (κανόνας αμυντικής τριών δευτερολέπτων);",
+        "source": "https://official.nba.com/rule-book/",
+        "type": "text_input",
+        "category": "Κανόνες & Τακτικές",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "3",
+                "is_correct": true
+            },
+            {
+                "answer": "Τρία",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Πόσο διαρκεί η κατοχή της μπάλας σε ένα παιχνίδι μπάσκετ σύμφωνα με τους κανόνες της FIBA (π.χ. EuroLeague, Παγκόσμιο Κύπελλο);",
+        "source": "https://www.fiba.basketball/documents/official-basketball-rules.pdf",
+        "type": "multiple_choice",
+        "category": "Κανόνες & Τακτικές",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "24 δευτερόλεπτα",
+                "is_correct": true
+            },
+            {
+                "answer": "30 δευτερόλεπτα",
+                "is_correct": false
+            },
+            {
+                "answer": "14 δευτερόλεπτα",
+                "is_correct": false
+            },
+            {
+                "answer": "12 δευτερόλεπτα",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος είναι ο μοναδικός τρόπος να ανανεωθεί ο χρόνος επίθεσης στα 14 δευτερόλεπτα (αντί για 24) σύμφωνα με τους κανονισμούς της FIBA;",
+        "source": "https://www.fiba.basketball/documents/official-basketball-rules.pdf",
+        "type": "text_input",
+        "category": "Κανόνες & Τακτικές",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Με επιθετικό ριμπάουντ μετά από αποτυχημένη προσπάθεια για καλάθι (ή βολή).",
+                "is_correct": true
+            },
+            {
+                "answer": "Με επιθετικό ριμπάουντ.",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος εφηύρε το μπάσκετ το 1891;",
+        "source": "https://www.britannica.com/sports/basketball",
+        "type": "text_input",
+        "category": "Ιστορία Μπάσκετ",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "James Naismith",
+                "is_correct": true
+            },
+            {
+                "answer": "Τζέιμς Νέισμιθ",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιο έτος πρωτοξεκίνησε το NBA (τότε BAA);",
+        "source": "https://www.nba.com/history/timeline",
+        "type": "multiple_choice",
+        "category": "Ιστορία Μπάσκετ",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "1946",
+                "is_correct": true
+            },
+            {
+                "answer": "1950",
+                "is_correct": false
+            },
+            {
+                "answer": "1937",
+                "is_correct": false
+            },
+            {
+                "answer": "1960",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα συμμετείχε στον πρώτο αγώνα NBA (τότε BAA) στην ιστορία;",
+        "source": "https://www.nba.com/history/timeline",
+        "type": "text_input",
+        "category": "Ιστορία Μπάσκετ",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Toronto Huskies",
+                "is_correct": true
+            },
+            {
+                "answer": "New York Knicks",
+                "is_correct": true
+            },
+            {
+                "answer": "Τορόντο Χάσκις",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης μεταγράφηκε από τους Cavaliers στους Heat το 2010;",
+        "source": "https://www.nba.com",
+        "type": "text_input",
+        "category": "Μεταγραφές & Συμβόλαια",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "LeBron James",
+                "is_correct": true
+            },
+            {
+                "answer": "Λεμπρόν Τζέιμς",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης έγινε ο πρώτος που υπέγραψε συμβόλαιο 200 εκατομμυρίων δολαρίων στο NBA;",
+        "source": "https://www.espn.com/nba/story/_/id/20128775/stephen-curry-golden-state-warriors-agrees-record-5-year-201-million-deal",
+        "type": "multiple_choice",
+        "category": "Μεταγραφές & Συμβόλαια",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Kevin Durant",
+                "is_correct": false
+            },
+            {
+                "answer": "Stephen Curry",
+                "is_correct": true
+            },
+            {
+                "answer": "James Harden",
+                "is_correct": false
+            },
+            {
+                "answer": "Damian Lillard",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Τι είναι το 'Bird Rights' στον κανονισμό του Salary Cap του NBA;",
+        "source": "https://cbacap.com/glossary/bird-rights/",
+        "type": "text_input",
+        "category": "Μεταγραφές & Συμβόλαια",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Ο κανόνας που επιτρέπει σε μια ομάδα να υπερβεί το Salary Cap για να υπογράψει εκ νέου τους δικούς της 'Free Agents' (που έχουν παίξει 3 σεζόν στην ομάδα).",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος Έλληνας παίκτης του NBA φημίζεται για το παρατσούκλι 'Greek Freak';",
+        "source": "https://www.nba.com/player/203507/giannis-antetokounmpo/bio",
+        "type": "text_input",
+        "category": "Ελληνικό Μπάσκετ",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Γιάννης Αντετοκούνμπο",
+                "is_correct": true
+            },
+            {
+                "answer": "Giannis Antetokounmpo",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος Έλληνας παίκτης ήταν ο MVP του Final Four της EuroLeague το 2007, 2009 και 2011;",
+        "source": "https://www.euroleague.net/main/history/f4-mvps",
+        "type": "multiple_choice",
+        "category": "Ελληνικό Μπάσκετ",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Βασίλης Σπανούλης",
+                "is_correct": false
+            },
+            {
+                "answer": "Δημήτρης Διαμαντίδης",
+                "is_correct": true
+            },
+            {
+                "answer": "Θοδωρής Παπαλουκάς",
+                "is_correct": false
+            },
+            {
+                "answer": "Νίκος Γκάλης",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποιος Έλληνας διεθνής παίκτης έχει συμπεριληφθεί στην 'Καλύτερη Αμυντική Πεντάδα του NBA' (NBA All-Defensive First Team);",
+        "source": "https://www.nba.com/news/all-defensive-teams-history",
+        "type": "text_input",
+        "category": "Ελληνικό Μπάσκετ",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Γιάννης Αντετοκούνμπο",
+                "is_correct": true
+            },
+            {
+                "answer": "Giannis Antetokounmpo",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιο είναι το όνομα της ετήσιας τελετής στην οποία οι ομάδες του NBA επιλέγουν παίκτες από τα κολέγια και άλλες λίγκες;",
+        "source": "https://www.nba.com/draft",
+        "type": "text_input",
+        "category": "Draft & Rookies",
+        "difficulty": 1,
+        "answers": [
+            {
+                "answer": "Draft",
+                "is_correct": true
+            },
+            {
+                "answer": "NBA Draft",
+                "is_correct": true
+            }
+        ]
+    },
+    {
+        "question": "Ποιος παίκτης του NBA ήταν το 'No. 1 Pick' του Draft το 2003;",
+        "source": "https://www.basketball-reference.com/draft/NBA_2003.html",
+        "type": "multiple_choice",
+        "category": "Draft & Rookies",
+        "difficulty": 2,
+        "answers": [
+            {
+                "answer": "Carmelo Anthony",
+                "is_correct": false
+            },
+            {
+                "answer": "Dwyane Wade",
+                "is_correct": false
+            },
+            {
+                "answer": "LeBron James",
+                "is_correct": true
+            },
+            {
+                "answer": "Chris Bosh",
+                "is_correct": false
+            }
+        ]
+    },
+    {
+        "question": "Ποια ομάδα επέλεξε τον Dirk Nowitzki στο #9 του Draft του 1998, πριν τον ανταλλάξει στους Mavericks;",
+        "source": "https://www.basketball-reference.com/draft/NBA_1998.html",
+        "type": "text_input",
+        "category": "Draft & Rookies",
+        "difficulty": 3,
+        "answers": [
+            {
+                "answer": "Milwaukee Bucks",
+                "is_correct": true
+            },
+            {
+                "answer": "Μιλγουόκι Μπακς",
+                "is_correct": true
+            }
+        ]
+    }
+]

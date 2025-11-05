@@ -24,6 +24,32 @@
                 </div>
             @endif
 
+            <!-- Sport Filter -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Φίλτρο Αθλήματος</h3>
+                    <form method="GET" action="{{ route('categories.index') }}" id="sportFilterForm">
+                        <div class="flex gap-3">
+                            <button type="submit" name="sport" value=""
+                                class="flex-1 px-4 py-3 rounded-lg border-2 transition-all font-medium
+                                {{ !request('sport') ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700' }}">
+                                🏆 Όλα τα Αθλήματα
+                            </button>
+                            <button type="submit" name="sport" value="football"
+                                class="flex-1 px-4 py-3 rounded-lg border-2 transition-all font-medium
+                                {{ request('sport') === 'football' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700' }}">
+                                ⚽ Ποδόσφαιρο
+                            </button>
+                            <button type="submit" name="sport" value="basketball"
+                                class="flex-1 px-4 py-3 rounded-lg border-2 transition-all font-medium
+                                {{ request('sport') === 'basketball' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700' }}">
+                                🏀 Μπάσκετ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="overflow-x-auto">

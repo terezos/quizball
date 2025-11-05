@@ -216,6 +216,7 @@
                             });
                         } else if (this.currentQuestion.type === 'text_input' && data.fake_answer) {
                             // Restore converted question
+                            this.currentQuestion.correct_answer = data.answer_text;
                             this.currentQuestion.fake_answer = data.fake_answer;
                             this.currentQuestion.converted_to_choice = true;
                         }
@@ -965,11 +966,15 @@
                                     JSON.stringify({ disabled_answers: data.disabled_answers })
                                 );
                             } else if (this.currentQuestion.type === 'text_input') {
+                                this.currentQuestion.correct_answer = data.answer_text;
                                 this.currentQuestion.fake_answer = data.fake_answer;
                                 this.currentQuestion.converted_to_choice = true;
                                 localStorage.setItem(
                                     `game_${this.game.id}_5050Data_${this.currentQuestion.id}`,
-                                    JSON.stringify({ fake_answer: data.fake_answer })
+                                    JSON.stringify({ 
+                                        answer_text: data.answer_text,
+                                        fake_answer: data.fake_answer 
+                                    })
                                 );
                             }
 
@@ -1497,11 +1502,11 @@
                                     </div>
 
                                     <div x-show="currentQuestion?.converted_to_choice" class="space-y-3">
-                                        <button @click="answer = currentQuestion?.answers[0]?.answer_text"
-                                                :class="answer === currentQuestion?.answers[0]?.answer_text ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
+                                        <button @click="answer = currentQuestion?.correct_answer"
+                                                :class="answer === currentQuestion?.correct_answer ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
                                                 class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
                                             <span class="font-bold text-blue-600 mr-3">A</span>
-                                            <span class="text-gray-900 font-medium" x-text="currentQuestion?.answers[0]?.answer_text"></span>
+                                            <span class="text-gray-900 font-medium" x-text="currentQuestion?.correct_answer"></span>
                                         </button>
                                         <button @click="answer = currentQuestion?.fake_answer"
                                                 :class="answer === currentQuestion?.fake_answer ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"

@@ -19,9 +19,14 @@ class CategoryController extends Controller
 
         $categories = Category::query()
             ->withCount('questions')
+            ->when(request('sport'), function ($query) {
+                $query->where('sport', request('sport'));
+            })
+            ->orderBy('sport')
             ->orderBy('order')
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(20)
+            ->appends(request()->only('sport'));
 
         return view('categories.index', ['categories' => $categories]);
     }
