@@ -1226,7 +1226,7 @@
                                         </div>
                                     </button>
 
-                                    <button @click="activate5050()"
+                                    <button @click.prevent="activate5050()"
                                             :disabled="!has5050PowerupAvailable || !can5050BeUsed || !(phase === 'question' && currentQuestion) || !isMyTurn || loading5050"
                                             :class="[
                                                 !has5050PowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
@@ -1328,7 +1328,7 @@
                             </div>
                         </button>
 
-                        <button @click="activate5050()"
+                        <button @click.prevent="activate5050()"
                                 :disabled="!has5050PowerupAvailable || !can5050BeUsed || !(phase === 'question' && currentQuestion) || loading5050"
                                 :class="[
                                     !has5050PowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
@@ -1978,14 +1978,14 @@
                         </div>
 
                         <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
-                            <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερώτηση</div>
+                            <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερωτηση</div>
                             <div class="text-slate-900 font-medium text-sm sm:text-base leading-relaxed" x-text="opponentMove?.question"></div>
                             <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                                <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Απάντηση Αντιπάλου</div>
+                                <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Απαντηση Αντιπαλου</div>
                                 <div class="text-slate-900 font-bold break-words" x-text="opponentMove?.answer || '-'"></div>
                             </div>
                         </div>
