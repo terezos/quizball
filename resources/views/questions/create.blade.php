@@ -4,8 +4,8 @@
         <x-page-header title="Δημιουργία Ερώτησης" icon="➕" />
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             @if($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     <strong class="font-bold">Validation Errors:</strong>
@@ -18,7 +18,7 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <form method="POST" action="{{ route('questions.store') }}" enctype="multipart/form-data" x-data="questionForm()">
                         @csrf
 
@@ -97,7 +97,7 @@
 
                             <!-- Image Preview -->
                             <div x-show="imagePreview" class="mt-3">
-                                <img :src="imagePreview" alt="Preview" class="max-w-md rounded border shadow-sm">
+                                <img :src="imagePreview" alt="Preview" class="w-full max-w-md rounded border shadow-sm">
                                 <button type="button" @click="clearImagePreview()" class="mt-2 text-sm text-red-600 hover:text-red-800">
                                     ✕ Διαγραφή Εικόνας
                                 </button>
@@ -210,11 +210,11 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-4">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <button type="submit" class="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
                                 Δημιουργία Ερώτησης
                             </button>
-                            <a href="{{ route('questions.index') }}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
+                            <a href="{{ route('questions.index') }}" class="w-full sm:flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg text-center transition">
                                 Ακύρωση
                             </a>
                         </div>

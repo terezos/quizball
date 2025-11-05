@@ -4,8 +4,8 @@
         <x-page-header title="Επεξεργασία Ερώτησης" icon="✏️" />
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             @if($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     <strong class="font-bold">Validation Errors:</strong>
@@ -18,7 +18,7 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <form method="POST" action="{{ route('questions.update', $question) }}" enctype="multipart/form-data" x-data="questionForm('{{ $question->question_type->value }}', {{ $question->answers->count() }})">
                         @csrf
                         @method('PUT')
@@ -80,7 +80,7 @@
                             <div x-show="!imagePreview" class="mb-3">
                                 <img src="{{ asset($question->image_url) }}"
                                      alt="Question image"
-                                     class="max-w-md rounded border shadow-sm">
+                                     class="w-full max-w-md rounded border shadow-sm">
                                 <p class="text-sm text-gray-500 mt-1">Τρέχουσα Εικόνα</p>
                             </div>
                             @endif
@@ -89,7 +89,7 @@
                             <div x-show="imagePreview" class="mb-3">
                                 <img :src="imagePreview"
                                      alt="Preview"
-                                     class="max-w-md rounded border shadow-sm">
+                                     class="w-full max-w-md rounded border shadow-sm">
                                 <p class="text-sm text-gray-500 mt-1">Προεπισκόπηση εικόνας</p>
                                 <button type="button"
                                         @click="clearImagePreview()"

@@ -629,6 +629,9 @@
                     if (this.currentQuestion && this.currentQuestion.id) {
                         localStorage.removeItem(`game_${this.game.id}_5050Data_${this.currentQuestion.id}`);
                     }
+                    
+                    // Clear 50/50 powerup localStorage flag
+                    localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
 
                     this.answer = '';
                     this.topFiveAnswers = ['', '', '', '', ''];
@@ -1800,17 +1803,17 @@
 
 
                 <div class="space-y-1">
-                    <div class="text-center border-b border-indigo-200 pb-4">
-                        <h3 class="text-xl lg:text-2xl font-bold text-indigo-900 mb-2 flex items-center justify-center gap-2">
-                            <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
-                            <span x-text="opponent?.display_name"></span> παίζει
-                            <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+                    <div class="text-center border-b border-indigo-200 pb-3 sm:pb-4">
+                        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-900 mb-1 sm:mb-2 flex items-center justify-center gap-1 sm:gap-2 px-2">
+                            <div class="w-2 h-2 sm:w-3 sm:h-3 bg-indigo-500 rounded-full animate-pulse flex-shrink-0"></div>
+                            <span class="truncate" x-text="opponent?.display_name"></span> παίζει
+                            <div class="w-2 h-2 sm:w-3 sm:h-3 bg-indigo-500 rounded-full animate-pulse flex-shrink-0"></div>
                         </h3>
                     </div>
 
-                    <div x-show="!opponentMove || opponentMove?.phase === 'category'" class="text-center py-8">
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="relative w-32 h-32">
+                    <div x-show="!opponentMove || opponentMove?.phase === 'category'" class="text-center py-6 sm:py-8">
+                        <div class="flex flex-col items-center gap-3 sm:gap-4">
+                            <div class="relative w-24 h-24 sm:w-32 sm:h-32">
                                 <div class="absolute inset-0 rounded-full border-4"
                                      :class="opponentInactivityTimeRemaining < 30 ? 'border-red-200' : (opponentInactivityTimeRemaining < 60 ? 'border-amber-200' : 'border-indigo-200')"></div>
 
@@ -1819,19 +1822,19 @@
 
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <div class="text-center">
-                                        <div class="text-3xl font-black"
+                                        <div class="text-2xl sm:text-3xl font-black"
                                              :class="opponentInactivityTimeRemaining < 30 ? 'text-red-600 animate-pulse' : (opponentInactivityTimeRemaining < 60 ? 'text-amber-600' : 'text-indigo-600')"
                                              x-text="Math.floor(opponentInactivityTimeRemaining / 60) + ':' + String(opponentInactivityTimeRemaining % 60).padStart(2, '0')"></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <p class="text-lg font-bold"
+                            <div class="space-y-1 sm:space-y-2 px-2">
+                                <p class="text-base sm:text-lg font-bold"
                                    :class="opponentInactivityTimeRemaining < 30 ? 'text-red-700' : (opponentInactivityTimeRemaining < 60 ? 'text-amber-700' : 'text-indigo-900')">
                                     Ο παίκτης επιλέγει κατηγορία...
                                 </p>
-                                <p class="text-sm text-slate-600">
+                                <p class="text-xs sm:text-sm text-slate-600">
                                     Παρακαλώ περιμένετε
                                 </p>
                             </div>
@@ -1857,28 +1860,28 @@
                             </div>
 
                             <!-- Category Icon if selected -->
-                            <div x-show="opponentMove?.category" class="inline-flex items-center gap-3 bg-white rounded-xl p-4 shadow-md border border-slate-200 mt-2">
-                                <div class="text-4xl" x-text="opponentMove?.category?.icon || '📝'"></div>
-                                <div class="text-left">
+                            <div x-show="opponentMove?.category" class="inline-flex items-center gap-2 sm:gap-3 bg-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-200 mt-2 max-w-full">
+                                <div class="text-3xl sm:text-4xl flex-shrink-0" x-text="opponentMove?.category?.icon || '📝'"></div>
+                                <div class="text-left min-w-0">
                                     <div class="text-xs text-slate-500 uppercase tracking-wide font-medium">ΚΑΤΗΓΟΡΙΑ</div>
-                                    <div class="text-lg font-bold text-slate-800 mt-1" x-text="opponentMove?.category?.name"></div>
+                                    <div class="text-base sm:text-lg font-bold text-slate-800 mt-1 truncate" x-text="opponentMove?.category?.name"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Answering Question Phase -->
-                    <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-4">
+                    <div x-show="opponentMove?.phase === 'difficulty'" class="space-y-3 sm:space-y-4 px-2 sm:px-0">
                         <div class="text-center py-2">
-                            <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 font-bold px-5 py-2.5 rounded-full text-lg">
+                            <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-base sm:text-lg">
                                 Απαντάει στην ερώτηση...
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                            <div class="flex justify-between text-sm mb-2">
+                        <div class="bg-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-200">
+                            <div class="flex justify-between text-xs sm:text-sm mb-2">
                                 <span class="font-semibold text-slate-600">Χρόνος</span>
-                                <span class="font-bold text-indigo-600 text-xl" x-text="opponentTimeRemaining + 's'"></span>
+                                <span class="font-bold text-indigo-600 text-lg sm:text-xl" x-text="opponentTimeRemaining + 's'"></span>
                             </div>
                             <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                                 <div class="h-3 rounded-full transition-all duration-1000 shadow-sm"
@@ -1887,21 +1890,21 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-center gap-3 flex-wrap">
-                            <div class="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-md border border-slate-200">
-                                <span class="text-slate-600 font-medium text-sm">Κατηγορία:</span>
-                                <span class="font-bold text-slate-900" x-text="opponentMove?.category?.name"></span>
+                        <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                            <div class="inline-flex items-center gap-1.5 sm:gap-2 bg-white rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-md border border-slate-200">
+                                <span class="text-slate-600 font-medium text-xs sm:text-sm">Κατηγορία:</span>
+                                <span class="font-bold text-slate-900 text-xs sm:text-base truncate max-w-[120px] sm:max-w-none" x-text="opponentMove?.category?.name"></span>
                             </div>
-                            <div class="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-md border border-slate-200">
-                                <span class="text-slate-600 font-medium text-sm">Επίπεδο:</span>
-                                <span class="font-bold text-slate-900" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
+                            <div class="inline-flex items-center gap-1.5 sm:gap-2 bg-white rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-md border border-slate-200">
+                                <span class="text-slate-600 font-medium text-xs sm:text-sm">Επίπεδο:</span>
+                                <span class="font-bold text-slate-900 text-xs sm:text-base" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
+                        <div class="bg-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-200">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">ΕΡΩΤΗΣΗ</div>
-                            <div class="text-slate-900 font-medium leading-relaxed" x-text="opponentMove?.question"></div>
-                            <div class="text-slate-400 font-medium text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
+                            <div class="text-slate-900 font-medium leading-relaxed text-sm sm:text-base" x-text="opponentMove?.question"></div>
+                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div x-show="opponentMove?.image_url" class="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-3 shadow-md border border-slate-200">
@@ -1912,30 +1915,30 @@
                         </div>
                     </div>
 
-                    <div x-show="opponentMove?.phase === 'result'" class="space-y-4">
-                        <div class="flex items-center justify-center gap-3 flex-wrap">
-                            <div class="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-md border border-slate-200">
-                                <span class="font-bold text-slate-800" x-text="opponentMove?.category?.name"></span>
+                    <div x-show="opponentMove?.phase === 'result'" class="space-y-3 sm:space-y-4 px-2 sm:px-0">
+                        <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                            <div class="inline-flex items-center bg-white rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-md border border-slate-200">
+                                <span class="font-bold text-slate-800 text-xs sm:text-base truncate max-w-[120px] sm:max-w-none" x-text="opponentMove?.category?.name"></span>
                             </div>
-                            <div class="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-md border border-slate-200">
-                                <span class="font-bold text-slate-800" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
+                            <div class="inline-flex items-center bg-white rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-md border border-slate-200">
+                                <span class="font-bold text-slate-800 text-xs sm:text-base" x-text="getDifficultyLabel(opponentMove?.difficulty)"></span>
                             </div>
                         </div>
 
-                        <div class="py-4">
+                        <div class="py-3 sm:py-4">
                             <div x-show="opponentMove?.is_correct"
                                  x-transition:enter="transition ease-out duration-500"
                                  x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                 class="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-6 py-5 shadow-xl animate-pulse-slow">
+                                 class="w-full flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl px-4 sm:px-6 py-4 sm:py-5 shadow-xl animate-pulse-slow">
                                 <div class="flex-shrink-0">
-                                    <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
-                                        <div class="text-4xl lg:text-5xl text-white font-black">✓</div>
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                        <div class="text-2xl sm:text-4xl lg:text-5xl text-white font-black">✓</div>
                                     </div>
                                 </div>
-                                <div class="flex-1 text-left">
-                                    <div class="text-emerald-900 font-black text-2xl lg:text-3xl mb-1">Σωστό!</div>
-                                    <div class="text-emerald-700 font-bold text-lg lg:text-xl">
+                                <div class="flex-1 text-left min-w-0">
+                                    <div class="text-emerald-900 font-black text-xl sm:text-2xl lg:text-3xl mb-1">Σωστό!</div>
+                                    <div class="text-emerald-700 font-bold text-base sm:text-lg lg:text-xl">
                                         +<span x-text="opponentMove?.points_earned"></span> πόντοι
                                     </div>
                                 </div>
@@ -1945,25 +1948,25 @@
                                  x-transition:enter="transition ease-out duration-500"
                                  x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                 class="w-full flex items-center gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-6 py-5 shadow-xl">
+                                 class="w-full flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-rose-50 to-rose-100 border-2 border-rose-400 rounded-2xl px-4 sm:px-6 py-4 sm:py-5 shadow-xl">
                                 <div class="flex-shrink-0">
-                                    <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
-                                        <div class="text-4xl lg:text-5xl text-white font-black">×</div>
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-rose-500 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                                        <div class="text-2xl sm:text-4xl lg:text-5xl text-white font-black">×</div>
                                     </div>
                                 </div>
-                                <div class="flex-1 text-left">
-                                    <div class="text-rose-900 font-black text-2xl lg:text-3xl mb-1">Λάθος</div>
-                                    <div class="text-rose-700 font-bold text-lg lg:text-xl">
+                                <div class="flex-1 text-left min-w-0">
+                                    <div class="text-rose-900 font-black text-xl sm:text-2xl lg:text-3xl mb-1">Λάθος</div>
+                                    <div class="text-rose-700 font-bold text-base sm:text-lg lg:text-xl">
                                         0 πόντοι
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερώτηση</div>
-                            <div class="text-slate-900 font-medium" x-text="opponentMove?.question"></div>
-                            <div class="text-slate-400 font-medium text-sm" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
+                            <div class="text-slate-900 font-medium text-sm sm:text-base leading-relaxed" x-text="opponentMove?.question"></div>
+                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

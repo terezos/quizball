@@ -291,9 +291,9 @@ class GameService
         $isCorrect = $this->questionService->validateAnswer($question, $answer);
         $basePoints = $isCorrect ? $round->difficulty->points() : 0;
 
-        // Apply 50/50 penalty (reduces to 1 point)
-        if ($used5050Powerup && $basePoints > 0) {
-            $basePoints = 1;
+        // Apply 50/50 penalty (reduces by 1 point, but only if points > 1)
+        if ($used5050Powerup && $basePoints > 1) {
+            $basePoints = $basePoints - 1;
         }
 
         // Apply 2x multiplier
