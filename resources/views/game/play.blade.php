@@ -1768,7 +1768,7 @@
              style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[600px] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[500px] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="space-y-1">
                     <div class="text-center mb-4">
                         <h2 class="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
