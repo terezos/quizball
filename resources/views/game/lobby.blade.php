@@ -61,13 +61,13 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Άθλημα</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="sport" value="football" checked class="w-5 h-5 text-blue-600">
-                                    <span class="font-semibold text-gray-900">Ποδόσφαιρο</span>
+                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-blue-500 has-[:checked]:text-white">
+                                    <input type="radio" name="sport" value="football" checked class="sr-only">
+                                    <span class="font-semibold">Ποδόσφαιρο</span>
                                 </label>
-                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="sport" value="basketball" class="w-5 h-5 text-blue-600">
-                                    <span class="font-semibold text-gray-900">Μπάσκετ</span>
+                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-blue-500 has-[:checked]:text-white">
+                                    <input type="radio" name="sport" value="basketball" class="sr-only">
+                                    <span class="font-semibold">Μπάσκετ</span>
                                 </label>
                             </div>
                         </div>
