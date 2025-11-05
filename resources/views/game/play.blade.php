@@ -1939,7 +1939,7 @@
                             </div>
                         </div>
 
-                        <div class="py-3 sm:py-4">
+                        <div class="py-1 sm:py-4">
                             <div x-show="opponentMove?.is_correct"
                                  x-transition:enter="transition ease-out duration-500"
                                  x-transition:enter-start="opacity-0 scale-75 -translate-y-4"
@@ -1987,10 +1987,6 @@
                             <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
                                 <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Απάντηση Αντιπάλου</div>
                                 <div class="text-slate-900 font-bold break-words" x-text="opponentMove?.answer || '-'"></div>
-                            </div>
-                            <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                                <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Σωστή Απάντηση</div>
-                                <div class="text-emerald-700 font-bold break-words" x-text="opponentMove?.correct_answer"></div>
                             </div>
                         </div>
                     </div>
