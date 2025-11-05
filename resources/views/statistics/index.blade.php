@@ -47,6 +47,21 @@
 
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🤝</span>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-gray-600">{{ $gamesDrawn }}</div>
+                            <div class="text-sm text-gray-600">Ισοπαλίες</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Stats Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <span class="text-2xl">📈</span>
                         </div>
@@ -56,10 +71,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Additional Stats Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -225,7 +237,7 @@
                                     @php
                                         $opponent = $gamePlayer->game->gamePlayers->where('user_id', '!=', auth()->id())->first();
                                     @endphp
-                                    <tr class="{{ $gamePlayer->is_winner ? 'bg-green-50' : '' }}">
+                                    <tr class="{{ $gamePlayer->is_winner ? 'bg-green-50' : ($gamePlayer->is_draw ? 'bg-gray-50' : '') }}">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ $gamePlayer->created_at->translatedFormat('d M, Y') }}
                                         </td>
@@ -236,20 +248,28 @@
                                             <span class="text-sm font-bold text-gray-900">{{ $gamePlayer->score }} πόντοι</span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($gamePlayer->game->status->value === 'completed')
-                                                @if($gamePlayer->is_winner)
+                                            @if($gamePlayer->game->is_forfeited)
+                                                @php
+                                                    $forfeitedByMe = $gamePlayer->game->forfeited_by_player_id === $gamePlayer->id;
+                                                    $forfeiterName = $forfeitedByMe ? 'Εσύ' : ($opponent?->user->name ?? $opponent?->guest_name ?? 'Αντίπαλος');
+                                                @endphp
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                                    🚫 Εγκατάλειψη ({{ $forfeiterName }})
+                                                </span>
+                                            @elseif($gamePlayer->game->status->value === 'completed')
+                                                @if($gamePlayer->is_draw)
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        🤝 Ισοπαλία
+                                                    </span>
+                                                @elseif($gamePlayer->is_winner)
                                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                                         🏆 Νίκη
                                                     </span>
                                                 @else
                                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                                        Ήττα
+                                                        💔 Ήττα
                                                     </span>
                                                 @endif
-                                            @elseif($gamePlayer->game->status->value === 'forfeited')
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    Ματαίωση
-                                                </span>
                                             @else
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                     {{ ucfirst($gamePlayer->game->status->value) }}

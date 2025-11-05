@@ -24,7 +24,10 @@ class PlayerStatisticsController extends Controller
         $gamesWon = $completedGames->filter(function($gp) {
             return $gp->is_winner;
         })->count();
-        $gamesLost = $totalGames - $gamesWon;
+        $gamesDrawn = $completedGames->filter(function($gp) {
+            return $gp->is_draw;
+        })->count();
+        $gamesLost = $totalGames - $gamesWon - $gamesDrawn;
         $winRate = $totalGames > 0 ? round(($gamesWon / $totalGames) * 100) : 0;
 
         $totalScore = GamePlayer::where('user_id', $user->id)->sum('score');
@@ -148,6 +151,7 @@ class PlayerStatisticsController extends Controller
             'totalGames' => $totalGames,
             'gamesWon' => $gamesWon,
             'gamesLost' => $gamesLost,
+            'gamesDrawn' => $gamesDrawn,
             'winRate' => $winRate,
             'totalScore' => $totalScore,
             'correctAnswers' => $correctAnswers,

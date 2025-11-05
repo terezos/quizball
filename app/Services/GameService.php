@@ -15,6 +15,7 @@ use App\Models\GamePlayer;
 use App\Models\GameRound;
 use App\Models\Question;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -27,6 +28,9 @@ class GameService
     {
     }
 
+    /**
+     * @throws Exception
+     */
     public function createGame(string $gameType, ?User $user = null, ?string $guestName = null, ?string $sessionId = null, int $gamePace = 6, string $sport = 'football', int $aiDifficulty = 2): Game
     {
         $totalDifficulties = 3;
@@ -44,9 +48,14 @@ class GameService
         ]);
 
         $categories = Category::where('is_active', true)
+            ->where('sport', $sport)
             ->inRandomOrder()
             ->limit($gamePace)
             ->get();
+
+        if ($categories->count() < $gamePace) {
+            throw new Exception('Not enough active categories available for the selected sport.');
+        }
 
         $game->categories()->attach($categories->pluck('id'));
 
@@ -252,7 +261,7 @@ class GameService
         return $question;
     }
 
-    public function submitAnswer(Game $game, GamePlayer $player, string|array $answer, bool $used2xPowerup = false): array
+    public function submitAnswer(Game $game, GamePlayer $player, string|array $answer, bool $used2xPowerup = false, bool $used5050Powerup = false): array
     {
         $roundId = Cache::get("game:{$game->id}:current_round");
 
@@ -281,7 +290,15 @@ class GameService
         $question = $round->question()->with('answers')->first();
         $isCorrect = $this->questionService->validateAnswer($question, $answer);
         $basePoints = $isCorrect ? $round->difficulty->points() : 0;
+
+        // Apply 50/50 penalty (reduces to 1 point)
+        if ($used5050Powerup && $basePoints > 0) {
+            $basePoints = 1;
+        }
+
+        // Apply 2x multiplier
         $pointsEarned = $used2xPowerup ? $basePoints * 2 : $basePoints;
+
         $correctAnswer = $this->getCorrectAnswer($question);
         $playerAnswerDisplay = $this->formatAnswerForDisplay($question, $answer);
 
@@ -289,6 +306,7 @@ class GameService
             'player_answer' => is_array($answer) ? json_encode($answer, JSON_UNESCAPED_UNICODE) : $answer,
             'is_correct' => $isCorrect,
             'used_2x_powerup' => $used2xPowerup,
+            'used_5050_powerup' => $used5050Powerup,
             'points_earned' => $pointsEarned,
             'answered_at' => now(),
             'time_taken' => abs(now()->diffInSeconds($round->started_at)),
@@ -307,6 +325,7 @@ class GameService
         $currentMove['is_correct'] = $isCorrect;
         $currentMove['points_earned'] = $pointsEarned;
         $currentMove['used_2x_powerup'] = $used2xPowerup;
+        $currentMove['used_5050_powerup'] = $used5050Powerup;
         $currentMove['question'] = $question->question_text;
         $currentMove['result_created_at'] = now()->timestamp;
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addSeconds(10));
@@ -421,11 +440,15 @@ class GameService
         $game->update([
             'status' => GameStatus::Completed,
             'completed_at' => now(),
+            'is_forfeited' => true,
+            'forfeited_by_player_id' => $player->id,
         ]);
 
+        $player->update(['score' => 0]);
+
         $opponent = $game->players->where('id', '!=', $player->id)->first();
-        if ($opponent && $opponent->score <= 0) {
-            $opponent->increment('score', 10);
+        if ($opponent) {
+            $opponent->update(['score' => 10]);
         }
 
         Cache::forget("game_state:{$game->id}");

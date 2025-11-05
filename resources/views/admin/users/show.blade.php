@@ -214,7 +214,7 @@
             <!-- Game Statistics -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Στατιστικά</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
                         <div class="text-2xl font-bold text-gray-900">{{ $gamesPlayed }}</div>
                         <div class="text-sm text-gray-600">Παιχνίδια</div>
@@ -226,6 +226,10 @@
                     <div>
                         <div class="text-2xl font-bold text-red-600">{{ $gamesLost }}</div>
                         <div class="text-sm text-gray-600">Ήττες</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-600">{{ $gamesDrawn }}</div>
+                        <div class="text-sm text-gray-600">Ισοπαλίες</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-blue-600">{{ $winRate }}%</div>
@@ -240,23 +244,49 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Πρόσφατα Παιχνίδια</h3>
                 <div class="space-y-3">
                     @foreach($user->gamePlayers->take(10) as $gamePlayer)
+                        @php
+                            $opponent = $gamePlayer->game->gamePlayers->where('user_id', '!=', $user->id)->first();
+                        @endphp
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center justify-between">
-                                <div>
+                                <div class="flex-1">
                                     <div class="text-sm font-medium text-gray-900">
                                         Παιχνίδι #{{ $gamePlayer->game->id }} - {{ ucfirst($gamePlayer->game->game_type) }}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ $gamePlayer->game->created_at->diffForHumans() }}
                                     </div>
+                                    @if($opponent)
+                                        <div class="text-xs text-gray-600 mt-1">
+                                            Αντίπαλος: {{ $opponent->user?->name ?? $opponent->guest_name ?? 'AI' }}
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="text-right">
                                     <div class="text-lg font-bold {{ $gamePlayer->score > 0 ? 'text-blue-600' : 'text-gray-400' }}">
                                         {{ $gamePlayer->score }} πόντοι
                                     </div>
-                                    <span class="text-xs {{ $gamePlayer->is_winner ? 'text-green-600 font-semibold' : 'text-red-500' }}">
-                                            {{ $gamePlayer->is_winner ? '🏆 Νίκη' : 'Ήττα' }}
+                                    @if($gamePlayer->game->is_forfeited)
+                                        @php
+                                            $forfeitedByMe = $gamePlayer->game->forfeited_by_player_id === $gamePlayer->id;
+                                            $forfeiterName = $forfeitedByMe ? $user->name : ($opponent?->user?->name ?? $opponent?->guest_name ?? 'Αντίπαλος');
+                                        @endphp
+                                        <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800 font-semibold">
+                                            🚫 Εγκατάλειψη ({{ $forfeiterName }})
                                         </span>
+                                    @elseif($gamePlayer->is_draw)
+                                        <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold">
+                                            🤝 Ισοπαλία
+                                        </span>
+                                    @elseif($gamePlayer->is_winner)
+                                        <span class="text-xs text-green-600 font-semibold">
+                                            🏆 Νίκη
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-red-500">
+                                            💔 Ήττα
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

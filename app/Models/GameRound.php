@@ -18,6 +18,7 @@ class GameRound extends Model
         'player_answer',
         'is_correct',
         'used_2x_powerup',
+        'used_5050_powerup',
         'points_earned',
         'time_taken',
         'started_at',

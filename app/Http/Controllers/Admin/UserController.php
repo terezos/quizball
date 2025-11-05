@@ -67,9 +67,12 @@ class UserController extends Controller
         
         $gamesPlayed = $completedGames->count();
         $gamesWon = $completedGames->filter(function($gp) {
-            return $gp->is_winner;
+            return $gp->is_winner && !$gp->is_draw;
         })->count();
-        $gamesLost = $gamesPlayed - $gamesWon;
+        $gamesDrawn = $completedGames->filter(function($gp) {
+            return $gp->is_draw;
+        })->count();
+        $gamesLost = $gamesPlayed - $gamesWon - $gamesDrawn;
         $winRate = $gamesPlayed > 0 ? round(($gamesWon / $gamesPlayed) * 100) : 0;
         
         // Calculate total score
@@ -81,6 +84,7 @@ class UserController extends Controller
             'totalGamesCount' => $totalGamesCount,
             'gamesPlayed' => $gamesPlayed,
             'gamesWon' => $gamesWon,
+            'gamesDrawn' => $gamesDrawn,
             'gamesLost' => $gamesLost,
             'winRate' => $winRate,
             'totalScore' => $totalScore,

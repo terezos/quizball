@@ -15,6 +15,29 @@
                 </h1>
             </div>
 
+            @if($game->is_forfeited)
+                <div class="max-w-md mx-auto mb-8">
+                    <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-xl p-6 shadow-lg">
+                        <div class="flex items-center gap-4">
+                            <div class="text-5xl">⚠️</div>
+                            <div class="flex-1">
+                                <div class="text-lg font-black text-red-900 mb-1">Παιχνίδι με Παραίτηση</div>
+                                <div class="text-sm text-red-700 font-semibold">
+                                    @php
+                                        $forfeiter = $game->players->firstWhere('id', $game->forfeited_by_player_id);
+                                    @endphp
+                                    @if($forfeiter)
+                                        {{ $forfeiter->id === $player->id ? 'Παραιτήθηκες από το παιχνίδι' : ($forfeiter->display_name . ' παραιτήθηκε από το παιχνίδι') }}
+                                    @else
+                                        Ένας παίκτης παραιτήθηκε από το παιχνίδι
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-2 gap-5 mb-8 max-w-md mx-auto">
                 <div class="text-center p-5 rounded-xl {{ $isDraw ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-300' : ($winner && $player->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100') }}">
                     <div class="text-sm font-semibold text-slate-600 mb-2">ΕΣΥ</div>
@@ -58,7 +81,7 @@
                             <div class="bg-gradient-to-r from-slate-50 to-gray-50 p-4 border-b border-slate-200">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-3">
+                                        <div class="flex items-center gap-2 mb-3 flex-wrap">
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
                                                 Γύρος {{ $roundNumber }}
                                             </span>
@@ -66,6 +89,16 @@
                                                 {{ ucfirst($round->difficulty->label()) }}
                                             </span>
                                             <span class="text-sm font-medium text-slate-600">{{ $round->category->icon }} {{ $round->category->name }}</span>
+                                            @if($myRound && $myRound->used_5050_powerup)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                                    🎯 50/50
+                                                </span>
+                                            @endif
+                                            @if($myRound && $myRound->used_2x_powerup)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                    ⚡ 2x Πόντοι
+                                                </span>
+                                            @endif
                                         </div>
                                         <p class="text-base text-slate-900 font-semibold leading-relaxed">{{ $round->question->question_text }}</p>
                                     </div>

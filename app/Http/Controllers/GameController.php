@@ -11,6 +11,7 @@ use App\Services\GameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Faker\Generator;
+use OpenAI\Laravel\Facades\OpenAI;
 
 class GameController extends Controller
 {
@@ -327,6 +328,7 @@ class GameController extends Controller
         $request->validate([
             'answer' => 'nullable',
             'used_2x_powerup' => 'nullable|boolean',
+            'used_5050_powerup' => 'nullable|boolean',
         ]);
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
@@ -337,10 +339,70 @@ class GameController extends Controller
 
         $answer = $request->answer ?? '';
         $used2xPowerup = $request->used_2x_powerup ?? false;
+        $used5050Powerup = $request->used_5050_powerup ?? false;
 
-        $result = $this->gameService->submitAnswer($game, $player, $answer, $used2xPowerup);
+        $result = $this->gameService->submitAnswer($game, $player, $answer, $used2xPowerup, $used5050Powerup);
 
         return response()->json($result);
+    }
+
+    public function activate5050(Request $request, Game $game)
+    {
+        $request->validate([
+            'question_id' => 'required|exists:questions,id',
+        ]);
+
+        $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
+
+        if (!$player) {
+            return response()->json(['error' => 'Invalid player'], 403);
+        }
+
+        $question = \App\Models\Question::with('answers')->find($request->question_id);
+
+        if (!$question) {
+            return response()->json(['error' => 'Question not found'], 404);
+        }
+
+        if ($question->question_type->value === 'multiple_choice') {
+            $wrongAnswers = $question->answers->where('is_correct', false);
+            $disabledAnswers = $wrongAnswers->random(min(2, $wrongAnswers->count()))->pluck('id');
+
+            return response()->json([
+                'success' => true,
+                'disabled_answers' => $disabledAnswers,
+            ]);
+
+        } elseif ($question->question_type->value === 'text_input' || $question->question_type->value === 'text_input_with_image') {
+            $correctAnswer = $question->answers->where('is_correct', true)->first()->answer_text;
+
+            try {
+                $prompt = "Question: {$question->question_text}\nCorrect Answer: {$correctAnswer}\n\nGenerate ONE plausible but incorrect answer for this question. Return ONLY the answer text, nothing else.";
+
+                $response = OpenAI::chat()->create([
+                    'model' => 'gpt-4o-mini',
+                    'messages' => [
+                        ['role' => 'system', 'content' => 'You are a helpful assistant that generates plausible wrong answers for quiz questions. Return only the answer text without any explanation.'],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'max_tokens' => 100,
+                    'temperature' => 0.8,
+                ]);
+
+                $fakeAnswer = trim($response->choices[0]->message->content);
+
+                return response()->json([
+                    'success' => true,
+                    'fake_answer' => $fakeAnswer,
+                    'answer_text' => $correctAnswer,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate fake answer:', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'Failed to generate options'], 500);
+            }
+        }
+
+        return response()->json(['error' => 'Unsupported question type'], 400);
     }
 
     public function getState(Game $game)

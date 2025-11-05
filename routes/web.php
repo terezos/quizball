@@ -46,6 +46,7 @@ Route::prefix('game')
         Route::post('{game}/select-category', [GameController::class, 'selectCategory'])->name('selectCategory');
         Route::post('{game}/select-difficulty', [GameController::class, 'selectDifficulty'])->name('selectDifficulty');
         Route::post('{game}/submit-answer', [GameController::class, 'submitAnswer'])->name('submitAnswer');
+        Route::post('{game}/activate-5050', [GameController::class, 'activate5050'])->name('activate5050');
         Route::post('{game}/forfeit', [GameController::class, 'forfeit'])->name('forfeit');
         Route::get('{game}/state', [GameController::class, 'getState'])->name('state');
         Route::get('{game}/rounds', [GameController::class, 'getRounds'])->name('rounds');

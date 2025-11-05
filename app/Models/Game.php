@@ -22,6 +22,8 @@ class Game extends Model
         'current_turn_player_id',
         'started_at',
         'completed_at',
+        'is_forfeited',
+        'forfeited_by_player_id',
         'sport',
         'ai_difficulty',
     ];

@@ -107,6 +107,10 @@
                 used2xPowerup: false,
                 has2xPowerupAvailable: true,
                 show2xToast: false,
+                used5050Powerup: false,
+                has5050PowerupAvailable: true,
+                show5050Toast: false,
+                loading5050: false,
 
                 init() {
                     this.updatePlayers();
@@ -127,6 +131,13 @@
                     const saved2xPowerup = sessionStorage.getItem(`game_${this.game.id}_used2xPowerup`);
                     if (saved2xPowerup === 'true') {
                         this.used2xPowerup = true;
+                    }
+
+                    // Check if 50/50 was already used
+                    const saved5050Powerup = localStorage.getItem(`game_${this.game.id}_used5050Powerup`);
+                    if (saved5050Powerup === 'true') {
+                        this.has5050PowerupAvailable = false;
+                        this.used5050Powerup = true;
                     }
 
                     if (activeRound && this.isMyTurn) {
@@ -189,6 +200,26 @@
                         difficulty: round.difficulty,
                         answers: round.question.answers || null
                     };
+
+                    // Restore 50/50 powerup state if it was used for this question
+                    const saved5050Data = localStorage.getItem(`game_${this.game.id}_5050Data_${round.question.id}`);
+                    if (saved5050Data) {
+                        const data = JSON.parse(saved5050Data);
+
+                        if (this.currentQuestion.type === 'multiple_choice' && data.disabled_answers) {
+                            // Restore disabled answers
+                            this.currentQuestion.answers = this.currentQuestion.answers.map(answer => {
+                                if (data.disabled_answers.includes(answer.id)) {
+                                    return { ...answer, disabled: true };
+                                }
+                                return { ...answer, disabled: false };
+                            });
+                        } else if (this.currentQuestion.type === 'text_input' && data.fake_answer) {
+                            // Restore converted question
+                            this.currentQuestion.fake_answer = data.fake_answer;
+                            this.currentQuestion.converted_to_choice = true;
+                        }
+                    }
 
                     this.phase = 'question';
 
@@ -378,7 +409,9 @@
 
                         setTimeout(() => {
                             if (data.game_status === 'completed') {
+                                this.cleanup5050Data();
                                 localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+                                localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
                                 window.location.href = `/game/${this.game.id}/results`;
                             } else {
                                 this.resetForNextRound();
@@ -414,7 +447,8 @@
                             },
                             body: JSON.stringify({
                                 answer: answerData,
-                                used_2x_powerup: this.used2xPowerup
+                                used_2x_powerup: this.used2xPowerup,
+                                used_5050_powerup: this.used5050Powerup
                             })
                         });
 
@@ -456,7 +490,9 @@
 
                         setTimeout(() => {
                             if (data.game_status === 'completed') {
+                                this.cleanup5050Data();
                                 localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+                                localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
                                 window.location.href = `/game/${this.game.id}/results`;
                             } else {
                                 this.resetForNextRound();
@@ -588,6 +624,11 @@
                 },
 
                 resetForNextRound() {
+                    // Clean up question-specific 50/50 data if exists
+                    if (this.currentQuestion && this.currentQuestion.id) {
+                        localStorage.removeItem(`game_${this.game.id}_5050Data_${this.currentQuestion.id}`);
+                    }
+
                     this.answer = '';
                     this.topFiveAnswers = ['', '', '', '', ''];
                     this.currentQuestion = null;
@@ -600,6 +641,7 @@
                     this.isMyTurn = false;
                     this.opponentMove = null;
                     this.used2xPowerup = false;
+                    this.used5050Powerup = false;
                     sessionStorage.removeItem(`game_${this.game.id}_used2xPowerup`);
                 },
 
@@ -695,8 +737,11 @@
                 },
 
                 handleGameCompleted(data) {
+                    // Clean up all game-related localStorage
+                    this.cleanup5050Data();
                     localStorage.removeItem(`game_${this.game.id}_tabSwitchCount`);
                     localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+                    localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
                     sessionStorage.removeItem(`game_${this.game.id}_used2xPowerup`);
 
                     if (this.echoChannel) {
@@ -704,6 +749,17 @@
                     }
 
                     window.location.href = `/game/${this.game.id}/results`;
+                },
+
+                cleanup5050Data() {
+                    // Clean up all question-specific 50/50 data for this game
+                    const keys = Object.keys(localStorage);
+                    const prefix = `game_${this.game.id}_5050Data_`;
+                    keys.forEach(key => {
+                        if (key.startsWith(prefix)) {
+                            localStorage.removeItem(key);
+                        }
+                    });
                 },
 
                 async forfeitGame(forcedForfeit = false) {
@@ -742,6 +798,10 @@
                     if (!this.currentQuestion) {
                         return false;
                     }
+                    // If text_input was converted to choice by 50/50, treat as multiple choice
+                    if (this.currentQuestion.type === 'text_input' && this.currentQuestion.converted_to_choice) {
+                        return this.answer !== '';
+                    }
                     if (this.currentQuestion.type === 'text_input' || this.currentQuestion.type === 'text_input_with_image') {
                         return this.answer.trim() !== '';
                     }
@@ -752,6 +812,14 @@
                         return this.topFiveAnswers.filter(a => a.trim() !== '').length >= 5;
                     }
                     return false;
+                },
+
+                get can5050BeUsed() {
+                    if (!this.currentQuestion) {
+                        return false;
+                    }
+                    const allowedTypes = ['text_input', 'text_input_with_image', 'multiple_choice'];
+                    return allowedTypes.includes(this.currentQuestion.type);
                 },
 
                 isCategoryUsed(categoryId) {
@@ -778,11 +846,143 @@
                     return labels[difficulty] || difficulty;
                 },
 
+                get currentQuestionPoints() {
+                    if (!this.currentQuestion || !this.currentQuestion.difficulty) {
+                        return 0;
+                    }
+
+                    const basePoints = {
+                        'easy': 1,
+                        'medium': 3,
+                        'hard': 5
+                    };
+
+                    let points = basePoints[this.currentQuestion.difficulty] || 0;
+
+                    // Apply 50/50 penalty (reduces to 1 point)
+                    if (this.used5050Powerup) {
+                        points = 1;
+                    }
+
+                    // Apply 2x multiplier
+                    if (this.used2xPowerup) {
+                        points *= 2;
+                    }
+
+                    return points;
+                },
+
+                get pointsCalculationBreakdown() {
+                    if (!this.currentQuestion || !this.currentQuestion.difficulty) {
+                        return '';
+                    }
+
+                    const basePoints = {
+                        'easy': 1,
+                        'medium': 3,
+                        'hard': 5
+                    };
+
+                    const difficultyNames = {
+                        'easy': 'Εύκολο',
+                        'medium': 'Μέτριο',
+                        'hard': 'Δύσκολο'
+                    };
+
+                    let parts = [];
+                    let base = basePoints[this.currentQuestion.difficulty] || 0;
+
+                    parts.push(`${difficultyNames[this.currentQuestion.difficulty]}: ${base}π`);
+
+                    if (this.used5050Powerup) {
+                        parts.push(`50/50: -${base - 1}π`);
+                        base = 1;
+                    }
+
+                    if (this.used2xPowerup) {
+                        parts.push(`2x: ×2`);
+                    }
+
+                    return parts.join(' • ');
+                },
+
                 show2xActivationToast() {
                     this.show2xToast = true;
                     setTimeout(() => {
                         this.show2xToast = false;
                     }, 3000);
+                },
+
+                show5050ActivationToast() {
+                    this.show5050Toast = true;
+                    setTimeout(() => {
+                        this.show5050Toast = false;
+                    }, 3000);
+                },
+
+                async activate5050() {
+                    if (!this.has5050PowerupAvailable || this.phase !== 'question' || !this.currentQuestion || this.loading5050) {
+                        return;
+                    }
+
+                    // Check if question type supports 50/50
+                    const allowedTypes = ['text_input', 'text_input_with_image', 'multiple_choice'];
+                    if (!allowedTypes.includes(this.currentQuestion.type)) {
+                        return;
+                    }
+
+                    this.loading5050 = true;
+                    this.used5050Powerup = true;
+                    localStorage.setItem(`game_${this.game.id}_used5050Powerup`, 'true');
+                    this.show5050ActivationToast();
+
+                    try {
+                        const response = await fetch(`/game/${this.game.id}/activate-5050`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                question_id: this.currentQuestion.id
+                            })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            if (this.currentQuestion.type === 'multiple_choice') {
+                                // Disable two wrong answers
+                                this.currentQuestion.answers = this.currentQuestion.answers.map(answer => {
+                                    if (data.disabled_answers.includes(answer.id)) {
+                                        return { ...answer, disabled: true };
+                                    }
+                                    return { ...answer, disabled: false };
+                                });
+                                // Store disabled answers in localStorage
+                                localStorage.setItem(
+                                    `game_${this.game.id}_5050Data_${this.currentQuestion.id}`,
+                                    JSON.stringify({ disabled_answers: data.disabled_answers })
+                                );
+                            } else if (this.currentQuestion.type === 'text_input') {
+                                this.currentQuestion.fake_answer = data.fake_answer;
+                                this.currentQuestion.converted_to_choice = true;
+                                localStorage.setItem(
+                                    `game_${this.game.id}_5050Data_${this.currentQuestion.id}`,
+                                    JSON.stringify({ fake_answer: data.fake_answer })
+                                );
+                            }
+
+                            this.has5050PowerupAvailable = false;
+                        }
+                    } catch (error) {
+                        console.error('Failed to activate 50/50:', error);
+                        alert('Αποτυχία ενεργοποίησης 50/50. Παρακαλώ δοκιμάστε ξανά.');
+                        this.used5050Powerup = false;
+                        localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
+                    } finally {
+                        this.loading5050 = false;
+                    }
                 },
 
                 cleanup() {
@@ -1006,14 +1206,24 @@
                                         </div>
                                     </button>
 
-                                    <button :disabled="!(phase === 'question' && currentQuestion) || !isMyTurn"
-                                            :class="!(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : ''"
-                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-opacity duration-200"
+                                    <button @click="activate5050()"
+                                            :disabled="!has5050PowerupAvailable || !can5050BeUsed || !(phase === 'question' && currentQuestion) || !isMyTurn || loading5050"
+                                            :class="[
+                                                !has5050PowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
+                                                !can5050BeUsed ? 'opacity-50 cursor-not-allowed grayscale' :
+                                                !(phase === 'question' && currentQuestion) || !isMyTurn ? 'opacity-50 cursor-not-allowed' : '',
+                                                used5050Powerup ? 'ring-2 ring-green-300 ring-offset-1 scale-105' : ''
+                                            ]"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-all duration-200"
                                             style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                         <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
                                         <div class="relative h-full flex flex-col items-center justify-center transform transition-transform duration-200 group-active:scale-90">
                                             <span class="text-white font-black text-base leading-none drop-shadow-lg">50</span>
                                             <span class="text-white font-black text-base leading-none drop-shadow-lg">50</span>
+                                            <span x-show="used5050Powerup" class="text-white text-[8px] font-bold mt-0.5 animate-pulse">✓</span>
+                                        </div>
+                                        <div x-show="loading5050" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                            <div class="animate-spin rounded-full h-6 w-6 border-4 border-white border-t-transparent"></div>
                                         </div>
                                     </button>
                                 </div>
@@ -1098,8 +1308,14 @@
                             </div>
                         </button>
 
-                        <button :disabled="!(phase === 'question' && currentQuestion)"
-                                :class="!(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'"
+                        <button @click="activate5050()"
+                                :disabled="!has5050PowerupAvailable || !can5050BeUsed || !(phase === 'question' && currentQuestion) || loading5050"
+                                :class="[
+                                    !has5050PowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
+                                    !can5050BeUsed ? 'opacity-50 cursor-not-allowed grayscale' :
+                                    !(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer',
+                                    used5050Powerup ? 'ring-4 ring-green-400 ring-offset-2 scale-105' : ''
+                                ]"
                                 class="relative overflow-hidden rounded-xl shadow-md transition-all duration-200 p-4"
                                 style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                             <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
@@ -1110,6 +1326,10 @@
                                     <span class="text-white font-black text-2xl leading-none drop-shadow-lg">50</span>
                                 </div>
                                 <span class="text-white text-xs font-semibold drop-shadow">Μισές Επιλογές</span>
+                                <span x-show="used5050Powerup" class="text-white text-[10px] font-bold mt-1 animate-pulse">✓ Ενεργό</span>
+                            </div>
+                            <div x-show="loading5050" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
                             </div>
                         </button>
                     </div>
@@ -1229,6 +1449,33 @@
                                     </div>
                                 </div>
 
+                                <!-- Points Display -->
+                                <div class="mb-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-black text-xl shadow-md">
+                                                <span x-text="currentQuestionPoints"></span>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-emerald-900">Πόντοι Ερώτησης</div>
+                                                <div x-show="used5050Powerup || used2xPowerup" class="text-xs text-emerald-700 font-medium" x-text="pointsCalculationBreakdown"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <template x-if="used2xPowerup">
+                                                <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-black shadow-sm border border-amber-300">
+                                                    2X
+                                                </div>
+                                            </template>
+                                            <template x-if="used5050Powerup">
+                                                <div class="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3 py-1 rounded-full text-xs font-black shadow-sm border border-emerald-300">
+                                                    50/50
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <h3 class="text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
                                 <h3 class="text-sm font-bold text-gray-500 mb-6 leading-relaxed" x-text="'H Ερώτηση δημιουργήθηκε από τον χρήστη: ' + currentQuestion?.created_by"></h3>
 
@@ -1242,10 +1489,27 @@
                                 </div>
 
                                 <div x-show="currentQuestion?.type === 'text_input'" class="space-y-4">
-                                    <input type="text" x-model="answer"
-                                           @keydown.enter="submitAnswer"
-                                           class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
-                                           placeholder="Type your answer...">
+                                    <div x-show="!currentQuestion?.converted_to_choice">
+                                        <input type="text" x-model="answer"
+                                               @keydown.enter="submitAnswer"
+                                               class="w-full rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg p-4 transition-all duration-200"
+                                               placeholder="Type your answer...">
+                                    </div>
+
+                                    <div x-show="currentQuestion?.converted_to_choice" class="space-y-3">
+                                        <button @click="answer = currentQuestion?.answers[0]?.answer_text"
+                                                :class="answer === currentQuestion?.answers[0]?.answer_text ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
+                                                class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                                            <span class="font-bold text-blue-600 mr-3">A</span>
+                                            <span class="text-gray-900 font-medium" x-text="currentQuestion?.answers[0]?.answer_text"></span>
+                                        </button>
+                                        <button @click="answer = currentQuestion?.fake_answer"
+                                                :class="answer === currentQuestion?.fake_answer ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
+                                                class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                                            <span class="font-bold text-blue-600 mr-3">B</span>
+                                            <span class="text-gray-900 font-medium" x-text="currentQuestion?.fake_answer"></span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div x-show="currentQuestion?.type === 'text_input_with_image'" class="space-y-4">
@@ -1255,13 +1519,19 @@
                                            placeholder="Type your answer...">
                                 </div>
 
+                                <!-- Multiple Choice (with potential disabled answers) -->
                                 <div x-show="currentQuestion?.type === 'multiple_choice'" class="space-y-3">
                                     <template x-for="(ans, index) in currentQuestion?.answers" :key="ans.id">
-                                        <button @click="answer = ans.id"
-                                                :class="answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'"
-                                                class="w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                                        <button @click="!ans.disabled ? answer = ans.id : null"
+                                                :disabled="ans.disabled"
+                                                :class="[
+                                                    ans.disabled ? 'opacity-30 grayscale cursor-not-allowed bg-gray-100 border-gray-200' :
+                                                    (answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30')
+                                                ]"
+                                                class="relative w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
                                             <span class="font-bold text-blue-600 mr-3" x-text="String.fromCharCode(65 + index)"></span>
                                             <span class="text-gray-900 font-medium" x-text="ans.answer_text"></span>
+
                                         </button>
                                     </template>
                                 </div>
@@ -1849,6 +2119,25 @@
                     <span class="text-sm font-semibold opacity-90">Διπλασιασμός πόντων</span>
                 </div>
                 <div class="text-2xl">🔥</div>
+            </div>
+        </div>
+
+        <!-- 50/50 Activation Toast -->
+        <div x-show="show5050Toast"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="fixed bottom-24 lg:bottom-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+            <div class="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-emerald-300 animate-pulse">
+                <div class="text-3xl font-black">50/50</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-lg leading-tight">Ενεργοποιήθηκε!</span>
+                    <span class="text-sm font-semibold opacity-90">Μισές επιλογές</span>
+                </div>
+                <div class="text-2xl">✨</div>
             </div>
         </div>
 
