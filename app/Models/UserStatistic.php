@@ -12,6 +12,7 @@ class UserStatistic extends Model
         'games_played',
         'games_won',
         'games_lost',
+        'games_drawn',
         'total_score',
         'total_questions_answered',
         'correct_answers',

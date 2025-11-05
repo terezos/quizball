@@ -96,7 +96,6 @@
                 cleanup();
             });
 
-            // Initialize when page loads - wait for Echo to be ready
             function waitForEcho() {
                 if (window.Echo) {
                     initializeMatchmaking();
@@ -106,7 +105,6 @@
                 }
             }
 
-            // Start waiting for Echo after DOM is ready
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', waitForEcho);
             } else {

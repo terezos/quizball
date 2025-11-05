@@ -58,25 +58,16 @@
                     <form method="POST" action="{{ route('game.create') }}" class="space-y-4">
                         @csrf
 
-                        @guest
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Το Όνομά σας</label>
-                                <input type="text" name="guest_name"
-                                       class="w-full rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-4 py-3 transition-all duration-200"
-                                       placeholder="Εισάγετε το όνομά σας" required>
-                            </div>
-                        @endguest
-
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Άθλημα</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
                                     <input type="radio" name="sport" value="football" checked class="w-5 h-5 text-blue-600">
-                                    <span class="font-semibold text-gray-900">Ποδόσφαιρο ⚽</span>
+                                    <span class="font-semibold text-gray-900">Ποδόσφαιρο</span>
                                 </label>
-                                <label class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                <label class="flex items-center justify-center gap-1 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
                                     <input type="radio" name="sport" value="basketball" class="w-5 h-5 text-blue-600">
-                                    <span class="font-semibold text-gray-900">Μπάσκετ 🏀</span>
+                                    <span class="font-semibold text-gray-900">Μπάσκετ</span>
                                 </label>
                             </div>
                         </div>
@@ -100,27 +91,24 @@
                         </script>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Ρυθμός Παιχνιδιού</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Αριθμός Κατηγοριών Παιχνιδιού</label>
                             <div class="grid grid-cols-3 gap-3">
-                                <label class="relative p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
+                                <label class="relative border-2 p-1 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
                                     <input type="radio" name="game_pace" value="4" class="sr-only">
                                     <div class="text-center">
-                                        <div class="font-bold">Γρήγορο</div>
-                                        <div class="text-xs opacity-80">4 κατηγορίες</div>
+                                        <div class="font-bold">4</div>
                                     </div>
                                 </label>
-                                <label class="relative p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
+                                <label class="relative p-1 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
                                     <input type="radio" name="game_pace" value="6" checked class="sr-only">
                                     <div class="text-center">
-                                        <div class="font-bold">Κανονικό</div>
-                                        <div class="text-xs opacity-80">6 κατηγορίες</div>
+                                        <div class="font-bold">6</div>
                                     </div>
                                 </label>
-                                <label class="relative p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
+                                <label class="relative p-1 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 has-[:checked]:bg-gradient-to-r has-[:checked]:from-blue-600 has-[:checked]:to-purple-600 has-[:checked]:border-transparent has-[:checked]:shadow-lg has-[:checked]:text-white">
                                     <input type="radio" name="game_pace" value="8" class="sr-only">
                                     <div class="text-center">
-                                        <div class="font-bold">Αργό</div>
-                                        <div class="text-xs opacity-80">8 κατηγορίες</div>
+                                        <div class="font-bold">8</div>
                                     </div>
                                 </label>
                             </div>
@@ -149,10 +137,27 @@
                                     </div>
                                 </div>
 
-                                <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all duration-200">
-                                    <input type="radio" name="game_type" value="matchmaking" class="w-5 h-5 text-green-600" onchange="toggleAiDifficulty(false)">
+                                <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all duration-200 {{ auth()->guest() ? 'opacity-60' : '' }}">
+                                    <input type="radio" name="game_type" value="matchmaking" class="w-5 h-5 text-green-600"
+                                           {{ auth()->guest() ? 'disabled' : '' }}
+                                           @click="@guest$event.preventDefault(); @endguest"
+                                           onchange="toggleAiDifficulty(false)">
                                     <div class="flex-1">
-                                        <div class="font-bold text-gray-900">Γρήγορο Παιχνίδι</div>
+                                        <div class="font-bold text-gray-900 flex items-center gap-2">
+                                            Γρήγορο Παιχνίδι
+                                            @guest
+                                                <a href="{{ route('login') }}" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full hover:bg-red-200 transition-colors text-center">
+                                                    Απαιτείται Λογαριασμός
+                                                </a>
+                                            @else
+                                                @if(!auth()->user()->isPremium())
+                                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">5/ημέρα</span>
+                                                @else
+                                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Απεριόριστα</span>
+                                                @endif
+                                            @endguest
+                                        </div>
+
                                         <div class="text-sm text-gray-600">Βρείτε γρήγορα έναν τυχαίο αντίπαλο</div>
                                     </div>
                                 </label>
@@ -161,13 +166,13 @@
                                        x-data="{ open: false }">
                                     <input type="radio" name="game_type" value="human" class="w-5 h-5 text-purple-600"
                                            {{ auth()->guest() ? 'disabled' : '' }}
-                                           @click="@guest open = true; $event.preventDefault(); @endguest"
+                                           @click="@guest$event.preventDefault(); @endguest"
                                            onchange="toggleAiDifficulty(false)">
                                     <div class="flex-1">
                                         <div class="font-bold text-gray-900 flex items-center gap-2">
                                             Ιδιωτικό Παιχνίδι
                                             @guest
-                                                <a href="{{ route('login') }}" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full hover:bg-red-200 transition-colors">
+                                                <a href="{{ route('login') }}" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full hover:bg-red-200 transition-colors text-center">
                                                     Απαιτείται Λογαριασμός
                                                 </a>
                                             @else
@@ -180,46 +185,6 @@
                                         </div>
                                         <div class="text-sm text-gray-600">Λάβετε κωδικό για να μοιραστείτε με φίλο</div>
                                     </div>
-
-                                    @guest
-                                        <!-- Modal for guest users -->
-                                        <div x-show="open"
-                                             x-cloak
-                                             @click.away="open = false"
-                                             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                                            <div @click.stop class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-                                                <div class="text-center">
-                                                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                        <svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                                                        </svg>
-                                                    </div>
-                                                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Απαιτείται Λογαριασμός</h3>
-                                                    <p class="text-gray-600 mb-6">Για να δημιουργήσετε ιδιωτικά παιχνίδια πρέπει να συνδεθείτε ή να εγγραφείτε.</p>
-
-                                                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                                                        <div class="text-sm font-semibold text-blue-900 mb-2">Δωρεάν Λογαριασμός:</div>
-                                                        <ul class="text-sm text-blue-800 space-y-1 text-left">
-                                                            <li>✓ 2 ιδιωτικά παιχνίδια ανά ημέρα</li>
-                                                            <li>✓ Απεριόριστα AI παιχνίδια</li>
-                                                            <li>✓ Στατιστικά & Επιτεύγματα</li>
-                                                        </ul>
-                                                    </div>
-
-                                                    <div class="flex gap-3">
-                                                        <a href="{{ route('login') }}"
-                                                           class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all duration-200 text-center">
-                                                            Σύνδεση
-                                                        </a>
-                                                        <a href="{{ route('register') }}"
-                                                           class="flex-1 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-bold py-3 rounded-xl transition-all duration-200 text-center">
-                                                            Εγγραφή
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endguest
                                 </label>
                             </div>
                         </div>
@@ -273,15 +238,6 @@
 
                     <form method="POST" action="{{ route('game.join') }}" class="space-y-4">
                         @csrf
-
-                        @guest
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Το Όνομά σας</label>
-                                <input type="text" name="guest_name"
-                                       class="w-full rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 px-4 py-3 transition-all duration-200"
-                                       placeholder="Εισάγετε το όνομά σας" required>
-                            </div>
-                        @endguest
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Κωδικός Παιχνιδιού</label>

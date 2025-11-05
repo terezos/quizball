@@ -789,7 +789,7 @@
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2">
             <div class="flex flex-col items-center justify-center py-3">
                 <a href="#" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">
                     quizball.io
@@ -811,7 +811,7 @@
 {{--                            <div class="absolute inset-0 w-3 h-3 bg-white rounded-full animate-ping"></div>--}}
 {{--                        </div>--}}
 
-                        <span class="text-white font-black text-xl tracking-wide drop-shadow-lg">
+                        <span class="text-white font-black lg:text-xl sm:text-sm tracking-wide drop-shadow-lg">
                             Η ΜΠΑΛΑ ΕΙΝΑΙ ΣΤΟ ΓΗΠΕΔΟ ΣΟΥ!
                         </span>
 
@@ -835,7 +835,7 @@
         </style>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-0">
-            <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
+            <div class="flex flex-col lg:flex-row gap-2 lg:gap-6">
                 <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
                     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
                         <div class="border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
@@ -936,11 +936,9 @@
                                         <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10"></div>
                                         <div class="absolute inset-0 animate-pulse bg-white/5"></div>
                                         <div class="relative h-14 flex items-center justify-center gap-2">
-                                            <svg class="w-5 h-5 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                                            </svg>
+
                                             <span class="text-white font-bold text-base tracking-wide drop-shadow-lg">
-                                                ΓΥΡΟΣ <span x-text="game.current_round || 1"></span> / 10
+                                                ΓΥΡΟΣ <span x-text="game.current_round || 1"></span>/<span x-text="game.max_rounds"></span>
                                             </span>
                                         </div>
                                     </div>
@@ -1411,11 +1409,11 @@
         <div x-show="!isMyTurn"
              x-cloak
              class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-32 lg:pb-4"
-             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: scroll">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-lg w-full p-6 border-2 border-indigo-300 transform transition-all">
-                <div class="space-y-4">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-lg w-full p-6 border-2 border-indigo-300 transform transition-all overflow-scroll">
+                <div class="space-y-1">
                     <div class="text-center border-b border-indigo-200 pb-4">
                         <h3 class="text-xl lg:text-2xl font-bold text-indigo-900 mb-2 flex items-center justify-center gap-2">
                             <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>

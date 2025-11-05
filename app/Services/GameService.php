@@ -40,6 +40,7 @@ class GameService
             'ai_difficulty' => $aiDifficulty,
             'current_round' => 0,
             'max_rounds' => $maxRounds,
+            'game_pace' => $gamePace,
         ]);
 
         $categories = Category::where('is_active', true)
@@ -373,7 +374,9 @@ class GameService
 
         if ($totalRounds >= $game->max_rounds) {
             $players = $game->players;
-            $winner = $players->sortByDesc('score')->first();
+            $maxScore = $players->max('score');
+            $playersWithMaxScore = $players->where('score', $maxScore);
+            $isDraw = $playersWithMaxScore->count() > 1;
 
             $game->update([
                 'status' => GameStatus::Completed,
@@ -382,12 +385,13 @@ class GameService
 
             foreach ($players as $player) {
                 if ($player->user_id) {
-                    $won = $player->id === $winner->id;
+                    $won = !$isDraw && $player->score === $maxScore;
                     $this->statisticsService->updateUserStatistics(
                         $player->user,
                         $won,
                         $player->score,
-                        $game->rounds()->where('game_player_id', $player->id)->get()
+                        $game->rounds()->where('game_player_id', $player->id)->get(),
+                        $isDraw
                     );
                 }
             }

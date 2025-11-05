@@ -18,6 +18,7 @@ class Game extends Model
         'matchmaking_started_at',
         'current_round',
         'max_rounds',
+        'game_pace',
         'current_turn_player_id',
         'started_at',
         'completed_at',

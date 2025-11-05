@@ -5,22 +5,22 @@
         <div class="max-w-5xl mx-auto @if($game->rounds->count() <= 0 ) mt-8 @endif">
             @php
                 $opponent = $game->players->firstWhere('id', '!=', $player->id);
-                $iWon = $winner->id === $player->id;
+                $iWon = $winner && $winner->id === $player->id;
             @endphp
 
             <div class="text-center mb-8">
-                <div class="text-6xl mb-4">{{ $iWon ? '🏆' : '' }}</div>
+                <div class="text-6xl mb-4">{{ $isDraw ? '🤝' : ($iWon ? '🏆' : '') }}</div>
                 <h1 class="text-4xl font-bold text-slate-900 mb-2">
-                    {{ $iWon ? 'Νίκησες!' : 'Έχασες!' }}
+                    {{ $isDraw ? 'Ισοπαλία!' : ($iWon ? 'Νίκησες!' : 'Έχασες!') }}
                 </h1>
             </div>
 
             <div class="grid grid-cols-2 gap-5 mb-8 max-w-md mx-auto">
-                <div class="text-center p-5 rounded-xl {{ $player->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100' }}">
+                <div class="text-center p-5 rounded-xl {{ $isDraw ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-300' : ($winner && $player->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100') }}">
                     <div class="text-sm font-semibold text-slate-600 mb-2">ΕΣΥ</div>
                     <div class="text-5xl font-bold text-slate-900">{{ $player->score }}</div>
                 </div>
-                <div class="text-center p-5 rounded-xl {{ $opponent->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100' }}">
+                <div class="text-center p-5 rounded-xl {{ $isDraw ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-2 ring-blue-300' : ($winner && $opponent->id === $winner->id ? 'bg-gradient-to-br from-amber-50 to-green-50 ring-2 ring-green-300' : 'bg-slate-100') }}">
                     <div class="text-sm font-semibold text-slate-600 mb-2">{{ $opponent->display_name }}</div>
                     <div class="text-5xl font-bold text-slate-900">{{ $opponent->score }}</div>
                 </div>

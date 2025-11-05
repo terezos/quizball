@@ -10,16 +10,20 @@ use App\Services\GameRecoveryService;
 use App\Services\GameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Faker\Generator;
 
 class GameController extends Controller
 {
     public function __construct(
-        protected GameService $gameService,
-        protected GameRecoveryService $recoveryService,
-        protected AIOpponentService $aiService,
-        protected \App\Services\MatchmakingService $matchmakingService,
+        protected GameService                             $gameService,
+        protected GameRecoveryService                     $recoveryService,
+        protected AIOpponentService                       $aiService,
+        protected \App\Services\MatchmakingService        $matchmakingService,
         protected \App\Services\AIAnswerValidationService $aiAnswerValidation,
-    ) {}
+        protected Generator                               $faker,
+    )
+    {
+    }
 
     public function lobby()
     {
@@ -42,31 +46,23 @@ class GameController extends Controller
     {
         $validationRules = [
             'game_type' => 'required|in:ai,human,matchmaking',
-            'guest_name' => 'nullable|string|max:255',
+            'game_pace' => 'required|in:4,6,8',
+            'sport' => 'required|in:football,basketball',
         ];
 
-        // Only require pace and sport for non-matchmaking games
-        if ($request->game_type !== 'matchmaking') {
-            $validationRules['game_pace'] = 'required|in:4,6,8';
-            $validationRules['sport'] = 'required|in:football,basketball';
-        }
-
-        // AI difficulty only for AI games
         if ($request->game_type === 'ai') {
             $validationRules['ai_difficulty'] = 'required|in:1,2,3';
         }
 
         $request->validate($validationRules);
 
-        // Check if private game requires authentication
         if ($request->game_type === 'human' && auth()->guest()) {
             return back()->with('error', 'Πρέπει να συνδεθείτε για να δημιουργήσετε ιδιωτικό παιχνίδι.');
         }
 
-        // Check daily limit for non-premium users creating private games
         if ($request->game_type === 'human' && auth()->check() && !auth()->user()->isPremium()) {
             $todayGamesCount = \App\Models\Game::where('game_type', 'human')
-                ->whereHas('gamePlayers', function($q) {
+                ->whereHas('gamePlayers', function ($q) {
                     $q->where('user_id', auth()->id());
                 })
                 ->whereDate('created_at', today())
@@ -77,33 +73,32 @@ class GameController extends Controller
             }
         }
 
-        // Handle matchmaking (uses default pace and sport for now)
         if ($request->game_type === 'matchmaking') {
             $game = $this->matchmakingService->joinQueue(
                 auth()->user(),
-                $request->guest_name,
-                Session::getId()
+                (auth()->id() ? auth()->user()->name : $this->faker->firstName . $this->faker->randomNumber(2)),
+                Session::getId(),
+                (int)$request->game_pace,
+                $request->sport
             );
 
             $this->recoveryService->storeActiveGame($game, auth()->user(), Session::getId());
 
-            // If opponent found immediately, go to game
             if ($this->matchmakingService->hasFoundOpponent($game)) {
                 return redirect()->route('game.play', $game);
             }
 
-            // Otherwise, wait for opponent
             return redirect()->route('game.matchmaking', $game);
         }
 
         $game = $this->gameService->createGame(
             $request->game_type,
             auth()->user(),
-            $request->guest_name,
+            (auth()->id() ? auth()->user()->name : $this->faker->firstName . $this->faker->randomNumber(2)),
             Session::getId(),
-            (int) $request->game_pace,
+            (int)$request->game_pace,
             $request->sport,
-            (int) $request->input('ai_difficulty', 2)
+            (int)$request->input('ai_difficulty', 2)
         );
 
         $this->recoveryService->storeActiveGame($game, auth()->user(), Session::getId());
@@ -119,25 +114,21 @@ class GameController extends Controller
     {
         $request->validate([
             'game_code' => 'required|string|size:6',
-            'guest_name' => 'nullable|string|max:255',
         ]);
 
-        // Find the game first to check if it's a private game
         $game = \App\Models\Game::where('game_code', strtoupper($request->game_code))->first();
 
         if (!$game) {
             return back()->withErrors(['game_code' => 'Ο κωδικός παιχνιδιού δεν βρέθηκε']);
         }
 
-        // Check if it's a private (human) game and user is guest
         if ($game->game_type === 'human' && auth()->guest()) {
             return back()->withErrors(['game_code' => 'Πρέπει να συνδεθείτε για να συμμετάσχετε σε ιδιωτικό παιχνίδι']);
         }
 
-        // Check daily limit for non-premium users joining private games
         if ($game->game_type === 'human' && auth()->check() && !auth()->user()->isPremium()) {
             $todayGamesCount = \App\Models\Game::where('game_type', 'human')
-                ->whereHas('gamePlayers', function($q) {
+                ->whereHas('gamePlayers', function ($q) {
                     $q->where('user_id', auth()->id());
                 })
                 ->whereDate('created_at', today())
@@ -151,11 +142,11 @@ class GameController extends Controller
         $game = $this->gameService->joinGame(
             strtoupper($request->game_code),
             auth()->user(),
-            $request->guest_name,
+            (auth()->id() ? auth()->user()->name : $this->faker->firstName . $this->faker->randomNumber(2)),
             Session::getId()
         );
 
-        if (! $game) {
+        if (!$game) {
             return back()->withErrors(['game_code' => 'Το παιχνίδι δεν βρέθηκε ή είναι γεμάτο']);
         }
 
@@ -168,7 +159,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return redirect()->route('game.lobby');
         }
 
@@ -182,7 +173,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return redirect()->route('game.lobby');
         }
 
@@ -208,7 +199,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return redirect()->route('game.lobby');
         }
 
@@ -222,7 +213,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -240,7 +231,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return redirect()->route('game.lobby');
         }
 
@@ -275,7 +266,7 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player || ! $this->recoveryService->isPlayersTurn($game, $player)) {
+        if (!$player || !$this->recoveryService->isPlayersTurn($game, $player)) {
             return response()->json(['error' => 'Not your turn'], 403);
         }
 
@@ -301,14 +292,14 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player || ! $this->recoveryService->isPlayersTurn($game, $player)) {
+        if (!$player || !$this->recoveryService->isPlayersTurn($game, $player)) {
             return response()->json(['error' => 'Not your turn'], 403);
         }
 
         $difficulty = DifficultyLevel::from($request->difficulty);
         $question = $this->gameService->selectDifficulty($game, $player, $difficulty);
 
-        if (! $question) {
+        if (!$question) {
             return response()->json(['error' => 'No questions available'], 400);
         }
 
@@ -322,7 +313,7 @@ class GameController extends Controller
                 'created_by' => $question->creator->name,
                 'image_url' => $question->image_url,
                 'answers' => $question->question_type->value === 'multiple_choice'
-                    ? $question->answers->map(fn ($a) => [
+                    ? $question->answers->map(fn($a) => [
                         'id' => $a->id,
                         'answer_text' => $a->answer_text,
                     ])
@@ -339,14 +330,13 @@ class GameController extends Controller
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
         $answer = $request->answer ?? '';
 
         $result = $this->gameService->submitAnswer($game, $player, $answer);
-
 
         return response()->json($result);
     }
@@ -355,7 +345,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
@@ -381,7 +371,7 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return response()->json(['error' => 'Invalid player'], 403);
         }
 
@@ -468,18 +458,23 @@ class GameController extends Controller
     {
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
 
-        if (! $player) {
+        if (!$player) {
             return redirect()->route('game.lobby');
         }
 
         $this->recoveryService->clearActiveGame();
 
-        $winner = $game->players()->orderByDesc('score')->first();
+        $players = $game->players()->orderByDesc('score')->get();
+        $maxScore = $players->max('score');
+        $playersWithMaxScore = $players->where('score', $maxScore);
+        $isDraw = $playersWithMaxScore->count() > 1;
+        $winner = $isDraw ? null : $players->first();
 
         return view('game.results', [
             'game' => $game->load(['players', 'rounds.question', 'rounds.category']),
             'player' => $player,
             'winner' => $winner,
+            'isDraw' => $isDraw,
         ]);
     }
 }

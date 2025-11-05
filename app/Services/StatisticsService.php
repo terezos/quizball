@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class StatisticsService
 {
-    public function updateUserStatistics(User $user, bool $won, int $scoreEarned, Collection $rounds): void
+    public function updateUserStatistics(User $user, bool $won, int $scoreEarned, Collection $rounds, bool $isDraw = false): void
     {
         $statistics = $user->statistics ?? UserStatistic::create(['user_id' => $user->id]);
 
@@ -38,7 +38,8 @@ class StatisticsService
         $statistics->update([
             'games_played' => $statistics->games_played + 1,
             'games_won' => $statistics->games_won + ($won ? 1 : 0),
-            'games_lost' => $statistics->games_lost + ($won ? 0 : 1),
+            'games_lost' => $statistics->games_lost + (!$won && !$isDraw ? 1 : 0),
+            'games_drawn' => $statistics->games_drawn + ($isDraw ? 1 : 0),
             'total_score' => $statistics->total_score + $scoreEarned,
             'total_questions_answered' => $statistics->total_questions_answered + $totalQuestions,
             'correct_answers' => $statistics->correct_answers + $correctAnswers,
@@ -58,6 +59,7 @@ class StatisticsService
             'games_played' => $stats->games_played,
             'games_won' => $stats->games_won,
             'games_lost' => $stats->games_lost,
+            'games_drawn' => $stats->games_drawn,
             'win_rate' => $stats->win_rate,
             'total_score' => $stats->total_score,
             'accuracy' => $stats->accuracy,
@@ -71,6 +73,7 @@ class StatisticsService
             'games_played' => 0,
             'games_won' => 0,
             'games_lost' => 0,
+            'games_drawn' => 0,
             'win_rate' => 0,
             'total_score' => 0,
             'accuracy' => 0,

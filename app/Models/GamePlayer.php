@@ -18,7 +18,7 @@ class GamePlayer extends Model
 	    'player_order',
     ];
 
-    protected $appends = ['display_name'];
+    protected $appends = ['display_name', 'is_draw'];
 
     protected function casts(): array
     {
@@ -67,7 +67,27 @@ class GamePlayer extends Model
             return false;
         }
 
-        // User wins if their score is higher than opponent's score
+        // User wins only if their score is strictly higher than opponent's score (no draw)
         return $this->score > $opponent->score;
+    }
+
+    public function getIsDrawAttribute(): bool
+    {
+        if ($this->game->status->value !== 'completed') {
+            return false;
+        }
+
+        // Get all players in this game
+        $players = $this->game->gamePlayers;
+
+        // Find the opponent
+        $opponent = $players->where('id', '!=', $this->id)->first();
+
+        if (!$opponent) {
+            return false;
+        }
+
+        // It's a draw if scores are equal
+        return $this->score === $opponent->score;
     }
 }
