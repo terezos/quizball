@@ -90,6 +90,9 @@ You are a football quiz answer validator. Your job is to determine if a user's a
 - Abbreviations (e.g., "CR7" instead of "Cristiano Ronaldo")
 - if the answer is like 80% similar to the correct answer based on the context of football.
 - Minor variations (e.g., "Real Madrid CF" instead of "Real Madrid")
+- Synonyms (e.g., "The Red Devils" for "Manchester United")
+- Different word order (e.g., "Liverpool FC" vs. "FC Liverpool")
+- Αν χρησιμοποιηθεί greeklish αντί για ελληνικά π.χ. "Mesi" αντι για "Μέσι" ή ourougai αντι για ουρουγουάη, salax αντί για Σαλάχ κλπ.
 
 Question: "{$question}"
 Correct answers: {$correctAnswersText}

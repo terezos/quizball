@@ -325,7 +325,8 @@ class GameController extends Controller
     public function submitAnswer(Request $request, Game $game)
     {
         $request->validate([
-            'answer' => 'nullable', // Allow empty answer for timeout scenarios
+            'answer' => 'nullable',
+            'used_2x_powerup' => 'nullable|boolean',
         ]);
 
         $player = $this->recoveryService->getActiveGamePlayer($game, auth()->user());
@@ -335,8 +336,9 @@ class GameController extends Controller
         }
 
         $answer = $request->answer ?? '';
+        $used2xPowerup = $request->used_2x_powerup ?? false;
 
-        $result = $this->gameService->submitAnswer($game, $player, $answer);
+        $result = $this->gameService->submitAnswer($game, $player, $answer, $used2xPowerup);
 
         return response()->json($result);
     }
@@ -416,6 +418,7 @@ class GameController extends Controller
                 return [
                     'id' => $round->id,
                     'round_number' => $round->round_number,
+                    'game_player_id' => $round->game_player_id,
                     'category' => $round->category ? [
                         'id' => $round->category->id,
                         'name' => $round->category->name,
@@ -427,6 +430,7 @@ class GameController extends Controller
                     ] : null,
                     'points_earned' => $round->points_earned ?? 0,
                     'is_correct' => $round->is_correct ?? false,
+                    'used_2x_powerup' => $round->used_2x_powerup ?? false,
                     'time_taken' => $round->time_taken,
                     'question' => $questionData,
                     'player_answer' => $playerAnswerText,

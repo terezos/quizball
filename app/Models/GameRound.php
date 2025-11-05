@@ -17,6 +17,7 @@ class GameRound extends Model
         'difficulty',
         'player_answer',
         'is_correct',
+        'used_2x_powerup',
         'points_earned',
         'time_taken',
         'started_at',
@@ -28,6 +29,7 @@ class GameRound extends Model
         return [
             'difficulty' => DifficultyLevel::class,
             'is_correct' => 'boolean',
+            'used_2x_powerup' => 'boolean',
             'started_at' => 'datetime',
             'answered_at' => 'datetime',
         ];

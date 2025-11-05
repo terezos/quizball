@@ -252,7 +252,7 @@ class GameService
         return $question;
     }
 
-    public function submitAnswer(Game $game, GamePlayer $player, string|array $answer): array
+    public function submitAnswer(Game $game, GamePlayer $player, string|array $answer, bool $used2xPowerup = false): array
     {
         $roundId = Cache::get("game:{$game->id}:current_round");
 
@@ -266,15 +266,29 @@ class GameService
             return ['success' => false, 'message' => 'Invalid round or player'];
         }
 
+        // Check if player already used 2x powerup in this game
+        if ($used2xPowerup) {
+            $alreadyUsed2x = GameRound::where('game_id', $game->id)
+                ->where('game_player_id', $player->id)
+                ->where('used_2x_powerup', true)
+                ->exists();
+
+            if ($alreadyUsed2x) {
+                $used2xPowerup = false; // Ignore if already used
+            }
+        }
+
         $question = $round->question()->with('answers')->first();
         $isCorrect = $this->questionService->validateAnswer($question, $answer);
-        $pointsEarned = $isCorrect ? $round->difficulty->points() : 0;
+        $basePoints = $isCorrect ? $round->difficulty->points() : 0;
+        $pointsEarned = $used2xPowerup ? $basePoints * 2 : $basePoints;
         $correctAnswer = $this->getCorrectAnswer($question);
         $playerAnswerDisplay = $this->formatAnswerForDisplay($question, $answer);
 
         $round->update([
             'player_answer' => is_array($answer) ? json_encode($answer, JSON_UNESCAPED_UNICODE) : $answer,
             'is_correct' => $isCorrect,
+            'used_2x_powerup' => $used2xPowerup,
             'points_earned' => $pointsEarned,
             'answered_at' => now(),
             'time_taken' => abs(now()->diffInSeconds($round->started_at)),
@@ -292,6 +306,7 @@ class GameService
         $currentMove['correct_answer'] = $correctAnswer;
         $currentMove['is_correct'] = $isCorrect;
         $currentMove['points_earned'] = $pointsEarned;
+        $currentMove['used_2x_powerup'] = $used2xPowerup;
         $currentMove['question'] = $question->question_text;
         $currentMove['result_created_at'] = now()->timestamp;
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addSeconds(10));
@@ -304,6 +319,7 @@ class GameService
             'success' => true,
             'is_correct' => $isCorrect,
             'points_earned' => $pointsEarned,
+            'used_2x_powerup' => $used2xPowerup,
             'player_answer' => $playerAnswerDisplay,
             'correct_answer' => $correctAnswer,
             'question_text' => $question->question_text,

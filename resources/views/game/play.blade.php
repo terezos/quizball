@@ -104,6 +104,9 @@
                 consecutiveTimeouts: 0,
                 tabSwitchListenerAdded: false,
                 isPageUnloading: false,
+                used2xPowerup: false,
+                has2xPowerupAvailable: true,
+                show2xToast: false,
 
                 init() {
                     this.updatePlayers();
@@ -118,6 +121,12 @@
                     const savedTimeouts = localStorage.getItem(`game_${this.game.id}_consecutiveTimeouts`);
                     if (savedTimeouts !== null) {
                         this.consecutiveTimeouts = parseInt(savedTimeouts, 10);
+                    }
+
+                    // Restore 2x powerup state
+                    const saved2xPowerup = sessionStorage.getItem(`game_${this.game.id}_used2xPowerup`);
+                    if (saved2xPowerup === 'true') {
+                        this.used2xPowerup = true;
                     }
 
                     if (activeRound && this.isMyTurn) {
@@ -223,6 +232,14 @@
 
                         const data = await response.json();
                         this.game.rounds = data.rounds || [];
+
+                        // Check if player has already used 2x powerup in this game
+                        const hasUsed2x = this.game.rounds.some(round =>
+                            round.game_player_id === {{ $player->id }} && round.used_2x_powerup
+                        );
+                        if (hasUsed2x) {
+                            this.has2xPowerupAvailable = false;
+                        }
                     } catch (error) {
                         console.error('Failed to load game history:', error);
                         this.game.rounds = [];
@@ -395,7 +412,10 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                             },
-                            body: JSON.stringify({ answer: answerData })
+                            body: JSON.stringify({
+                                answer: answerData,
+                                used_2x_powerup: this.used2xPowerup
+                            })
                         });
 
                         if (!response.ok) {
@@ -407,6 +427,14 @@
                         const data = await response.json();
                         this.lastResult = data;
                         this.phase = 'result';
+
+                        // Clear sessionStorage for 2x powerup after submission
+                        sessionStorage.removeItem(`game_${this.game.id}_used2xPowerup`);
+
+                        // Update powerup availability if it was used
+                        if (data.used_2x_powerup) {
+                            this.has2xPowerupAvailable = false;
+                        }
 
                         if (isTimeout && !data.is_correct) {
                             this.consecutiveTimeouts++;
@@ -571,6 +599,8 @@
                     this.phase = 'waiting';
                     this.isMyTurn = false;
                     this.opponentMove = null;
+                    this.used2xPowerup = false;
+                    sessionStorage.removeItem(`game_${this.game.id}_used2xPowerup`);
                 },
 
                 setupEcho() {
@@ -667,6 +697,7 @@
                 handleGameCompleted(data) {
                     localStorage.removeItem(`game_${this.game.id}_tabSwitchCount`);
                     localStorage.removeItem(`game_${this.game.id}_consecutiveTimeouts`);
+                    sessionStorage.removeItem(`game_${this.game.id}_used2xPowerup`);
 
                     if (this.echoChannel) {
                         window.Echo.leave(`game.${this.game.id}`);
@@ -745,6 +776,13 @@
                         'hard': 'Δύσκολο (3π)'
                     };
                     return labels[difficulty] || difficulty;
+                },
+
+                show2xActivationToast() {
+                    this.show2xToast = true;
+                    setTimeout(() => {
+                        this.show2xToast = false;
+                    }, 3000);
                 },
 
                 cleanup() {
@@ -836,7 +874,7 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-0">
             <div class="flex flex-col lg:flex-row gap-2 lg:gap-6">
-                <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4">
+                <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4 relative lg:z-40" :class="{'lg:hidden': !isMyTurn}">
                     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
                         <div class="border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
                             <div class="p-2">
@@ -856,12 +894,14 @@
                                                  :class="game.current_turn_player_id === {{ $player->id }} ? 'text-white/90' : 'text-slate-600'">
                                                 ΕΣΥ
                                             </div>
-                                            <div class="text-2xl font-black leading-none mb-0.5"
-                                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
-                                                 x-text="players[{{ $player->id }}]?.score || 0"></div>
-                                            <div class="text-[7px] font-semibold uppercase tracking-wide"
-                                                 :class="game.current_turn_player_id === {{ $player->id }} ? 'text-emerald-100' : 'text-slate-500'">
-                                                ΠΟΝΤΟΙ
+                                            <div class="flex items-center gap-1">
+                                                <div class="text-2xl font-black leading-none"
+                                                     :class="game.current_turn_player_id === {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
+                                                     x-text="players[{{ $player->id }}]?.score || 0"></div>
+                                                <div class="text-[7px] font-semibold uppercase tracking-wide"
+                                                     :class="game.current_turn_player_id === {{ $player->id }} ? 'text-emerald-100' : 'text-slate-500'">
+                                                    ΠΟΝΤΟΙ
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -884,12 +924,14 @@
                                                  :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-white/90' : 'text-slate-600'">
                                                 ΑΝΤΙΠΑΛΟΣ
                                             </div>
-                                            <div class="text-2xl font-black leading-none mb-0.5"
-                                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
-                                                 x-text="opponent?.score || 0"></div>
-                                            <div class="text-[7px] font-semibold uppercase tracking-wide"
-                                                 :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-indigo-100' : 'text-slate-500'">
-                                                ΠΟΝΤΟΙ
+                                            <div class="flex items-center gap-1">
+                                                <div class="text-2xl font-black leading-none"
+                                                     :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-white drop-shadow-md' : 'text-slate-700'"
+                                                     x-text="opponent?.score || 0"></div>
+                                                <div class="text-[7px] font-semibold uppercase tracking-wide"
+                                                     :class="game.current_turn_player_id !== {{ $player->id }} ? 'text-indigo-100' : 'text-slate-500'">
+                                                    ΠΟΝΤΟΙ
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -944,17 +986,27 @@
                                     </div>
 
                                     <!-- Power-up Buttons -->
-                                    <button :disabled="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting')"
-                                            :class="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting') ? 'opacity-50 cursor-not-allowed' : ''"
-                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-opacity duration-200"
+                                    <button @click="if (has2xPowerupAvailable && (phase === 'category' || phase === 'difficulty')) {
+                                                used2xPowerup = !used2xPowerup;
+                                                sessionStorage.setItem(`game_${game.id}_used2xPowerup`, used2xPowerup);
+                                                if (used2xPowerup) show2xActivationToast();
+                                            }"
+                                            :disabled="!has2xPowerupAvailable || phase === 'question' || !isMyTurn"
+                                            :class="[
+                                                !has2xPowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
+                                                phase === 'question' || !isMyTurn ? 'opacity-50 cursor-not-allowed' : '',
+                                                used2xPowerup ? 'ring-2 ring-yellow-300 ring-offset-1 scale-105' : ''
+                                            ]"
+                                            class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-all duration-200"
                                             style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                                         <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
-                                        <div class="relative h-full flex items-center justify-center transform transition-transform duration-200 group-active:scale-90">
+                                        <div class="relative h-full flex flex-col items-center justify-center transform transition-transform duration-200 group-active:scale-90">
                                             <span class="text-white font-black text-lg drop-shadow-lg">2X</span>
+                                            <span x-show="used2xPowerup" class="text-white text-[8px] font-bold mt-0.5 animate-pulse">✓</span>
                                         </div>
                                     </button>
 
-                                    <button :disabled="!(phase === 'question' && currentQuestion)"
+                                    <button :disabled="!(phase === 'question' && currentQuestion) || !isMyTurn"
                                             :class="!(phase === 'question' && currentQuestion) ? 'opacity-50 cursor-not-allowed' : ''"
                                             class="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden group shadow-lg transition-opacity duration-200"
                                             style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
@@ -1022,15 +1074,27 @@
                     </div>
 
                     <!-- Power-up Buttons (Desktop Only) -->
-                    <div class="hidden lg:grid grid-cols-2 gap-3">
-                        <button :disabled="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting')"
-                                :class="!(phase === 'category' || phase === 'difficulty' || phase === 'waiting') ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'"
+                    <div x-show="isMyTurn" class="hidden lg:grid grid-cols-2 gap-3">
+                        <button @click="if (has2xPowerupAvailable && (phase === 'category' || phase === 'difficulty')) {
+                                    used2xPowerup = !used2xPowerup;
+                                    sessionStorage.setItem(`game_${game.id}_used2xPowerup`, used2xPowerup);
+                                    if (used2xPowerup) show2xActivationToast();
+                                }"
+                                :disabled="!has2xPowerupAvailable || phase === 'question' || !isMyTurn"
+                                :class="[
+                                    !has2xPowerupAvailable ? 'opacity-30 cursor-not-allowed grayscale' :
+                                    phase === 'question' ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer',
+                                    used2xPowerup ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105' : ''
+                                ]"
                                 class="relative overflow-hidden rounded-xl shadow-md transition-all duration-200 p-4"
                                 style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                             <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20"></div>
                             <div class="relative flex flex-col items-center justify-center gap-1">
                                 <span class="text-white font-black text-3xl drop-shadow-lg">2X</span>
                                 <span class="text-white text-xs font-semibold drop-shadow">Διπλοί Πόντοι</span>
+                                <span x-show="used2xPowerup" class="text-white text-[10px] font-bold mt-1 animate-pulse">✓ Ενεργό</span>
+                            </div>
+                            <div x-show="!has2xPowerupAvailable" class="absolute inset-0 bg-black/60 flex items-center justify-center">
                             </div>
                         </button>
 
@@ -1051,7 +1115,7 @@
                     </div>
 
                     <!-- History Button (Desktop Only) -->
-                    <button @click="showMoveHistory = true"
+                    <button x-show="isMyTurn" @click="showMoveHistory = true"
                             class="hidden lg:flex w-full items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -1060,7 +1124,7 @@
                     </button>
 
                     <!-- Forfeit Button (Desktop Only) -->
-                    <button @click="showForfeitConfirmation = true"
+                    <button x-show="isMyTurn" @click="showForfeitConfirmation = true"
                             class="hidden lg:flex w-full items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                         <svg class="w-10 h-10 text-white drop-shadow-lg" viewBox="-28 -28 336.00 336.00"
                              xml:space="preserve" transform="matrix(-1, 0, 0, 1, 0, 0)rotate(0)"
@@ -1218,8 +1282,8 @@
                             <div class="flex gap-3">
                                 <button @click="passQuestion"
                                         :disabled="loading"
-                                        class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-bold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105">
-                                    <span class="hidden sm:inline">Παράλειψη</span>
+                                        class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 hover:border--400 text-gray-700 hover:text-gray-900 font-bold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105">
+                                    <span class="hidden sm:inline">Πάσο</span>
                                     <svg class="sm:hidden w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
                                     </svg>
@@ -1408,11 +1472,58 @@
 
         <div x-show="!isMyTurn"
              x-cloak
-             class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-32 lg:pb-4"
-             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: scroll">
+             class="fixed inset-0 z-30 flex items-center justify-center p-4 pb-52 lg:pb-32"
+             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-lg w-full p-6 border-2 border-indigo-300 transform transition-all overflow-scroll">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-6 border-2 border-indigo-300 transform transition-all overflow-y-auto lg:overflow-visible max-h-[85vh] lg:max-h-none">
+                <div class="space-y-1">
+                    <div class="text-center mb-4">
+                        <h2 class="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                            quizball.io
+                        </h2>
+                    </div>
+                </div>
+
+                <div class="hidden lg:block mb-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200 transition-all duration-300"
+                             :class="game.current_turn_player_id === {{ $player->id }} ? 'ring-2 ring-emerald-400' : ''">
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ΕΣΥ</div>
+                            <div class="text-3xl font-bold text-emerald-600" x-text="players[{{ $player->id }}]?.score || 0"></div>
+                            <div class="text-xs text-slate-600 mt-1 truncate" x-text="players[{{ $player->id }}]?.display_name"></div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200 transition-all duration-300"
+                             :class="game.current_turn_player_id !== {{ $player->id }} ? 'ring-2 ring-indigo-400' : ''" x-show="opponent">
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ΑΝΤΙΠΑΛΟΣ</div>
+                            <div class="text-3xl font-bold text-indigo-600" x-text="opponent?.score || 0"></div>
+                            <div class="text-xs text-slate-600 mt-1 truncate" x-text="opponent?.display_name"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-center bg-white rounded-xl p-3 shadow-md border border-slate-200">
+                        <strong class="text-slate-700">Γύρος <span class="font-semibold" x-text="game.current_round"></span>/<span x-text="game.max_rounds"></span></strong>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button @click="showMoveHistory = true"
+                                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Ιστορικό
+                        </button>
+                        <button @click="showForfeitConfirmation = true"
+                                class="flex-1 flex items-center justify-center gap-2 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-700 font-semibold py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Λήξη
+                        </button>
+                    </div>
+                </div>
+
+
                 <div class="space-y-1">
                     <div class="text-center border-b border-indigo-200 pb-4">
                         <h3 class="text-xl lg:text-2xl font-bold text-indigo-900 mb-2 flex items-center justify-center gap-2">
@@ -1719,6 +1830,25 @@
                         Κλείσιμο
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 2x Activation Toast -->
+        <div x-show="show2xToast"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="fixed bottom-24 lg:bottom-8 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+            <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-amber-300 animate-pulse">
+                <div class="text-3xl font-black">2X</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-lg leading-tight">Ενεργοποιήθηκε!</span>
+                    <span class="text-sm font-semibold opacity-90">Διπλασιασμός πόντων</span>
+                </div>
+                <div class="text-2xl">🔥</div>
             </div>
         </div>
 
