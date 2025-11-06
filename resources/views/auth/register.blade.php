@@ -3,8 +3,7 @@
         <h2 class="text-2xl font-bold text-gray-900 text-center">Εγγραφή</h2>
         <p class="text-sm text-gray-600 text-center mt-2">Δημιουργήστε τον λογαριασμό σας στο QuizBall</p>
     </div>
-    
-    <!-- Google Register Button -->
+
     <div class="mb-6">
         <a href="{{ route('google.redirect') }}" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
             <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -16,7 +15,7 @@
             Εγγραφή με Google
         </a>
     </div>
-    
+
     <div class="relative mb-6">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-300"></div>
@@ -29,7 +28,6 @@
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
 
-        <!-- Name -->
         <div>
             <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Όνομα</label>
             <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
@@ -37,7 +35,6 @@
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
         <div>
             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username"
@@ -45,7 +42,6 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
         <div>
             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Κωδικός</label>
             <input id="password" type="password" name="password" required autocomplete="new-password"
@@ -53,7 +49,6 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
         <div>
             <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-2">Επιβεβαίωση Κωδικού</label>
             <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
@@ -76,4 +71,6 @@
             </p>
         </div>
     </form>
+
+    <x-google-one-tap />
 </x-guest-layout>

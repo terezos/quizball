@@ -4,16 +4,14 @@
         <p class="text-sm text-gray-600 text-center mt-2">Καλώς ήρθατε πίσω στο QuizBall</p>
     </div>
 
-    <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
-    
+
     @if(session('error'))
         <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
             {{ session('error') }}
         </div>
     @endif
-    
-    <!-- Google Login Button -->
+
     <div class="mb-6">
         <a href="{{ route('google.redirect') }}" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
             <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -25,7 +23,7 @@
             Συνέχεια με Google
         </a>
     </div>
-    
+
     <div class="relative mb-6">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-300"></div>
@@ -38,7 +36,6 @@
     <form method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
 
-        <!-- Email Address -->
         <div>
             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
@@ -46,7 +43,6 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
         <div>
             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Κωδικός</label>
             <input id="password" type="password" name="password" required autocomplete="current-password"
@@ -54,7 +50,6 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me -->
         <div class="flex items-center">
             <input id="remember_me" type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <label for="remember_me" class="ml-2 text-sm text-gray-600">Να με θυμάσαι</label>
@@ -83,4 +78,6 @@
             </p>
         </div>
     </form>
+
+    <x-google-one-tap />
 </x-guest-layout>
