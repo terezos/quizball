@@ -323,7 +323,7 @@
                                 </div>
 
                                 <div class="flex-shrink-0">
-                                    <a href="{{ route('register') }}" class="sm:inline-flex lg:inline-flex items-center justify-center px-5 py-2.5 bg-white text-blue-600 font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                    <a href="{{ route('login') }}" class="sm:inline-flex lg:inline-flex items-center justify-center px-5 py-2.5 bg-white text-blue-600 font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
                                         Σύνδεση
                                     </a>
                                 </div>
