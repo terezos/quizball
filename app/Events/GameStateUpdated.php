@@ -16,20 +16,21 @@ class GameStateUpdated implements ShouldBroadcastNow
 
     public function __construct(
         public Game $game
-    ) {
-    }
+    ) {}
 
     public function broadcastOn(): array
     {
         return [
             //            new PrivateChannel('game.' . $this->game->id),
-            new Channel('game.' . $this->game->id),
+            new Channel('game.'.$this->game->id),
         ];
     }
 
     public function broadcastWith(): array
     {
         return [
+            'state_version' => $this->game->state_version,
+            'timestamp' => now()->toIso8601String(),
             'game' => [
                 'id' => $this->game->id,
                 'status' => $this->game->status->value,
@@ -39,12 +40,12 @@ class GameStateUpdated implements ShouldBroadcastNow
                 'turn_started_at' => $this->game->turn_started_at ?? \Illuminate\Support\Facades\Cache::get("game:{$this->game->id}:turn_started_at"),
                 'used_combinations' => \App\Models\GameRound::where('game_id', $this->game->id)
                     ->get()
-                    ->map(fn($round) => [
+                    ->map(fn ($round) => [
                         'category_id' => $round->category_id,
                         'difficulty' => $round->difficulty->value,
                     ])
                     ->toArray(),
-                'players' => $this->game->players->map(fn($player) => [
+                'players' => $this->game->players->map(fn ($player) => [
                     'id' => $player->id,
                     'user_id' => $player->user_id,
                     'guest_name' => $player->guest_name,

@@ -111,6 +111,8 @@
                 has5050PowerupAvailable: true,
                 show5050Toast: false,
                 loading5050: false,
+                currentStateVersion: 0,
+                reconnecting: false,
 
                 init() {
                     this.updatePlayers();
@@ -183,6 +185,10 @@
                             } else {
                                 this.showTabSwitchWarning = true;
                             }
+                        }
+
+                        if (!document.hidden) {
+                            this.reconnectAndRefresh();
                         }
                     });
                 },
@@ -637,12 +643,10 @@
                 },
 
                 resetForNextRound() {
-                    // Clean up question-specific 50/50 data if exists
                     if (this.currentQuestion && this.currentQuestion.id) {
                         localStorage.removeItem(`game_${this.game.id}_5050Data_${this.currentQuestion.id}`);
                     }
 
-                    // Clear 50/50 powerup localStorage flag
                     localStorage.removeItem(`game_${this.game.id}_used5050Powerup`);
 
                     this.answer = '';
@@ -681,7 +685,91 @@
                     });
                 },
 
+                async reconnectAndRefresh() {
+                    // Show reconnecting state (separate from loading)
+                    this.reconnecting = true;
+
+                    try {
+                        if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+                            window.Echo.connector.pusher.connect();
+                        }
+
+                        const response = await fetch(`/game/${this.game.id}/state`, {
+                            headers: {
+                                'Accept': 'application/json',
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            // Update version when reconnecting
+                            if (data.state_version) {
+                                this.currentStateVersion = data.state_version;
+                            }
+
+                            this.game.status = data.status;
+                            this.game.current_turn_player_id = data.current_turn_player_id;
+                            this.game.current_round = data.current_round;
+                            if (data.players) {
+                                this.game.players = data.players;
+                            }
+                            this.usedCombinations = data.used_combinations || [];
+                            this.turnStartedAt = data.turn_started_at;
+                            this.updatePlayers();
+                            await this.loadGameHistory();
+
+                            const wasMyTurn = this.isMyTurn;
+                            this.isMyTurn = data.current_turn_player_id === this.player.id;
+
+                            if (this.isMyTurn !== wasMyTurn) {
+                                if (this.isMyTurn) {
+                                    this.opponentMove = null;
+                                    this.stopOpponentTimer();
+                                    this.stopOpponentInactivityTimer();
+
+                                    if (this.phase !== 'result') {
+                                        this.phase = 'category';
+                                        this.startInactivityTimer();
+                                    }
+                                } else {
+                                    this.stopInactivityTimer();
+                                    if (this.phase !== 'result') {
+                                        this.phase = 'waiting';
+                                    }
+                                    if (this.turnStartedAt) {
+                                        this.startOpponentInactivityTimer(this.turnStartedAt);
+                                    }
+                                }
+                            }
+
+                            if (data.status === 'completed') {
+                                window.location.href = `/game/${this.game.id}/results`;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Failed to reconnect and refresh game state:', error);
+                    } finally {
+                        // Hide reconnecting state
+                        this.reconnecting = false;
+                    }
+                },
+
                 handleGameStateUpdate(data) {
+                    // Check version to prevent applying stale state
+                    if (data.state_version && data.state_version <= this.currentStateVersion) {
+                        console.log('Ignoring stale state update', {
+                            received: data.state_version,
+                            current: this.currentStateVersion
+                        });
+                        return;
+                    }
+
+                    // Update current version
+                    if (data.state_version) {
+                        this.currentStateVersion = data.state_version;
+                    }
+
                     this.game = data.game;
                     this.usedCombinations = data.game.used_combinations || [];
                     this.turnStartedAt = data.game.turn_started_at;
@@ -1063,7 +1151,7 @@
                     <!-- Animated background shine -->
                     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
 
-                    <div class="relative px-1 py-4 flex items-center justify-center gap-3">
+                    <div class="relative px-1 py-2 flex items-center justify-center gap-3">
 {{--                        <div class="relative">--}}
 {{--                            <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>--}}
 {{--                            <div class="absolute inset-0 w-3 h-3 bg-white rounded-full animate-ping"></div>--}}
@@ -1094,7 +1182,7 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-0">
             <div class="flex flex-col lg:flex-row gap-2 lg:gap-6">
-                <div class="w-full lg:w-80 flex-shrink-0 space-y-3 lg:space-y-4 relative lg:z-40" :class="{'lg:hidden': !isMyTurn}">
+                <div class="w-full lg:w-80 flex-shrink-0 space-y-1 lg:space-y-4 relative lg:z-40" :class="{'lg:hidden': !isMyTurn}">
                     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
                         <div class="border-t-3 border-gradient-to-r from-purple-400 via-pink-400 to-indigo-400" style="border-image: linear-gradient(90deg, #c084fc, #f472b6, #818cf8) 1;">
                             <div class="p-2">
@@ -1271,11 +1359,6 @@
                             <div class="h-2 rounded-full transition-all duration-1000 shadow-sm"
                                  :class="inactivityTimeRemaining > 60 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : (inactivityTimeRemaining > 30 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-600')"
                                  :style="`width: ${(inactivityTimeRemaining / 120) * 100}%`"></div>
-                        </div>
-                        <div x-show="showInactivityWarning" class="mt-2 text-xs font-medium px-2 py-1 rounded"
-                             :class="isMyTurn ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
-                            <span x-show="isMyTurn">Ο χρόνος εξαντλείται!</span>
-                            <span x-show="!isMyTurn">Ο χρόνος του αντιπάλου εξαντλείται!</span>
                         </div>
                     </div>
 
@@ -1455,8 +1538,8 @@
                         </div>
 
                         <div x-show="phase === 'question' && currentQuestion" x-cloak style="display: none">
-                            <div class="mb-6">
-                                <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 transition-all duration-300"
+                            <div class="mb-2">
+                                <div class="mb-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-2 border border-blue-200 transition-all duration-300"
                                      :class="!questionTimerReady ? 'blur-sm' : ''">
                                     <div class="flex justify-between text-sm mb-2">
                                         <span class="font-semibold text-gray-700">Υπολειπόμενος χρόνος</span>
@@ -1470,7 +1553,7 @@
                                 </div>
 
                                 <!-- Points Display -->
-                                <div class="mb-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+                                <div class="mb-1 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-1 border-2 border-emerald-200 shadow-sm">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3">
                                             <div class="bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-black text-xl shadow-md">
@@ -1496,8 +1579,8 @@
                                     </div>
                                 </div>
 
-                                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
-                                <h3 class="text-sm font-bold text-gray-500 mb-6 leading-relaxed" x-text="'H Ερώτηση δημιουργήθηκε από τον χρήστη: ' + currentQuestion?.created_by"></h3>
+                                <h3 class="text-lg sm:text-2xl font-bold text-gray-900 leading-relaxed" x-text="currentQuestion?.text"></h3>
+                                <h3 class="text-xs font-bold text-gray-500 mb-2 leading-relaxed" x-text="'Δημιουργήθηκε από: ' + currentQuestion?.created_by"></h3>
 
                                 <div x-show="currentQuestion?.type === 'text_input_with_image'" class="mb-6">
                                     <div class="relative bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-4 shadow-lg border-2 border-gray-200">
@@ -1548,7 +1631,7 @@
                                                     ans.disabled === true ? 'opacity-30 grayscale cursor-not-allowed bg-gray-100 border-gray-200' :
                                                     (answer === ans.id ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 scale-105' : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30')
                                                 ]"
-                                                class="relative w-full p-5 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                                                class="relative w-full p-3 sm:p-4 border-2 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md">
                                             <span class="font-bold text-blue-600 mr-3" x-text="String.fromCharCode(65 + index)"></span>
                                             <span class="text-gray-900 font-medium" x-text="ans.answer_text"></span>
 
@@ -1587,7 +1670,7 @@
                         </div>
 
                         <div x-show="phase === 'result' && lastResult" x-cloak>
-                            <div class="py-6 space-y-6">
+                            <div class="py-3 space-y-6">
                                 <div class="mb-6">
                                     <div x-show="lastResult?.is_correct"
                                          x-transition:enter="transition ease-out duration-500"
@@ -1638,11 +1721,11 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="bg-white rounded-xl p-5 shadow-lg border-2 border-slate-200 transform transition-all hover:scale-105">
                                         <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-3">Η ΑΠΑΝΤΗΣΗ ΣΟΥ</div>
-                                        <div class="text-slate-900 font-bold text-lg break-words" x-text="lastResult?.player_answer || '-'"></div>
+                                        <div class="text-slate-900 font-bold text-sm break-words" x-text="lastResult?.player_answer || '-'"></div>
                                     </div>
                                     <div class="bg-white rounded-xl p-5 shadow-lg border-2 border-emerald-200 transform transition-all hover:scale-105">
                                         <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-3">ΣΩΣΤΗ ΑΠΑΝΤΗΣΗ</div>
-                                        <div class="text-emerald-700 font-bold text-lg break-words" x-text="lastResult?.correct_answer"></div>
+                                        <div class="text-emerald-700 font-bold text-sm break-words" x-text="lastResult?.correct_answer"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1760,6 +1843,30 @@
             </div>
         </div>
 
+        <!-- Reconnecting Modal -->
+        <div x-show="reconnecting"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+            <div class="absolute inset-0 bg-black/60"></div>
+
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-md w-full p-8 border-2 border-indigo-300 transform transition-all">
+                <div class="text-center space-y-6">
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <div class="w-24 h-24 border-8 border-indigo-600 rounded-full"></div>
+                            <div class="w-24 h-24 border-8 border-purple-600 rounded-full border-t-transparent absolute top-0 left-0 animate-spin"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Επανασύνδεση...</h3>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <div x-show="!isMyTurn"
              x-cloak
              @click.self="null"
@@ -1768,7 +1875,7 @@
              style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <div class="absolute inset-0 bg-black/60"></div>
 
-            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[500px] sm:max-h-[calc(100vh-12rem)] overflow-y-auto">
+            <div class="relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 border-2 border-indigo-300 transform transition-all my-4 sm:my-0 max-h-[500px] sm:max-h-[calc(100vh)] overflow-y-auto">
                 <div class="space-y-1">
                     <div class="text-center mb-4">
                         <h2 class="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
@@ -1918,7 +2025,7 @@
                         <div class="bg-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-200">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">ΕΡΩΤΗΣΗ</div>
                             <div class="text-slate-900 font-medium leading-relaxed text-sm sm:text-base" x-text="opponentMove?.question"></div>
-                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
+                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div x-show="opponentMove?.image_url" class="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-3 shadow-md border border-slate-200">
@@ -1980,7 +2087,7 @@
                         <div class="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
                             <div class="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Ερωτηση</div>
                             <div class="text-slate-900 font-medium text-sm sm:text-base leading-relaxed" x-text="opponentMove?.question"></div>
-                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από τον χρήστη: ' + opponentMove?.created_by"></div>
+                            <div class="text-slate-400 font-medium text-xs sm:text-sm mt-2" x-text="'Δημιουργήθηκε από: ' + opponentMove?.created_by"></div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

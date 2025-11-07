@@ -22,11 +22,9 @@ use Illuminate\Support\Str;
 class GameService
 {
     public function __construct(
-        protected QuestionService   $questionService,
+        protected QuestionService $questionService,
         protected StatisticsService $statisticsService,
-    )
-    {
-    }
+    ) {}
 
     /**
      * @throws Exception
@@ -58,6 +56,19 @@ class GameService
         }
 
         $game->categories()->attach($categories->pluck('id'));
+
+        // Cache categories in Redis for fast access during gameplay
+        $categoriesData = $categories->map(fn ($cat) => [
+            'id' => $cat->id,
+            'name' => $cat->name,
+            'icon' => $cat->icon,
+            'order' => $cat->order,
+        ])->toArray();
+
+        Cache::put("game:{$game->id}:categories", $categoriesData, now()->addHours(3));
+
+        // Pre-cache question IDs for each category/difficulty combination
+        $this->precacheGameQuestions($game, $categories);
 
         $player = GamePlayer::create([
             'game_id' => $game->id,
@@ -97,7 +108,7 @@ class GameService
             ->where('status', GameStatus::Waiting)
             ->first();
 
-        if (!$game || $game->players()->count() >= 2) {
+        if (! $game || $game->players()->count() >= 2) {
             return null;
         }
 
@@ -125,7 +136,8 @@ class GameService
 
         $game = $game->fresh(['players']);
 
-        broadcast(new GameStateUpdated($game));
+        $game->incrementStateVersion();
+        broadcast(new GameStateUpdated($game->fresh(['players'])));
         broadcast(new TurnChanged($game, $firstPlayer->id, $turnStartedAt));
 
         return $game;
@@ -142,7 +154,9 @@ class GameService
             return;
         }
 
+        // Cache both ID and category object to avoid DB query in selectDifficulty
         Cache::put("game:{$game->id}:selected_category", $category->id, now()->addMinutes(5));
+        Cache::put("game:{$game->id}:selected_category_obj", $category, now()->addMinutes(5));
 
         $currentMove = [
             'player_id' => $player->id,
@@ -155,28 +169,51 @@ class GameService
         ];
 
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
-        $this->cacheGameState($game);
 
+        // Only broadcast opponent move (no need to cache full game state for category selection)
         broadcast(new OpponentMoved($game, $currentMove))->toOthers();
     }
 
     public function getUsedCategoryDifficulties(Game $game): array
     {
-        return GameRound::where('game_id', $game->id)
-            ->get()
-            ->map(fn($round) => [
-                'category_id' => $round->category_id,
-                'difficulty' => $round->difficulty->value,
-            ])
-            ->toArray();
+        return Cache::remember("game:{$game->id}:used_combinations", now()->addHours(3), function () use ($game) {
+            return GameRound::where('game_id', $game->id)
+                ->get(['category_id', 'difficulty'])
+                ->map(fn ($round) => [
+                    'category_id' => $round->category_id,
+                    'difficulty' => $round->difficulty->value,
+                ])
+                ->toArray();
+        });
     }
 
     public function isCategoryDifficultyAvailable(Game $game, int $categoryId, string $difficulty): bool
     {
-        return !GameRound::where('game_id', $game->id)
+        return ! GameRound::where('game_id', $game->id)
             ->where('category_id', $categoryId)
             ->where('difficulty', $difficulty)
             ->exists();
+    }
+
+    public function getAvailableDifficultiesForCategory(Game $game, int $categoryId): array
+    {
+        // Get used combinations from cache (already optimized)
+        $usedCombinations = $this->getUsedCategoryDifficulties($game);
+
+        // Check which difficulties are available for this category
+        $availableDifficulties = [
+            'easy' => true,
+            'medium' => true,
+            'hard' => true,
+        ];
+
+        foreach ($usedCombinations as $combo) {
+            if ($combo['category_id'] === $categoryId) {
+                $availableDifficulties[$combo['difficulty']] = false;
+            }
+        }
+
+        return $availableDifficulties;
     }
 
     public function selectDifficulty(Game $game, GamePlayer $player, DifficultyLevel $difficulty): ?Question
@@ -195,27 +232,36 @@ class GameService
 
         $categoryId = Cache::get("game:{$game->id}:selected_category");
 
-        if (!$categoryId) {
+        if (! $categoryId) {
             return null;
         }
 
-        $category = Category::find($categoryId);
-
-        if (!$category) {
+        // Get cached category object (avoids DB query)
+        $category = Cache::get("game:{$game->id}:selected_category_obj");
+        if (! $category) {
             return null;
         }
 
-        if (!$this->isCategoryDifficultyAvailable($game, $categoryId, $difficulty->value)) {
+        // Check availability using cached combinations (no DB query)
+        $availableDifficulties = $this->getAvailableDifficultiesForCategory($game, $categoryId);
+        if (! $availableDifficulties[$difficulty->value]) {
             return null;
         }
 
         $excludeCreatorId = $player->user_id;
 
-        $question = $this->questionService->getRandomQuestion($category, $difficulty, $excludeCreatorId);
+        $question = $this->getPrecachedQuestion($game, $categoryId, $difficulty);
 
-        if (!$question) {
+        if (! $question || ($excludeCreatorId && $question->created_by === $excludeCreatorId)) {
+            $question = $this->questionService->getRandomQuestion($category, $difficulty, $excludeCreatorId);
+        }
+
+        if (! $question) {
             return null;
         }
+
+        // Remove from cache after use (each question used once per game)
+        Cache::forget("game:{$game->id}:question:{$categoryId}:{$difficulty->value}");
 
         $game->increment('current_round');
 
@@ -231,6 +277,7 @@ class GameService
 
         Cache::put("game:{$game->id}:current_round", $round->id, now()->addMinutes(5));
         Cache::forget("game:{$game->id}:selected_category");
+        Cache::forget("game:{$game->id}:selected_category_obj");
 
         // Clear turn_started_at to prevent inactivity forfeit while answering question
         Cache::forget("game:{$game->id}:turn_started_at");
@@ -250,12 +297,9 @@ class GameService
             'started_at' => now()->timestamp,
         ];
 
-
         Cache::put("game:{$game->id}:current_move", $currentMove, now()->addMinutes(5));
 
-        $this->cacheGameState($game);
-
-        // Broadcast opponent move
+        // Broadcast opponent move (no need to cache full game state here)
         broadcast(new OpponentMoved($game, $currentMove))->toOthers();
 
         return $question;
@@ -265,13 +309,13 @@ class GameService
     {
         $roundId = Cache::get("game:{$game->id}:current_round");
 
-        if (!$roundId) {
+        if (! $roundId) {
             return ['success' => false, 'message' => 'No active round found'];
         }
 
         $round = GameRound::find($roundId);
 
-        if (!$round || $round->game_player_id !== $player->id) {
+        if (! $round || $round->game_player_id !== $player->id) {
             return ['success' => false, 'message' => 'Invalid round or player'];
         }
 
@@ -311,6 +355,9 @@ class GameService
             'answered_at' => now(),
             'time_taken' => abs(now()->diffInSeconds($round->started_at)),
         ]);
+
+        // Invalidate used combinations cache when round is completed
+        Cache::forget("game:{$game->id}:used_combinations");
 
         if ($isCorrect) {
             $player->increment('score', $pointsEarned);
@@ -387,7 +434,7 @@ class GameService
             return;
         }
 
-        $currentPlayerIndex = $players->search(fn($p) => $p->id === $game->current_turn_player_id);
+        $currentPlayerIndex = $players->search(fn ($p) => $p->id === $game->current_turn_player_id);
         $nextPlayerIndex = ($currentPlayerIndex + 1) % $players->count();
 
         $game->update([
@@ -420,7 +467,7 @@ class GameService
 
             foreach ($players as $player) {
                 if ($player->user_id) {
-                    $won = !$isDraw && $player->score === $maxScore;
+                    $won = ! $isDraw && $player->score === $maxScore;
                     $this->statisticsService->updateUserStatistics(
                         $player->user,
                         $won,
@@ -491,7 +538,9 @@ class GameService
             'used_combinations' => $usedCombinations,
             'current_move' => $currentMove,
             'turn_started_at' => $turnStartedAt,
-            'players' => $game->players->map(fn($p) => [
+            'state_version' => $game->state_version,
+            'timestamp' => now()->toIso8601String(),
+            'players' => $game->players->map(fn ($p) => [
                 'id' => $p->id,
                 'display_name' => $p->display_name,
                 'score' => $p->score,
@@ -505,11 +554,61 @@ class GameService
         $game = $game->fresh(['players']);
         Cache::put("game_state:{$game->id}", $this->getGameState($game), now()->addHours(2));
 
+        $game->incrementStateVersion();
         broadcast(new GameStateUpdated($game->fresh(['players'])));
     }
 
     public function getCachedGameState(int $gameId): ?array
     {
         return Cache::get("game_state:{$gameId}");
+    }
+
+    public function getGameCategories(Game $game): array
+    {
+        return Cache::remember("game:{$game->id}:categories", now()->addHours(3), function () use ($game) {
+            return $game->categories()
+                ->orderBy('order')
+                ->get()
+                ->map(fn ($cat) => [
+                    'id' => $cat->id,
+                    'name' => $cat->name,
+                    'icon' => $cat->icon,
+                    'order' => $cat->order,
+                ])
+                ->toArray();
+        });
+    }
+
+    public function precacheGameQuestions(Game $game, $categories): void
+    {
+        $difficulties = [DifficultyLevel::Easy, DifficultyLevel::Medium, DifficultyLevel::Hard];
+
+        foreach ($categories as $category) {
+            foreach ($difficulties as $difficulty) {
+                $question = $this->questionService->getRandomQuestion($category, $difficulty);
+
+                if ($question) {
+                    // Cache the full question data with relationships to avoid DB query later
+                    $question->load(['answers', 'creator']);
+
+                    Cache::put(
+                        "game:{$game->id}:question:{$category->id}:{$difficulty->value}",
+                        $question,
+                        now()->addHours(3)
+                    );
+                }
+            }
+        }
+    }
+
+    public function getPrecachedQuestion(Game $game, int $categoryId, DifficultyLevel $difficulty): ?Question
+    {
+        $question = Cache::get("game:{$game->id}:question:{$categoryId}:{$difficulty->value}");
+
+        if (! $question || ! $question->is_active) {
+            return null;
+        }
+
+        return $question;
     }
 }

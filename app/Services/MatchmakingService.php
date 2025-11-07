@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class MatchmakingService
 {
+    public function __construct(
+        protected GameService $gameService
+    ) {}
+
     /**
      * Add a player to the matchmaking queue
      */
@@ -73,7 +77,7 @@ class MatchmakingService
 
                 \Log::info('MatchFound event broadcast', [
                     'game_id' => $existingGame->id,
-                    'channel' => 'game.' . $existingGame->id,
+                    'channel' => 'game.'.$existingGame->id,
                     'redirect_url' => route('game.play', $existingGame),
                     'turn_started_at' => $turnStartedAt,
                 ]);
@@ -93,11 +97,25 @@ class MatchmakingService
             ]);
 
             $categories = \App\Models\Category::where('is_active', true)
+                ->where('sport', $sport)
                 ->inRandomOrder()
                 ->limit($gamePace)
                 ->get();
 
             $game->categories()->attach($categories->pluck('id'));
+
+            // Cache categories in Redis for fast access during gameplay
+            $categoriesData = $categories->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'icon' => $cat->icon,
+                'order' => $cat->order,
+            ])->toArray();
+
+            Cache::put("game:{$game->id}:categories", $categoriesData, now()->addHours(3));
+
+            // Pre-cache question IDs for each category/difficulty combination
+            $this->gameService->precacheGameQuestions($game, $categories);
 
             GamePlayer::create([
                 'game_id' => $game->id,

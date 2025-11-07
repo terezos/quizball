@@ -26,6 +26,7 @@ class Game extends Model
         'forfeited_by_player_id',
         'sport',
         'ai_difficulty',
+        'state_version',
     ];
 
     protected function casts(): array
@@ -62,5 +63,10 @@ class Game extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'game_category');
+    }
+
+    public function incrementStateVersion(): void
+    {
+        $this->increment('state_version');
     }
 }

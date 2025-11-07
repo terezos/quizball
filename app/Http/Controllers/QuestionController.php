@@ -22,7 +22,7 @@ class QuestionController extends Controller
             ->orderBy('name')
             ->get()
             ->groupBy('sport');
-        
+
         $editors = Question::select('created_by')
             ->distinct()
             ->with('creator:id,name')
@@ -40,7 +40,7 @@ class QuestionController extends Controller
                 $query->whereIn('category_id', $request->categories);
             })
             ->when($request->get('created_by'), function ($query) use ($request) {
-                $query->where('created_by', (int)$request->get('created_by'));
+                $query->where('created_by', (int) $request->get('created_by'));
             })
             ->with(['category', 'creator', 'answers'])
             ->latest()
@@ -95,7 +95,7 @@ class QuestionController extends Controller
         $imageUrl = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('questions', 'public');
-            $imageUrl = 'storage/' . $imagePath;
+            $imageUrl = 'storage/'.$imagePath;
         }
 
         // Determine if question should be auto-approved
@@ -169,8 +169,13 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question)
     {
-        if (!auth()->user()->isAdmin() && $question->created_by !== auth()->id()) {
+        if (! auth()->user()->isAdmin() && $question->created_by !== auth()->id()) {
             abort(403);
+        }
+
+        // Prevent editing questions in active games
+        if (! $question->canBeEdited()) {
+            return back()->with('error', 'Αυτή η ερώτηση χρησιμοποιείται σε ενεργά παιχνίδια και δεν μπορεί να επεξεργαστεί.');
         }
 
         if ($request->has('answers')) {
@@ -181,12 +186,12 @@ class QuestionController extends Controller
         }
 
         $status = $question->status;
-        if ($question->status == QuestionStatus::Rejected){
+        if ($question->status == QuestionStatus::Rejected) {
             if ((auth()->user()->isAdmin() || auth()->user()->is_pre_validated)) {
                 $status = QuestionStatus::Approved;
                 $approvedBy = auth()->user()->id;
                 $approvedAt = now();
-            }else{
+            } else {
                 $status = QuestionStatus::Pending;
                 $approvedBy = null;
                 $approvedAt = null;
@@ -213,7 +218,7 @@ class QuestionController extends Controller
                 \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
             }
             $imagePath = $request->file('image')->store('questions', 'public');
-            $imageUrl = 'storage/' . $imagePath;
+            $imageUrl = 'storage/'.$imagePath;
         } elseif ($request->question_type !== 'text_input_with_image') {
             if ($question->image_url && \Storage::disk('public')->exists(str_replace('storage/', '', $question->image_url))) {
                 \Storage::disk('public')->delete(str_replace('storage/', '', $question->image_url));
@@ -250,7 +255,7 @@ class QuestionController extends Controller
             ]);
         }
 
-        if ($status == QuestionStatus::Approved){
+        if ($status == QuestionStatus::Approved) {
             $creator = $question->creator;
             $creator->increment('approved_questions_count');
 
@@ -259,14 +264,14 @@ class QuestionController extends Controller
             }
         }
 
-        if ($status == QuestionStatus::Pending){
+        if ($status == QuestionStatus::Pending) {
             $admins = User::where('role', UserRole::Admin)->get();
             foreach ($admins as $admin) {
                 Notification::create([
                     'user_id' => $admin->id,
                     'type' => 'question',
                     'title' => 'Η Ερώτηση Ανανεώθηκε. Χρειάζεται Έγκριση',
-                    'message' => "Μια ερώτηση έχει ανανεωθεί από τον/την δημιουργό της και χρειάζεται έγκριση από τον διαχειριστή.",
+                    'message' => 'Μια ερώτηση έχει ανανεωθεί από τον/την δημιουργό της και χρειάζεται έγκριση από τον διαχειριστή.',
                     'data' => [
                         'report_id' => $question->id,
                         'question_id' => $question->id,
@@ -289,6 +294,11 @@ class QuestionController extends Controller
     {
         if (! auth()->user()->isAdmin() && $question->created_by !== auth()->id()) {
             abort(403);
+        }
+
+        // Prevent deleting questions in active games
+        if (! $question->canBeDeleted()) {
+            return back()->with('error', 'Αυτή η ερώτηση χρησιμοποιείται σε ενεργά παιχνίδια και δεν μπορεί να διαγραφεί.');
         }
 
         $question->delete();

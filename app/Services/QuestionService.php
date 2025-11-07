@@ -19,7 +19,7 @@ class QuestionService
             ->where('category_id', $category->id)
             ->where('difficulty', $difficulty)
             ->where('is_active', true)
-            ->where('status', 'approved')  // Only approved questions
+            ->where('status', 'approved')
             ->when($excludeCreatorId, function ($query, $creatorId) {
                 $query->where('created_by', '!=', $creatorId);
             })

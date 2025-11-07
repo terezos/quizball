@@ -61,4 +61,50 @@ class Question extends Model
     {
         return $this->hasMany(GameRound::class);
     }
+
+    public function isUsedInActiveGames(): bool
+    {
+        // Check if question is used in any round of an active game
+        $usedInRounds = $this->gameRounds()
+            ->whereHas('game', function ($query) {
+                $query->where('status', \App\Enums\GameStatus::Active);
+            })
+            ->exists();
+
+        if ($usedInRounds) {
+            return true;
+        }
+
+        // Check if question is pre-cached in any active game
+        $activeGames = Game::where('status', \App\Enums\GameStatus::Active)->pluck('id');
+
+        foreach ($activeGames as $gameId) {
+            // Check all possible category/difficulty combinations
+            $categories = \Cache::get("game:{$gameId}:categories");
+
+            if ($categories) {
+                foreach ($categories as $category) {
+                    foreach (['easy', 'medium', 'hard'] as $difficulty) {
+                        $cachedQuestionId = \Cache::get("game:{$gameId}:question:{$category['id']}:{$difficulty}");
+
+                        if ($cachedQuestionId === $this->id) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function canBeEdited(): bool
+    {
+        return ! $this->isUsedInActiveGames();
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return ! $this->isUsedInActiveGames();
+    }
 }

@@ -50,7 +50,7 @@ class CategoryController extends Controller
     {
         // Get the next order number for this sport
         $maxOrder = Category::where('sport', $request->sport)->max('order') ?? -1;
-        
+
         Category::create([
             'name' => $request->name,
             'icon' => $request->icon,
@@ -80,6 +80,11 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
+        // Prevent editing categories in active games
+        if (! $category->canBeEdited()) {
+            return back()->with('error', 'Αυτή η κατηγορία χρησιμοποιείται σε ενεργά παιχνίδια και δεν μπορεί να επεξεργαστεί.');
+        }
+
         $category->update([
             'name' => $request->name,
             'icon' => $request->icon,
@@ -104,6 +109,12 @@ class CategoryController extends Controller
         if ($category->questions()->count() > 0) {
             return redirect()->route('categories.index')
                 ->with('error', 'Cannot delete category that has questions assigned to it');
+        }
+
+        // Prevent deleting categories in active games
+        if (! $category->canBeDeleted()) {
+            return redirect()->route('categories.index')
+                ->with('error', 'Αυτή η κατηγορία χρησιμοποιείται σε ενεργά παιχνίδια και δεν μπορεί να διαγραφεί.');
         }
 
         $category->delete();
