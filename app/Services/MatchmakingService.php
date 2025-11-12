@@ -112,7 +112,7 @@ class MatchmakingService
                 'order' => $cat->order,
             ])->toArray();
 
-            Cache::put("game:{$game->id}:categories", $categoriesData, now()->addHours(3));
+            \Illuminate\Support\Facades\Cache::put("game:{$game->id}:categories", $categoriesData, now()->addHours(3));
 
             // Pre-cache question IDs for each category/difficulty combination
             $this->gameService->precacheGameQuestions($game, $categories);
